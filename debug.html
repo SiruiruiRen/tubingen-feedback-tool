@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Debug - Tübingen Teacher Feedback Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .debug-section {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">Database Debug Tool</h1>
+        <p>This page helps diagnose issues with the Supabase database connection.</p>
+        
+        <div class="alert alert-info mb-4">
+            Check the browser console (F12) for detailed debug information.
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="debug-section">
+                    <h3>Database Status</h3>
+                    <div id="db-status" class="alert alert-secondary">Checking connection...</div>
+                    <button id="check-connection" class="btn btn-primary">Check Connection</button>
+                </div>
+                
+                <div class="debug-section">
+                    <h3>Table Schema</h3>
+                    <pre id="table-schema">Loading...</pre>
+                    <button id="check-schema" class="btn btn-info">Check Schema</button>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="debug-section">
+                    <h3>Recent Entries</h3>
+                    <pre id="recent-entries">No entries loaded</pre>
+                    <button id="load-entries" class="btn btn-success">Load Entries</button>
+                </div>
+                
+                <div class="debug-section">
+                    <h3>Test Insert</h3>
+                    <input type="text" id="test-name" class="form-control mb-2" placeholder="Enter test name">
+                    <textarea id="test-text" class="form-control mb-2" rows="3" placeholder="Enter test text"></textarea>
+                    <button id="test-insert" class="btn btn-warning">Test Insert</button>
+                    <div id="test-result" class="mt-2"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <a href="index.html" class="btn btn-secondary">Back to App</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://immrkllzjvhdnzesmaat.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltbXJrbGx6anZoZG56ZXNtYWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzk2MzgsImV4cCI6MjA2Mjc1NTYzOH0.glhn-u4mNpKHsH6qiwdecXyYOWhdxDrTVDIvNivKVf8';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const dbStatus = document.getElementById('db-status');
+            const tableSchema = document.getElementById('table-schema');
+            const recentEntries = document.getElementById('recent-entries');
+            const checkConnectionBtn = document.getElementById('check-connection');
+            const checkSchemaBtn = document.getElementById('check-schema');
+            const loadEntriesBtn = document.getElementById('load-entries');
+            const testInsertBtn = document.getElementById('test-insert');
+            const testName = document.getElementById('test-name');
+            const testText = document.getElementById('test-text');
+            const testResult = document.getElementById('test-result');
+            
+            // Initialize Supabase client
+            let supabase;
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('Supabase client initialized:', supabase);
+            } catch (error) {
+                console.error('Error initializing Supabase client:', error);
+                dbStatus.className = 'alert alert-danger';
+                dbStatus.textContent = 'Failed to initialize Supabase client: ' + error.message;
+            }
+            
+            // Auto-check connection on load
+            checkConnection();
+            
+            // Event listeners
+            checkConnectionBtn.addEventListener('click', checkConnection);
+            checkSchemaBtn.addEventListener('click', checkSchema);
+            loadEntriesBtn.addEventListener('click', loadEntries);
+            testInsertBtn.addEventListener('click', testInsert);
+            
+            // Check database connection
+            async function checkConnection() {
+                dbStatus.className = 'alert alert-secondary';
+                dbStatus.textContent = 'Checking connection...';
+                
+                try {
+                    const { data, error } = await supabase.from('reflections').select('count').limit(1);
+                    
+                    if (error) throw error;
+                    
+                    console.log('Connection successful:', data);
+                    dbStatus.className = 'alert alert-success';
+                    dbStatus.textContent = '✅ Connection successful!';
+                } catch (error) {
+                    console.error('Connection error:', error);
+                    dbStatus.className = 'alert alert-danger';
+                    dbStatus.textContent = '❌ Connection failed: ' + error.message;
+                }
+            }
+            
+            // Check table schema
+            async function checkSchema() {
+                tableSchema.textContent = 'Loading schema...';
+                
+                try {
+                    // This is a workaround since we don't have direct schema access
+                    // We'll query a single row and examine its structure
+                    const { data, error } = await supabase
+                        .from('reflections')
+                        .select('*')
+                        .limit(1);
+                    
+                    if (error) throw error;
+                    
+                    if (data && data.length > 0) {
+                        const schema = {
+                            columns: Object.keys(data[0]),
+                            sample: data[0]
+                        };
+                        
+                        tableSchema.textContent = JSON.stringify(schema, null, 2);
+                    } else {
+                        tableSchema.textContent = 'No data found. Table exists but is empty.';
+                    }
+                } catch (error) {
+                    console.error('Schema check error:', error);
+                    tableSchema.textContent = 'Error checking schema: ' + error.message;
+                }
+            }
+            
+            // Load recent entries
+            async function loadEntries() {
+                recentEntries.textContent = 'Loading entries...';
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('reflections')
+                        .select('id, student_name, created_at')
+                        .order('created_at', { ascending: false })
+                        .limit(5);
+                    
+                    if (error) throw error;
+                    
+                    if (data && data.length > 0) {
+                        recentEntries.textContent = JSON.stringify(data, null, 2);
+                    } else {
+                        recentEntries.textContent = 'No entries found in the database.';
+                    }
+                } catch (error) {
+                    console.error('Load entries error:', error);
+                    recentEntries.textContent = 'Error loading entries: ' + error.message;
+                }
+            }
+            
+            // Test insert operation
+            async function testInsert() {
+                const name = testName.value.trim();
+                const text = testText.value.trim();
+                
+                if (!name || !text) {
+                    testResult.className = 'alert alert-warning';
+                    testResult.textContent = 'Please enter both name and text';
+                    return;
+                }
+                
+                testResult.className = 'alert alert-secondary';
+                testResult.textContent = 'Testing insert...';
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('reflections')
+                        .insert([{
+                            student_name: name,
+                            reflection_text: text,
+                            feedback_text: 'Test feedback',
+                            created_at: new Date().toISOString()
+                        }])
+                        .select();
+                    
+                    if (error) throw error;
+                    
+                    console.log('Insert successful:', data);
+                    testResult.className = 'alert alert-success';
+                    testResult.textContent = '✅ Insert successful! ID: ' + (data[0]?.id || 'unknown');
+                    
+                    // Refresh entries list
+                    loadEntries();
+                } catch (error) {
+                    console.error('Insert error:', error);
+                    testResult.className = 'alert alert-danger';
+                    testResult.textContent = '❌ Insert failed: ' + error.message;
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
