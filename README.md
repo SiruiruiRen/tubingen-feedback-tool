@@ -11,6 +11,11 @@ A web-based tool for generating high-quality feedback on student teacher reflect
 - Save feedback to database and revise reflections
 - Rate feedback quality and usefulness
 
+## Live Demos
+
+- [Render Deployment](https://tubingen-feedback-tool.onrender.com)
+- [GitHub Repository](https://github.com/SiruiruiRen/tubingen-feedback-tool)
+
 ## Setup and Installation
 
 ### Prerequisites
@@ -22,8 +27,8 @@ A web-based tool for generating high-quality feedback on student teacher reflect
 
 1. Clone this repository
    ```
-   git clone https://github.com/yourusername/tubingen-teacher-feedback-tool.git
-   cd tubingen-teacher-feedback-tool
+   git clone https://github.com/SiruiruiRen/tubingen-feedback-tool.git
+   cd tubingen-feedback-tool
    ```
 
 2. Install dependencies
@@ -31,7 +36,7 @@ A web-based tool for generating high-quality feedback on student teacher reflect
    npm install
    ```
 
-3. Create a `.env` file in the root directory and add your OpenAI API key:
+3. Create a `.env` file in the root directory (see `.env.example`) and add your OpenAI API key:
    ```
    OPENAI_API_KEY=your_api_key_here
    PORT=3000
@@ -44,7 +49,36 @@ A web-based tool for generating high-quality feedback on student teacher reflect
 
 5. Open your browser and navigate to `http://localhost:3000`
 
-#
+## Deployment Options
+
+### Option 1: Render
+
+1. Create a free account on [Render](https://render.com)
+2. Connect your GitHub repository 
+3. Render will automatically detect the `render.yaml` blueprint file and create:
+   - Frontend static site
+   - Backend CORS proxy server
+4. Add your OpenAI API key as an environment variable in the CORS proxy service
+5. Deploy both services
+
+### Option 2: Vercel
+
+1. Create a [Vercel](https://vercel.com) account
+2. Import your GitHub repository
+3. Configure as follows:
+   - Framework: Other
+   - Build Command: `npm install`
+   - Output Directory: `./`
+   - Install Command: `npm install`
+4. Add environment variables for your OpenAI API key
+5. Deploy
+
+### Option 3: GitHub Pages (Frontend Only)
+
+For the frontend part:
+1. Set up GitHub Pages for your repository
+2. Configure a separate service like Render or Railway for the CORS proxy
+3. Update the `CORS_PROXY_URL` in app.js to point to your deployed proxy
 
 ## Usage
 
@@ -96,91 +130,10 @@ The application uses a simple data schema with a primary "reflections" table:
 - usefulness_rating - Numerical rating of feedback usefulness (1-5)
 - timestamps - For creation, updates, and ratings
 
-## API Integration
-
-The tool connects to the OpenAI API to generate feedback. It makes a single API call with:
-1. A system prompt that defines the feedback style and quality criteria
-2. The student's reflection text as the user message
-
-The response is displayed to the user and can be saved to the database.
-
-
-
 ## License
 
-This project is licensed under the Tübingen University License.
+This project is licensed under the Tubigen University License.
 
 ## Acknowledgments
 
-This tool was developed in collaboration between the University of North Carolina at Chapel Hill and the University of Tübingen.
-
-### Running Locally
-
-1. Clone this repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Create a `.env` file with your OpenAI API key:
-   ```
-   OPENAI_API_KEY=your_api_key_here
-   ```
-4. Start the CORS proxy server:
-   ```
-   node cors-proxy.js
-   ```
-5. In a separate terminal, start a simple HTTP server to serve the static files:
-   ```
-   python3 -m http.server 8080
-   ```
-6. Access the application at http://localhost:8080
-
-### Deploying to Render
-
-This application is configured for deployment on Render using the provided `render.yaml` file.
-
-1. Push your code to a Git repository (GitHub, GitLab, etc.)
-
-2. Create a new Render account or log in at https://render.com
-
-3. Click "New" and select "Blueprint" from the dropdown menu
-
-4. Connect your Git repository and select it
-
-5. Render will automatically detect the `render.yaml` file and create two services:
-   - `tubingen-feedback-tool` - Static site for the frontend
-   - `tubingen-feedback-cors-proxy` - Node.js service for the CORS proxy
-
-6. Set the following environment variables for the CORS proxy service:
-   - `OPENAI_API_KEY` - Your OpenAI API key
-
-7. Deploy the services
-
-8. Access your application via the URL provided by Render for the frontend service
-
-### Data Structure
-
-The application uses Supabase for data storage with the following schema:
-
-```sql
-CREATE TABLE reflections (
-  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  student_name TEXT NOT NULL,
-  reflection_text TEXT NOT NULL,
-  feedback_text TEXT NOT NULL,
-  revised_text TEXT,
-  feedback_rating INT,
-  usefulness_rating INT,
-  created_at TIMESTAMPTZ NOT NULL,
-  updated_at TIMESTAMPTZ,
-  rated_at TIMESTAMPTZ
-);
-```
-
-### Technology Stack
-
-- Frontend: HTML, CSS, JavaScript, Bootstrap 5
-- Backend: Node.js, Express
-- Database: Supabase (PostgreSQL)
-- AI: OpenAI GPT-4o
-- Deployment: Render 
+This tool was developed in collaboration between the University of North Carolina at Chapel Hill and the University of Tübingen. 
