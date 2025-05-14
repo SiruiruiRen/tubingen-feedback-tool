@@ -1,0 +1,28 @@
+services:
+  # Static web app service for the frontend
+  - type: web
+    name: tubingen-feedback-tool
+    runtime: static
+    buildCommand: npm install
+    staticPublishPath: ./
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 18.x
+
+  # Web service for the CORS proxy
+  - type: web
+    name: tubingen-feedback-cors-proxy
+    runtime: node
+    buildCommand: npm install
+    startCommand: node cors-proxy.js
+    envVars:
+      - key: NODE_VERSION
+        value: 18.x
+      - key: PORT
+        value: 3000
+      - key: OPENAI_API_KEY
+        sync: false 
