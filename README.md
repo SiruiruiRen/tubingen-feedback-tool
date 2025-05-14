@@ -13,7 +13,7 @@ A web-based tool for generating high-quality feedback on student teacher reflect
 
 ## Live Demos
 
-- [Render Deployment](https://tubingen-feedback-tool.onrender.com)
+- [Render Deployment] (https://tubingen-feedback-cors-proxy.onrender.com/)
 - [GitHub Repository](https://github.com/SiruiruiRen/tubingen-feedback-tool)
 
 ## Setup and Installation
