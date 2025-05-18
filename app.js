@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const buttonsInGroup = container.querySelectorAll('.btn-rating-star');
                 buttonsInGroup.forEach((btn, index) => {
                     btn.innerHTML = index < i ? '★' : '☆';
+                    btn.classList.toggle('filled', index < i);
                 });
             });
             button.addEventListener('mouseout', function() {
@@ -105,7 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Restore stars based on actual current rating
                 const buttonsInGroup = container.querySelectorAll('.btn-rating-star');
                 buttonsInGroup.forEach((btn, index) => {
-                    btn.innerHTML = currentRating !== null && index < currentRating ? '★' : '☆';
+                    const isFilled = currentRating !== null && index < currentRating;
+                    btn.innerHTML = isFilled ? '★' : '☆';
+                    btn.classList.toggle('filled', isFilled);
                 });
             });
             container.appendChild(button);
@@ -119,15 +122,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const hoverLabelElement = groupName === 'quality' ? qualityRatingHoverLabel : usefulnessRatingHoverLabel;
         
         buttonsInGroup.forEach((btn, index) => {
-            btn.classList.remove('btn-primary');
-            btn.classList.add('btn-outline-secondary');
-            btn.innerHTML = index < value ? '★' : '☆'; // Update star symbols
+            const isFilled = index < value;
+            btn.innerHTML = isFilled ? '★' : '☆'; // Update star symbols
+            btn.classList.toggle('filled', isFilled);
         });
         
-        // No need to change primary/outline for star buttons visually this way
-        // button.classList.remove('btn-outline-secondary');
-        // button.classList.add('btn-primary');
-
         if (groupName === 'quality') {
             currentQualityRating = value;
         } else if (groupName === 'usefulness') {
@@ -366,7 +365,7 @@ FORMATTING REQUIREMENTS:
 6. I will format my response with proper spacing between sections
 7. I will use bullet points for listing specific points
 8. I will make sure all feedback is well-structured with clear headings
-9. I will keep my responses concise and to the point.`,
+9. I will keep my responses concise and to the point, aiming for no more than 2-3 short paragraphs per main section (Description, Explanation, Prediction) and a brief overall assessment.`,
 
             'academic German': `Ich werde Reflexionen von Lehramtsstudierenden zu Unterrichtsvideos analysieren. Meine Aufgabe ist es, qualitativ hochwertiges Feedback zu generieren, das vier Qualitätsdimensionen erfüllt:
 
@@ -421,7 +420,7 @@ FORMATIERUNGSANFORDERUNGEN:
 6. Ich werde meine Antwort mit angemessenen Abständen zwischen den Abschnitten formatieren
 7. Ich werde Aufzählungspunkte für die Auflistung konkreter Punkte verwenden
 8. Ich werde sicherstellen, dass das gesamte Feedback gut strukturiert ist und klare Überschriften hat
-9. Ich werde meine Antworten kurz und prägnant halten.`
+9. Ich werde meine Antworten kurz und prägnant halten und darauf abzielen, nicht mehr als 2-3 kurze Absätze pro Hauptabschnitt (Beschreibung, Erklärung, Vorhersage) und eine kurze Gesamtbewertung zu verfassen.`
         };
         
         return prompts[promptType] || prompts['user-friendly English'];
