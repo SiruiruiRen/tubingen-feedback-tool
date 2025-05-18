@@ -81,14 +81,19 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 1; i <= count; i++) {
             const button = document.createElement('button');
             button.type = 'button';
-            button.classList.add('btn', 'btn-outline-secondary');
-            button.textContent = i;
+            button.classList.add('btn', 'btn-outline-secondary', 'btn-rating-star');
+            button.innerHTML = '☆'; // Default to empty star
             button.dataset.value = i;
             button.addEventListener('click', function() {
                 handleRatingButtonClick(this, groupName, labels[i]);
             });
             button.addEventListener('mouseover', function() {
                 hoverLabelElement.textContent = labels[i];
+                // Temporarily fill stars up to the hovered one
+                const buttonsInGroup = container.querySelectorAll('.btn-rating-star');
+                buttonsInGroup.forEach((btn, index) => {
+                    btn.innerHTML = index < i ? '★' : '☆';
+                });
             });
             button.addEventListener('mouseout', function() {
                 const currentRating = groupName === 'quality' ? currentQualityRating : currentUsefulnessRating;
@@ -97,6 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     hoverLabelElement.textContent = '';
                 }
+                // Restore stars based on actual current rating
+                const buttonsInGroup = container.querySelectorAll('.btn-rating-star');
+                buttonsInGroup.forEach((btn, index) => {
+                    btn.innerHTML = currentRating !== null && index < currentRating ? '★' : '☆';
+                });
             });
             container.appendChild(button);
         }
@@ -105,16 +115,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle rating button click
     function handleRatingButtonClick(button, groupName, labelText) {
         const value = parseInt(button.dataset.value);
-        const buttonsInGroup = button.parentElement.querySelectorAll('.btn');
+        const buttonsInGroup = button.parentElement.querySelectorAll('.btn-rating-star');
         const hoverLabelElement = groupName === 'quality' ? qualityRatingHoverLabel : usefulnessRatingHoverLabel;
         
-        buttonsInGroup.forEach(btn => {
+        buttonsInGroup.forEach((btn, index) => {
             btn.classList.remove('btn-primary');
             btn.classList.add('btn-outline-secondary');
+            btn.innerHTML = index < value ? '★' : '☆'; // Update star symbols
         });
         
-        button.classList.remove('btn-outline-secondary');
-        button.classList.add('btn-primary');
+        // No need to change primary/outline for star buttons visually this way
+        // button.classList.remove('btn-outline-secondary');
+        // button.classList.add('btn-primary');
 
         if (groupName === 'quality') {
             currentQualityRating = value;

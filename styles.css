@@ -198,23 +198,23 @@ textarea {
 #feedback {
   white-space: pre-wrap;
   min-height: 300px;
-  max-height: 80vh;
+  max-height: 75vh;
   overflow-y: auto;
-  padding: 12px;
+  padding: 10px;
   background-color: white;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 /* Feedback Formatting Styles */
 #feedback h4.feedback-heading {
   color: var(--primary-dark);
-  font-size: 1.2rem;
-  margin-top: 1.2rem;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 2px solid var(--primary-light);
+  font-size: 1.1rem;
+  margin-top: 0.8rem;
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--primary-light);
   font-weight: 600;
 }
 
@@ -223,8 +223,8 @@ textarea {
 }
 
 #feedback .section-content {
-  margin-bottom: 1rem;
-  padding-left: 0.5rem;
+  margin-bottom: 0.6rem;
+  padding-left: 0.3rem;
 }
 
 #feedback strong {
@@ -233,22 +233,22 @@ textarea {
 }
 
 #feedback ul {
-  padding-left: 1.5rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.75rem;
+  padding-left: 1.2rem;
+  margin-top: 0.3rem;
+  margin-bottom: 0.5rem;
   list-style-type: disc;
 }
 
 #feedback ul li {
-  margin-bottom: 0.4rem;
-  line-height: 1.4;
-  padding-right: 0.5rem;
+  margin-bottom: 0.2rem;
+  line-height: 1.3;
+  padding-right: 0.3rem;
 }
 
 #feedback br {
   display: block;
   content: "";
-  margin-top: 0.3rem;
+  margin-top: 0.15rem;
 }
 
 /* Loading Spinner */
@@ -300,6 +300,12 @@ textarea {
   display: inline-block;
 }
 
+.btn-rating-star {
+  padding: 5px 8px;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
 .feedback-options {
   display: flex;
   gap: 8px;
@@ -319,10 +325,11 @@ textarea {
   border-radius: 10px;
   box-shadow: var(--card-shadow);
   margin-bottom: 10px;
-  padding: 15px;
-  border-left-width: 4px;
+  padding: 12px 15px;
+  border-left-width: 5px;
   animation: slideInRight 0.5s forwards;
   font-weight: 500;
+  font-size: 0.95rem;
   position: relative;
   overflow: hidden;
 }
@@ -341,8 +348,10 @@ textarea {
 .alert-success::before {
   content: '✓';
   position: absolute;
-  left: 12px;
-  font-size: 1.2rem;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
   font-weight: bold;
 }
 
@@ -359,8 +368,10 @@ textarea {
 .alert-warning::before {
   content: '⚠️';
   position: absolute;
-  left: 12px;
-  font-size: 1.2rem;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
 }
 
 .alert-danger {
@@ -372,8 +383,10 @@ textarea {
 .alert-danger::before {
   content: '✕';
   position: absolute;
-  left: 12px;
-  font-size: 1.2rem;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
   font-weight: bold;
 }
 
@@ -386,14 +399,16 @@ textarea {
 .alert-info::before {
   content: 'ℹ';
   position: absolute;
-  left: 12px;
-  font-size: 1.2rem;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
   font-weight: bold;
 }
 
 .alert-dismissible {
-  padding-right: 2.5rem;
-  padding-left: 2.5rem;
+  padding-right: 3rem;
+  padding-left: 2.8rem;
 }
 
 .alert-dismissible .btn-close {
