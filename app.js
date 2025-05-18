@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingSpinner = document.getElementById('loading-spinner');
     const qualityRatingButtonsContainer = document.getElementById('quality-rating-buttons');
     const usefulnessRatingButtonsContainer = document.getElementById('usefulness-rating-buttons');
+    const qualityRatingHoverLabel = document.getElementById('quality-rating-hover-label');
+    const usefulnessRatingHoverLabel = document.getElementById('usefulness-rating-hover-label');
     
     // Language and style selections
     const langEn = document.getElementById('lang-en');
@@ -42,6 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let currentQualityRating = null;
     let currentUsefulnessRating = null;
+
+    const qualityLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    const usefulnessLabels = ['', 'Not useful', 'Slightly useful', 'Moderately useful', 'Very useful', 'Extremely useful'];
 
     // Event listeners
     generateBtn.addEventListener('click', generateFeedback);
@@ -70,6 +75,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to create rating buttons
     function createRatingButtons(container, count, groupName) {
         container.innerHTML = ''; // Clear existing buttons
+        const labels = groupName === 'quality' ? qualityLabels : usefulnessLabels;
+        const hoverLabelElement = groupName === 'quality' ? qualityRatingHoverLabel : usefulnessRatingHoverLabel;
+
         for (let i = 1; i <= count; i++) {
             const button = document.createElement('button');
             button.type = 'button';
@@ -77,16 +85,28 @@ document.addEventListener('DOMContentLoaded', function() {
             button.textContent = i;
             button.dataset.value = i;
             button.addEventListener('click', function() {
-                handleRatingButtonClick(this, groupName);
+                handleRatingButtonClick(this, groupName, labels[i]);
+            });
+            button.addEventListener('mouseover', function() {
+                hoverLabelElement.textContent = labels[i];
+            });
+            button.addEventListener('mouseout', function() {
+                const currentRating = groupName === 'quality' ? currentQualityRating : currentUsefulnessRating;
+                if (currentRating !== null) {
+                    hoverLabelElement.textContent = labels[currentRating];
+                } else {
+                    hoverLabelElement.textContent = '';
+                }
             });
             container.appendChild(button);
         }
     }
 
     // Handle rating button click
-    function handleRatingButtonClick(button, groupName) {
+    function handleRatingButtonClick(button, groupName, labelText) {
         const value = parseInt(button.dataset.value);
         const buttonsInGroup = button.parentElement.querySelectorAll('.btn');
+        const hoverLabelElement = groupName === 'quality' ? qualityRatingHoverLabel : usefulnessRatingHoverLabel;
         
         buttonsInGroup.forEach(btn => {
             btn.classList.remove('btn-primary');
@@ -101,6 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (groupName === 'usefulness') {
             currentUsefulnessRating = value;
         }
+        hoverLabelElement.textContent = labelText; // Keep selected label visible
     }
 
     // Initialize rating buttons

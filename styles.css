@@ -291,6 +291,15 @@ textarea {
   margin-bottom: 6px;
 }
 
+.rating-hover-label {
+  font-style: italic;
+  color: var(--dark-gray);
+  font-size: 0.85rem;
+  margin-left: 8px;
+  min-height: 1.2em;
+  display: inline-block;
+}
+
 .feedback-options {
   display: flex;
   gap: 8px;
