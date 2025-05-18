@@ -32,11 +32,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const usefulnessRating = document.getElementById('usefulness-rating');
     const submitRatingBtn = document.getElementById('submit-rating-btn');
     const loadingSpinner = document.getElementById('loading-spinner');
+    const qualityRatingButtonsContainer = document.getElementById('quality-rating-buttons');
+    const usefulnessRatingButtonsContainer = document.getElementById('usefulness-rating-buttons');
     
     // Language and style selections
     const langEn = document.getElementById('lang-en');
     const langDe = document.getElementById('lang-de');
     const styleSelector = document.getElementById('style');
+
+    let currentQualityRating = null;
+    let currentUsefulnessRating = null;
 
     // Event listeners
     generateBtn.addEventListener('click', generateFeedback);
@@ -47,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
     saveRevisionBtn.addEventListener('click', saveRevision);
     compareBtn.addEventListener('click', compareReflections);
     submitRatingBtn.addEventListener('click', submitRating);
-
 
     // Initialize Supabase client
     const supabase = initSupabase();
@@ -62,6 +66,46 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Function to create rating buttons
+    function createRatingButtons(container, count, groupName) {
+        container.innerHTML = ''; // Clear existing buttons
+        for (let i = 1; i <= count; i++) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.classList.add('btn', 'btn-outline-secondary');
+            button.textContent = i;
+            button.dataset.value = i;
+            button.addEventListener('click', function() {
+                handleRatingButtonClick(this, groupName);
+            });
+            container.appendChild(button);
+        }
+    }
+
+    // Handle rating button click
+    function handleRatingButtonClick(button, groupName) {
+        const value = parseInt(button.dataset.value);
+        const buttonsInGroup = button.parentElement.querySelectorAll('.btn');
+        
+        buttonsInGroup.forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-secondary');
+        });
+        
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-primary');
+
+        if (groupName === 'quality') {
+            currentQualityRating = value;
+        } else if (groupName === 'usefulness') {
+            currentUsefulnessRating = value;
+        }
+    }
+
+    // Initialize rating buttons
+    createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
+    createRatingButtons(usefulnessRatingButtonsContainer, 5, 'usefulness');
 
     // Feedback generation
     async function generateFeedback() {
@@ -250,7 +294,7 @@ My target audience is student teachers who are learning to develop their profess
 
 I understand that "analysis" refers to professional vision, which includes:
 - **Description**: Accurately noting what happened in the classroom
-- **Explanation**: Interpreting classroom events using educational theory
+- **Explanation**: Interpreting classroom events using educational theory. The videos clearly display features of teaching quality (e.g., constructive support; see the attached PDF by Praetorius for dimensions of teaching quality).
 - **Prediction**: Forecasting how teacher actions might affect student learning
 
 FORMATTING REQUIREMENTS:
@@ -277,7 +321,7 @@ My audience is student teachers learning to analyze classroom teaching. I'll be 
 
 I know that good analysis includes three key parts:
 - **Description**: What exactly happened in the classroom
-- **Explanation**: Why it happened (using educational theories)
+- **Explanation**: Why it happened (using educational theories). The videos clearly display features of teaching quality (e.g., constructive support; see the attached PDF by Praetorius for dimensions of teaching quality).
 - **Prediction**: How it might affect student learning
 
 FORMATTING REQUIREMENTS:
@@ -288,7 +332,8 @@ FORMATTING REQUIREMENTS:
 5. Within each section, I will clearly start with "**Strengths:**" followed by "**Suggestions for Improvement:**"
 6. I will format my response with proper spacing between sections
 7. I will use bullet points for listing specific points
-8. I will make sure all feedback is well-structured with clear headings`,
+8. I will make sure all feedback is well-structured with clear headings
+9. I will keep my responses concise and to the point.`,
 
             'academic German': `Ich werde Reflexionen von Lehramtsstudierenden zu Unterrichtsvideos analysieren. Meine Aufgabe ist es, qualitativ hochwertiges Feedback zu generieren, das vier Qualitätsdimensionen erfüllt:
 
@@ -304,7 +349,7 @@ Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Wahrnehmungsf
 
 Ich verstehe, dass "Analyse" sich auf professionelle Unterrichtswahrnehmung bezieht, die folgende Aspekte umfasst:
 - **Beschreibung**: Genaue Beobachtung des Unterrichtsgeschehens
-- **Erklärung**: Interpretation von Unterrichtsereignissen mithilfe pädagogischer Theorien
+- **Erklärung**: Interpretation von Unterrichtsereignissen mithilfe pädagogischer Theorien. Die Videos zeigen deutlich Merkmale von Unterrichtsqualität (z.B. konstruktive Unterstützung; siehe beigefügtes PDF von Praetorius zu Dimensionen von Unterrichtsqualität).
 - **Vorhersage**: Prognose, wie sich Lehrerhandlungen auf das Lernen der Schüler:innen auswirken könnten
 
 FORMATIERUNGSANFORDERUNGEN:
@@ -331,7 +376,7 @@ Meine Zielgruppe sind angehende Lehrkräfte, die lernen, Unterricht zu analysier
 
 Ich weiß, dass eine gute Analyse drei Kernbereiche umfasst:
 - **Beschreibung**: Was genau im Unterricht passiert ist
-- **Erklärung**: Warum es passiert ist (unter Verwendung pädagogischer Theorien)
+- **Erklärung**: Warum es passiert ist (unter Verwendung pädagogischer Theorien). Die Videos zeigen deutlich Merkmale von Unterrichtsqualität (z.B. konstruktive Unterstützung; siehe beigefügtes PDF von Praetorius zu Dimensionen von Unterrichtsqualität).
 - **Vorhersage**: Wie es sich auf das Lernen der Schüler:innen auswirken könnte
 
 FORMATIERUNGSANFORDERUNGEN:
@@ -342,7 +387,8 @@ FORMATIERUNGSANFORDERUNGEN:
 5. In jedem Abschnitt werde ich mit "**Stärken:**" beginnen, gefolgt von "**Verbesserungsvorschläge:**"
 6. Ich werde meine Antwort mit angemessenen Abständen zwischen den Abschnitten formatieren
 7. Ich werde Aufzählungspunkte für die Auflistung konkreter Punkte verwenden
-8. Ich werde sicherstellen, dass das gesamte Feedback gut strukturiert ist und klare Überschriften hat`
+8. Ich werde sicherstellen, dass das gesamte Feedback gut strukturiert ist und klare Überschriften hat
+9. Ich werde meine Antworten kurz und prägnant halten.`
         };
         
         return prompts[promptType] || prompts['user-friendly English'];
@@ -557,11 +603,11 @@ FORMATIERUNGSANFORDERUNGEN:
 
     // Submit rating for feedback
     async function submitRating() {
-        const feedbackRatingValue = parseInt(feedbackRating.value);
-        const usefulnessRatingValue = parseInt(usefulnessRating.value);
+        const feedbackRatingValue = currentQualityRating;
+        const usefulnessRatingValue = currentUsefulnessRating;
         
-        if (isNaN(feedbackRatingValue) || isNaN(usefulnessRatingValue)) {
-            showAlert('Please select ratings before submitting.', 'warning');
+        if (feedbackRatingValue === null || usefulnessRatingValue === null) {
+            showAlert('Please select ratings for both quality and usefulness before submitting.', 'warning');
             return;
         }
         

@@ -103,32 +103,16 @@
                             
                             <div class="rating-container">
                                 <h6>Rate this feedback:</h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="feedback-item">
-                                            <label for="feedback-rating" class="form-label">Quality (1-5):</label>
-                                            <select class="form-select" id="feedback-rating">
-                                                <option value="" selected disabled>Select rating</option>
-                                                <option value="1">1 - Poor</option>
-                                                <option value="2">2 - Fair</option>
-                                                <option value="3">3 - Good</option>
-                                                <option value="4">4 - Very Good</option>
-                                                <option value="5">5 - Excellent</option>
-                                            </select>
-                                        </div>
+                                <div class="feedback-item mb-2">
+                                    <label class="form-label">Quality:</label>
+                                    <div id="quality-rating-buttons" class="btn-group" role="group" aria-label="Quality rating">
+                                        <!-- Buttons will be dynamically inserted here by app.js -->
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="feedback-item">
-                                            <label for="usefulness-rating" class="form-label">Usefulness (1-5):</label>
-                                            <select class="form-select" id="usefulness-rating">
-                                                <option value="" selected disabled>Select rating</option>
-                                                <option value="1">1 - Not useful</option>
-                                                <option value="2">2 - Slightly useful</option>
-                                                <option value="3">3 - Moderately useful</option>
-                                                <option value="4">4 - Very useful</option>
-                                                <option value="5">5 - Extremely useful</option>
-                                            </select>
-                                        </div>
+                                </div>
+                                <div class="feedback-item mb-3">
+                                    <label class="form-label">Usefulness:</label>
+                                    <div id="usefulness-rating-buttons" class="btn-group" role="group" aria-label="Usefulness rating">
+                                        <!-- Buttons will be dynamically inserted here by app.js -->
                                     </div>
                                 </div>
                                 <div class="text-end mt-2">
