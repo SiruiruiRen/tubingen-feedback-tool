@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const generateBtn = document.getElementById('generate-btn');
     const clearBtn = document.getElementById('clear-btn');
     const copyBtn = document.getElementById('copy-btn');
+    const reviseReflectionBtn = document.getElementById('revise-reflection-btn');
     const reflectionText = document.getElementById('reflection-text');
     const feedback = document.getElementById('feedback');
     const nameInput = document.getElementById('student-name');
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
     generateBtn.addEventListener('click', generateFeedback);
     clearBtn.addEventListener('click', clearText);
     copyBtn.addEventListener('click', copyFeedback);
+    reviseReflectionBtn.addEventListener('click', handleReviseReflectionClick);
     submitRatingBtn.addEventListener('click', submitRating);
 
     // Initialize Supabase client
@@ -231,11 +233,13 @@ document.addEventListener('DOMContentLoaded', function() {
             sessionStorage.setItem('currentStyle', style);
             
             showAlert(alertMessage, 'success');
+            reviseReflectionBtn.style.display = 'inline-block';
             
         } catch (error) {
             console.error('Error in generateFeedback process:', error);
             showAlert(`Error: ${error.message}. Please check console for details.`, 'danger');
             feedback.innerHTML = '<p class="text-danger">Failed to generate or save feedback. Please try again or check the console.</p>';
+            reviseReflectionBtn.style.display = 'none';
         } finally {
             toggleLoading(false);
         }
@@ -462,8 +466,17 @@ Stelle sicher, dass jeder Abschnitt (Beschreibung, Erklärung, etc.) nur diese d
     // Clear text area
     function clearText() {
         reflectionText.value = '';
-        // Also clear currentReflectionId if text is cleared, to ensure next generate is a new entry unless a rating/load happens
-        // sessionStoage.removeItem('currentReflectionId'); // Decided against this for now, can be confusing if user accidentally clears.
+        feedback.innerHTML = '<p class="text-muted">Feedback will appear here after generation...</p>';
+        sessionStorage.removeItem('currentReflectionId');
+        sessionStorage.removeItem('reflection');
+        sessionStorage.removeItem('feedback');
+        reviseReflectionBtn.style.display = 'none';
+        currentQualityRating = null;
+        currentUsefulnessRating = null;
+        createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
+        createRatingButtons(usefulnessRatingButtonsContainer, 5, 'usefulness');
+        qualityRatingHoverLabel.textContent = '';
+        usefulnessRatingHoverLabel.textContent = '';
     }
 
     // Copy feedback to clipboard
@@ -522,6 +535,13 @@ Stelle sicher, dass jeder Abschnitt (Beschreibung, Erklärung, etc.) nur diese d
             console.error('Error submitting rating:', error);
             showAlert('Error submitting rating. Please try again.', 'danger');
         }
+    }
+
+    // Handle click for the Revise Reflection button
+    function handleReviseReflectionClick() {
+        reflectionText.scrollIntoView({ behavior: 'smooth' });
+        reflectionText.focus();
+        showAlert('You can now edit your reflection directly in the text area above. Click \'Generate Feedback\' again to get new feedback on your revision.', 'info');
     }
 
     // Initialize Supabase client
