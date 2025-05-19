@@ -181,10 +181,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const { data, error } = await supabase
                     .from('reflections')
                     .update({
+                        student_name: studentName,
                         reflection_text: reflectionText.value,
                         feedback_text: generatedFeedbackText,
                         language: language,
                         style: style,
+                        session_id: currentSessionId,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', parseInt(reflectionId, 10))
