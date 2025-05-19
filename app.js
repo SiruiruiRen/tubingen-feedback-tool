@@ -172,75 +172,51 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedResponse = formatFeedback(generatedFeedbackText);
             feedback.innerHTML = formattedResponse;
 
-            let reflectionId = sessionStorage.getItem('currentReflectionId');
-            let alertMessage = '';
-
-            if (reflectionId) {
-                // Update existing record
-                console.log(`Updating existing reflection ID: ${reflectionId} in database...`);
-                const { data, error } = await supabase
-                    .from('reflections')
-                    .update({
-                        student_name: studentName,
-                        reflection_text: reflectionText.value,
-                        feedback_text: generatedFeedbackText,
+            // Always insert a new record
+            console.log('Saving new reflection and feedback to database (always new record)...');
+            const { data, error } = await supabase
+                .from('reflections')
+                .insert([
+                    { 
+                        student_name: studentName, 
+                        reflection_text: reflectionText.value, 
+                        feedback_text: generatedFeedbackText, 
                         language: language,
                         style: style,
-                        session_id: currentSessionId,
-                        updated_at: new Date().toISOString(),
-                        feedback_rating: null,
-                        usefulness_rating: null,
-                        rated_at: null
-                    })
-                    .eq('id', parseInt(reflectionId, 10))
-                    .select();
-                
-                if (error) {
-                    console.error('Error updating Supabase record:', error);
-                    throw new Error(`Failed to update reflection: ${error.message}`);
-                }
-                console.log('Update response:', data);
-                alertMessage = 'Feedback updated successfully!';
-            } else {
-                // Insert new record
-                console.log('Saving new reflection and feedback to database...');
-                const { data, error } = await supabase
-                    .from('reflections')
-                    .insert([
-                        { 
-                            student_name: studentName, 
-                            reflection_text: reflectionText.value, 
-                            feedback_text: generatedFeedbackText, 
-                            language: language,
-                            style: style,
-                            session_id: currentSessionId, 
-                            created_at: new Date().toISOString()
-                        }
-                    ])
-                    .select();
+                        session_id: currentSessionId, 
+                        created_at: new Date().toISOString(),
+                        // Ratings will be null by default on new insert, so no need to specify them here
+                    }
+                ])
+                .select();
 
-                if (error) {
-                    console.error('Error saving new to Supabase:', error);
-                    throw new Error(`Failed to save new reflection: ${error.message}`);
-                }
-                console.log('Save response:', data);
-                if (data && data.length > 0) {
-                    reflectionId = data[0].id.toString();
-                    sessionStorage.setItem('currentReflectionId', reflectionId);
-                    console.log('New reflection saved. currentReflectionId set to:', reflectionId);
-                }
-                alertMessage = 'Feedback generated and saved successfully!';
+            if (error) {
+                console.error('Error saving new reflection to Supabase:', error);
+                throw new Error(`Failed to save new reflection: ${error.message}`);
             }
             
-            sessionStorage.setItem('reflection', reflectionText.value);
-            sessionStorage.setItem('feedback', generatedFeedbackText);
+            console.log('Save response (new record):', data);
+            let newRecordId = null;
+            if (data && data.length > 0) {
+                newRecordId = data[0].id.toString();
+                // Store this ID specifically for potential rating of THIS feedback instance
+                sessionStorage.setItem('lastGeneratedReflectionIdForRating', newRecordId);
+                console.log('New reflection saved. ID for rating purposes:', newRecordId);
+            }
+            
+            const alertMessage = 'Feedback generated and saved as a new entry!';
+            
+            sessionStorage.setItem('reflection', reflectionText.value); // Still useful for pre-fill if desired elsewhere
+            sessionStorage.setItem('feedback', generatedFeedbackText); // Still useful for display
             sessionStorage.setItem('currentLanguage', language);
             sessionStorage.setItem('currentStyle', style);
             
             showAlert(alertMessage, 'success');
-            reviseReflectionBtn.style.display = 'inline-block';
             
-            // Reset UI for ratings after any feedback generation (new or update)
+            // Hide revise button as its old logic doesn't apply well to always-new entries
+            reviseReflectionBtn.style.display = 'none'; 
+
+            // Reset UI for ratings, as this is new feedback
             currentQualityRating = null;
             currentUsefulnessRating = null;
             createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
@@ -480,7 +456,7 @@ Stelle sicher, dass jeder Abschnitt (Beschreibung, Erklärung, etc.) nur diese d
     function clearText() {
         reflectionText.value = '';
         feedback.innerHTML = '<p class="text-muted">Feedback will appear here after generation...</p>';
-        sessionStorage.removeItem('currentReflectionId');
+        sessionStorage.removeItem('lastGeneratedReflectionIdForRating'); // Clear this as well
         sessionStorage.removeItem('reflection');
         sessionStorage.removeItem('feedback');
         reviseReflectionBtn.style.display = 'none';
@@ -505,24 +481,23 @@ Stelle sicher, dass jeder Abschnitt (Beschreibung, Erklärung, etc.) nur diese d
 
     // Submit rating for feedback
     async function submitRating() {
+        const reflectionId = sessionStorage.getItem('lastGeneratedReflectionIdForRating'); // Use the correct ID for rating
+        console.log('Rating for reflection ID:', reflectionId);
+        
+        if (!reflectionId) {
+            showAlert('Please generate feedback first before rating.', 'warning');
+             if (!generateBtn.disabled) {
+                generateBtn.classList.add('btn-pulse');
+                setTimeout(() => generateBtn.classList.remove('btn-pulse'), 2000);
+            }
+            return;
+        }
+        
         const feedbackRatingValue = currentQualityRating;
         const usefulnessRatingValue = currentUsefulnessRating;
         
         if (feedbackRatingValue === null || usefulnessRatingValue === null) {
             showAlert('Please select ratings for both quality and usefulness before submitting.', 'warning');
-            return;
-        }
-        
-        const reflectionId = sessionStorage.getItem('currentReflectionId');
-        console.log('Rating for reflection ID:', reflectionId);
-        
-        if (!reflectionId) {
-            // Save button is removed, adjust alert
-            showAlert('Please generate feedback first. Your work is saved upon generation.', 'warning');
-             if (!generateBtn.disabled) {
-                generateBtn.classList.add('btn-pulse');
-                setTimeout(() => generateBtn.classList.remove('btn-pulse'), 2000);
-            }
             return;
         }
         
