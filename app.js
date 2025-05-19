@@ -213,8 +213,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             showAlert(alertMessage, 'success');
             
-            // Hide revise button as its old logic doesn't apply well to always-new entries
-            reviseReflectionBtn.style.display = 'none'; 
+            // Show revise button if a reflection was successfully generated and stored
+            if (sessionStorage.getItem('reflection')) {
+                reviseReflectionBtn.style.display = 'inline-block'; 
+            }
 
             // Reset UI for ratings, as this is new feedback
             currentQualityRating = null;
@@ -228,7 +230,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error in generateFeedback process:', error);
             showAlert(`Error: ${error.message}. Please check console for details.`, 'danger');
             feedback.innerHTML = '<p class="text-danger">Failed to generate or save feedback. Please try again or check the console.</p>';
-            reviseReflectionBtn.style.display = 'none';
+            // Keep revise button hidden or hide it if it was an error on the very first try
+            reviseReflectionBtn.style.display = 'none'; 
         } finally {
             toggleLoading(false);
         }
@@ -527,9 +530,15 @@ Stelle sicher, dass jeder Abschnitt (Beschreibung, Erklärung, etc.) nur diese d
 
     // Handle click for the Revise Reflection button
     function handleReviseReflectionClick() {
+        const previousReflection = sessionStorage.getItem('reflection');
+        if (previousReflection) {
+            reflectionText.value = previousReflection;
+            showAlert('Your previous reflection has been loaded. Edit it here and click \"Generate Feedback\" for new feedback. This will be saved as a new entry.', 'info');
+        } else {
+            showAlert('No previous reflection found in this session to load.', 'warning');
+        }
         reflectionText.scrollIntoView({ behavior: 'smooth' });
         reflectionText.focus();
-        showAlert('You can now edit your reflection directly in the text area above. Click \'Generate Feedback\' again to get new feedback on your revision.', 'info');
     }
 
     // Initialize Supabase client
