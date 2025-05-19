@@ -19,14 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const generateBtn = document.getElementById('generate-btn');
     const clearBtn = document.getElementById('clear-btn');
     const copyBtn = document.getElementById('copy-btn');
-    const saveBtn = document.getElementById('save-btn');
-    const editBtn = document.getElementById('edit-btn');
     const reflectionText = document.getElementById('reflection-text');
     const feedback = document.getElementById('feedback');
-    const revisionSection = document.getElementById('revision-section');
-    const revisedText = document.getElementById('revised-text');
-    const saveRevisionBtn = document.getElementById('save-revision-btn');
-    const compareBtn = document.getElementById('compare-btn');
     const nameInput = document.getElementById('student-name');
     const feedbackRating = document.getElementById('feedback-rating');
     const usefulnessRating = document.getElementById('usefulness-rating');
@@ -52,10 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
     generateBtn.addEventListener('click', generateFeedback);
     clearBtn.addEventListener('click', clearText);
     copyBtn.addEventListener('click', copyFeedback);
-    saveBtn.addEventListener('click', saveFeedback);
-    editBtn.addEventListener('click', showRevisionPanel);
-    saveRevisionBtn.addEventListener('click', saveRevision);
-    compareBtn.addEventListener('click', compareReflections);
     submitRatingBtn.addEventListener('click', submitRating);
 
     // Initialize Supabase client
@@ -64,6 +54,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verify Supabase connection
     if (supabase) {
         verifySupabaseConnection(supabase);
+    }
+
+    // Function to get or create a session ID
+    function getOrCreateSessionId() {
+        let sessionId = sessionStorage.getItem('appSessionId');
+        if (!sessionId) {
+            sessionId = Date.now().toString(36) + Math.random().toString(36).substring(2);
+            sessionStorage.setItem('appSessionId', sessionId);
+            console.log('New session ID generated:', sessionId);
+        }
+        return sessionId;
     }
 
     // Initialize Bootstrap tooltips
@@ -141,43 +142,100 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Feedback generation
     async function generateFeedback() {
+        const studentName = nameInput.value.trim();
+        if (!studentName) {
+            showAlert('Please enter your name before generating feedback.', 'warning');
+            nameInput.focus(); // Set focus to name input
+            return;
+        }
+
         if (!reflectionText.value.trim()) {
             showAlert('Please enter a reflection text first.', 'warning');
+            reflectionText.focus(); // Set focus to reflection text area
             return;
         }
 
         // Determine language based on the radio button selection
         const language = langEn.checked ? 'en' : 'de';
         const style = styleSelector.value;
-        
-        // Clear any previous session data to avoid conflicts
-        sessionStorage.removeItem('currentReflectionId');
-        
-        console.log('Generating feedback with settings:', { language, style });
+        const currentSessionId = getOrCreateSessionId(); // Get or create session ID
         
         // Show loading spinner
         toggleLoading(true);
         
         try {
-            const response = await callOpenAI(reflectionText.value, language, style);
-            console.log('Generated feedback:', response);
+            const generatedFeedbackText = await callOpenAI(reflectionText.value, language, style);
+            console.log('Generated feedback:', generatedFeedbackText);
             
-            // Format the feedback with markdown to HTML conversion
-            const formattedResponse = formatFeedback(response);
+            const formattedResponse = formatFeedback(generatedFeedbackText);
             feedback.innerHTML = formattedResponse;
+
+            let reflectionId = sessionStorage.getItem('currentReflectionId');
+            let alertMessage = '';
+
+            if (reflectionId) {
+                // Update existing record
+                console.log(`Updating existing reflection ID: ${reflectionId} in database...`);
+                const { data, error } = await supabase
+                    .from('reflections')
+                    .update({
+                        reflection_text: reflectionText.value,
+                        feedback_text: generatedFeedbackText,
+                        language: language,
+                        style: style,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', parseInt(reflectionId, 10))
+                    .select();
+                
+                if (error) {
+                    console.error('Error updating Supabase record:', error);
+                    throw new Error(`Failed to update reflection: ${error.message}`);
+                }
+                console.log('Update response:', data);
+                alertMessage = 'Feedback updated successfully!';
+            } else {
+                // Insert new record
+                console.log('Saving new reflection and feedback to database...');
+                const { data, error } = await supabase
+                    .from('reflections')
+                    .insert([
+                        { 
+                            student_name: studentName, 
+                            reflection_text: reflectionText.value, 
+                            feedback_text: generatedFeedbackText, 
+                            language: language,
+                            style: style,
+                            session_id: currentSessionId, 
+                            created_at: new Date().toISOString()
+                        }
+                    ])
+                    .select();
+
+                if (error) {
+                    console.error('Error saving new to Supabase:', error);
+                    throw new Error(`Failed to save new reflection: ${error.message}`);
+                }
+                console.log('Save response:', data);
+                if (data && data.length > 0) {
+                    reflectionId = data[0].id.toString();
+                    sessionStorage.setItem('currentReflectionId', reflectionId);
+                    console.log('New reflection saved. currentReflectionId set to:', reflectionId);
+                }
+                alertMessage = 'Feedback generated and saved successfully!';
+            }
             
-            // Store strings only, not objects
             sessionStorage.setItem('reflection', reflectionText.value);
-            sessionStorage.setItem('feedback', response);
+            sessionStorage.setItem('feedback', generatedFeedbackText);
             sessionStorage.setItem('currentLanguage', language);
             sessionStorage.setItem('currentStyle', style);
             
-            showAlert('Feedback generated successfully!', 'success');
+            showAlert(alertMessage, 'success');
             
         } catch (error) {
-            console.error('Error generating feedback:', error);
-            showAlert(`Error generating feedback: ${error.message}. Please check console for details.`, 'danger');
-            feedback.innerHTML = '<p class="text-danger">Failed to generate feedback. Please try again or check the console for error details.</p>';
+            console.error('Error in generateFeedback process:', error);
+            showAlert(`Error: ${error.message}. Please check console for details.`, 'danger');
+            feedback.innerHTML = '<p class="text-danger">Failed to generate or save feedback. Please try again or check the console.</p>';
         } finally {
             toggleLoading(false);
         }
@@ -187,33 +245,53 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatFeedback(text) {
         if (!text) return '';
         
-        // Format headings (#### Heading)
-        text = text.replace(/####\s+([^\n]+)/g, '<h4 class="feedback-heading">$1</h4>');
-        
-        // Format bold text (**text**)
-        text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        // Consolidate heading processing
+        text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4 class="feedback-heading">${p1.trim()}</h4>`);
+
+        // Format bold text (Strengths:, Suggestions for Improvement:, Why?:, etc.)
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         
         // Format list items starting with - or *
+        // Ensure lists are only created if list items are present
         text = text.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
         
-        // Wrap consecutive list items in ul tags
-        text = text.replace(/<li>(.+)(?=<li>|$)/g, function(match) {
-            return '<ul>' + match.replace(/<\/li>(?!<li>)/g, '</li></ul>');
-        });
+        // Wrap consecutive list items in ul tags more robustly
+        text = text.replace(/(<li>.*?<\/li>\s*)+/g, (match) => `<ul>${match.trim()}</ul>`);
         
-        // Add spacing between sections
-        text = text.replace(/<\/h4>/g, '</h4><div class="section-content">');
-        text = text.replace(/<h4/g, '</div><h4');
+        // Add structure for sections. This is tricky with dynamic content.
+        // Let's assume headings define sections. We want space *between* full sections.
+        // Wrap content after h4 in a div, until the next h4 or end of string.
+        let sections = text.split(/(?=<h4)/);
+        text = sections.map(section => {
+            if (section.startsWith('<h4')) {
+                // Find the end of the h4 tag
+                const h4EndIndex = section.indexOf('</h4>') + 5;
+                const heading = section.substring(0, h4EndIndex);
+                const content = section.substring(h4EndIndex);
+                // Wrap content in a div for better styling and separation
+                return `${heading}<div class="section-content">${content.trim()}</div>`;
+            }
+            return section; // Should not happen if split correctly
+        }).join('');
         
-        // Remove any leading </div>
-        text = text.replace(/^<\/div>/, '');
-        
-        // Add final closing div
-        text += '</div>';
-        
-        // Replace newlines with <br>
+        // Replace newlines with <br> INSIDE list items or general text, but not excessively.
+        // Be careful not to add <br> inside <ul> or after <h4> directly.
+        // This is complex; a simpler approach is often better.
+        // The current CSS with `white-space: pre-wrap` for feedback might handle newlines well.
+        // However, explicit <br> can be needed if `pre-wrap` isn't sufficient or for specific formatting.
+        // For now, let's be more conservative with <br> replacement if CSS handles it.
+        // The main issue is that Markdown newlines are not always HTML newlines.
+        // Let's apply <br> more selectively.
+        // The previous global replace was: text = text.replace(/\n/g, '<br>');
+        // This might be too aggressive if CSS `white-space: pre-wrap` is used on the container.
+        // If `pre-wrap` is active, we might only need <br> for explicit line breaks not part of Markdown's usual block formatting.
+        // For now, I will keep the original global newline replacement as it was there before,
+        // but it's an area for potential refinement if formatting issues arise.
         text = text.replace(/\n/g, '<br>');
-        
+        // Clean up potential empty <br> tags from multiple newlines or at start/end of blocks
+        text = text.replace(/<br>\s*<br>/g, '<br>'); // Collapse multiple breaks
+        text = text.replace(/^<br>|<br>$/g, ''); // Trim leading/trailing breaks
+
         return text;
     }
 
@@ -312,115 +390,65 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get the appropriate system prompt based on style and language
     function getSystemPrompt(promptType) {
         const prompts = {
-            'academic English': `I will analyze student teacher reflections on teaching videos. My task is to generate high-quality feedback that fulfills four quality dimensions:
+            'academic English': `I will provide you with written reflection texts from pre-service teachers based on short classroom videos. These students were asked to analyze a teaching situation. By "analyze," we mean engaging in professional vision, which includes describing the situation, explaining it, and predicting potential effects on students' learning. The videos clearly display features of teaching quality (e.g., constructive support; see the attached PDF by Praetorius for dimensions of teaching quality).
 
-1. **Specificity**: I will refer to particular statements and passages in the text, avoiding vague phrases like "well done" or "this could be improved."
+Your task is to write feedback for each written analysis that fully meets the following four quality dimensions:
+1.  **Specificity**: The feedback must refer specifically to individual statements and passages in the text, rather than making general comments. Avoid vague phrases like "well done" or "this could be improved."
+2.  **Constructive suggestions**: The feedback should not only offer critique but also include realistic and actionable suggestions that help the student improve their analytical skills.
+3.  **Explanations / Justifications**: Provide well-founded reasons for your feedback. Where possible, refer to concepts from subject didactics or educational psychology (e.g., wait time, cognitive activation, scaffolding, feedback quality).
+4.  **Clarity**: Use clear, structured language that is easy to understand—even for students in their first or second year of study.
 
-2. **Constructive suggestions**: I will provide realistic, actionable suggestions that help students improve their analytical skills.
-
-3. **Explanations/Justifications**: I will ground my feedback in educational psychology concepts (e.g., wait time, cognitive activation, scaffolding, feedback quality) whenever possible.
-
-4. **Clarity**: I will use clear, structured language appropriate for early-stage education students.
-
-My target audience is student teachers who are learning to develop their professional vision skills. I will adopt the persona of a supportive yet rigorous teaching mentor.
-
-I understand that "analysis" refers to professional vision, which includes:
-- **Description**: Accurately noting what happened in the classroom
-- **Explanation**: Interpreting classroom events using educational theory. The videos clearly display features of teaching quality (e.g., constructive support; see the attached PDF by Praetorius for dimensions of teaching quality).
-- **Prediction**: Forecasting how teacher actions might affect student learning
+The tone should be supportive yet academically appropriate. Do not use emoticons or informal language.
 
 FORMATTING REQUIREMENTS:
-1. I will use "#### Description" as a header for the Description section
-2. I will use "#### Explanation" as a header for the Explanation section  
-3. I will use "#### Prediction" as a header for the Prediction section
-4. I will use "#### Overall Assessment and Next Steps" for the summary section
-5. Within each section, I will clearly mark "**Strengths:**" and "**Suggestions for Improvement:**"
-6. I will format my response with proper spacing between sections
-7. I will use bullet points for listing specific points
-8. I will make sure all feedback is well-structured with clear headings`,
+Structure your feedback into the following thematic sections, using these exact headings: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps".
+For EACH of these sections:
+1.  Provide a concise "**Strength:**" (1-2 sentences about what was done well regarding this aspect of analysis).
+2.  Offer actionable "**Suggestions:**" (1-2 bullet points, each 1-2 sentences, for improvement related to this aspect).
+3.  For each suggestion, explain "**Why?**" (1-2 sentences linking it to educational concepts or impact on developing professional vision).
+4.  Use bullet points for suggestions.
+5.  Ensure the entire feedback is well-structured and exclusively in English.`,
             
-            'user-friendly English': `I will analyze student teacher reflections and provide helpful feedback that is:
+            'user-friendly English': `I'll check student teacher reflections and give feedback that's specific, helpful, explained, and clear. I'll be a supportive mentor.
 
-1. **Specific**: I'll point to exact parts of their text, not just say "good job" or "needs work"
+Good analysis means:
+- **Description**: What happened?
+- **Explanation**: Why did it happen (using teaching ideas)?
+- **Prediction**: What's the learning effect?
 
-2. **Constructive**: I'll suggest practical ways to improve their analysis skills
+HOW TO FORMAT YOUR FEEDBACK:
+For EACH of the sections ("#### Description", "#### Explanation", "#### Prediction", "#### Overall Assessment and Next Steps"):
+1.  **Strength:** State one key positive in a single, very concise sentence.
+2.  **Suggestion:** Provide one main improvement idea as a single, very concise bullet point.
+3.  **Why?:** Explain the benefit of this suggestion in a single, very concise sentence.
+Ensure each section (Description, Explanation, etc.) contains only these three parts. Use the exact headings. The entire feedback for each section must be extremely brief. Respond only in English.`,
 
-3. **Well-explained**: I'll connect my suggestions to learning theories (wait time, scaffolding, etc.)
+            'academic German': `Ich werde Reflexionen von Lehramtsstudierenden zu Unterrichtsvideos analysieren. Meine Aufgabe ist es, qualitativ hochwertiges Feedback zu generieren, das vier Qualitätsdimensionen erfüllt: Spezifität, Konstruktive Vorschläge, Erklärungen/Begründungen und Verständlichkeit. Meine Zielgruppe sind Lehramtsstudierende. Ich werde die Rolle eines unterstützenden, aber anspruchsvollen Mentors einnehmen.
 
-4. **Clear**: I'll use simple language that early education students can easily understand
-
-My audience is student teachers learning to analyze classroom teaching. I'll be a supportive teaching mentor who balances encouragement with helpful critique.
-
-I know that good analysis includes three key parts:
-- **Description**: What exactly happened in the classroom
-- **Explanation**: Why it happened (using educational theories). The videos clearly display features of teaching quality (e.g., constructive support; see the attached PDF by Praetorius for dimensions of teaching quality).
-- **Prediction**: How it might affect student learning
-
-FORMATTING REQUIREMENTS:
-1. I MUST use "#### Description" as a header for the Description section
-2. I MUST use "#### Explanation" as a header for the Explanation section  
-3. I MUST use "#### Prediction" as a header for the Prediction section
-4. I MUST use "#### Overall Assessment and Next Steps" for the summary section
-5. Within each section, I will clearly start with "**Strengths:**" followed by "**Suggestions for Improvement:**"
-6. I will format my response with proper spacing between sections
-7. I will use bullet points for listing specific points
-8. I will make sure all feedback is well-structured with clear headings
-9. I will keep my responses concise and to the point, aiming for no more than 2-3 short paragraphs per main section (Description, Explanation, Prediction) and a brief overall assessment.`,
-
-            'academic German': `Ich werde Reflexionen von Lehramtsstudierenden zu Unterrichtsvideos analysieren. Meine Aufgabe ist es, qualitativ hochwertiges Feedback zu generieren, das vier Qualitätsdimensionen erfüllt:
-
-1. **Spezifität**: Ich werde mich auf konkrete Aussagen und Textpassagen beziehen und vage Formulierungen wie "gut gemacht" oder "könnte besser sein" vermeiden.
-
-2. **Konstruktive Vorschläge**: Ich werde realistische, umsetzbare Verbesserungsvorschläge anbieten, die den Studierenden helfen, ihre Analysefähigkeiten zu verbessern.
-
-3. **Erklärungen/Begründungen**: Ich werde mein Feedback nach Möglichkeit auf pädagogisch-psychologische Konzepte (z.B. Wartezeit, kognitive Aktivierung, Scaffolding, Feedbackqualität) stützen.
-
-4. **Verständlichkeit**: Ich werde eine klare, strukturierte Sprache verwenden, die für Studierende in den ersten Studienjahren angemessen ist.
-
-Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Wahrnehmungsfähigkeit entwickeln. Ich werde die Rolle eines unterstützenden, aber anspruchsvollen Mentors einnehmen.
-
-Ich verstehe, dass "Analyse" sich auf professionelle Unterrichtswahrnehmung bezieht, die folgende Aspekte umfasst:
-- **Beschreibung**: Genaue Beobachtung des Unterrichtsgeschehens
-- **Erklärung**: Interpretation von Unterrichtsereignissen mithilfe pädagogischer Theorien. Die Videos zeigen deutlich Merkmale von Unterrichtsqualität (z.B. konstruktive Unterstützung; siehe beigefügtes PDF von Praetorius zu Dimensionen von Unterrichtsqualität).
-- **Vorhersage**: Prognose, wie sich Lehrerhandlungen auf das Lernen der Schüler:innen auswirken könnten
+"Analyse" bezieht sich auf professionelle Unterrichtswahrnehmung: Beschreibung (was geschah), Erklärung (warum, mit Theoriebezug) und Vorhersage (Auswirkungen auf das Lernen).
 
 FORMATIERUNGSANFORDERUNGEN:
-1. Ich MUSS "#### Beschreibung" als Überschrift für den Beschreibungsabschnitt verwenden
-2. Ich MUSS "#### Erklärung" als Überschrift für den Erklärungsabschnitt verwenden
-3. Ich MUSS "#### Vorhersage" als Überschrift für den Vorhersageabschnitt verwenden
-4. Ich MUSS "#### Gesamtbewertung und nächste Schritte" für den Zusammenfassungsabschnitt verwenden
-5. In jedem Abschnitt werde ich deutlich "**Stärken:**" und "**Verbesserungsvorschläge:**" kennzeichnen
-6. Ich werde meine Antwort mit angemessenen Abständen zwischen den Abschnitten formatieren
-7. Ich werde Aufzählungspunkte für die Auflistung konkreter Punkte verwenden
-8. Ich werde sicherstellen, dass das gesamte Feedback gut strukturiert ist und klare Überschriften hat`,
+Für JEDEN der folgenden Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte":
+1.  Formulieren Sie eine prägnante "**Stärke:**" (1-2 Sätze).
+2.  Geben Sie umsetzbare "**Verbesserungsvorschläge:**" (1-2 Stichpunkte, jeweils 1-2 Sätze).
+3.  Erläutern Sie "**Warum?**" für jeden Vorschlag, mit Bezug zu pädagogischen Konzepten oder Auswirkungen (1-2 Sätze pro "Warum?" des Vorschlags).
+4.  Verwenden Sie klare Überschriften für jeden Abschnitt.
+5.  Verwenden Sie Stichpunkte für Vorschläge.
+6.  Stellen Sie sicher, dass das gesamte Feedback gut strukturiert und ausschließlich auf Deutsch ist.`,
 
-            'user-friendly German': `Ich werde Reflexionen von Lehramtsstudierenden analysieren und hilfreiches Feedback geben, das:
+            'user-friendly German': `Ich prüfe Reflexionen von Lehramtsstudierenden und gebe Feedback, das spezifisch, hilfreich, gut begründet und klar ist. Ich bin ein unterstützender Mentor.
 
-1. **Spezifisch** ist: Ich werde auf konkrete Textstellen hinweisen, nicht nur "gut gemacht" oder "braucht Verbesserung" sagen
+Gute Analyse bedeutet:
+- **Beschreibung**: Was ist passiert?
+- **Erklärung**: Warum ist es passiert (mit Blick auf Unterrichtsideen)?
+- **Vorhersage**: Was ist der Lerneffekt?
 
-2. **Konstruktiv** ist: Ich werde praktische Wege zur Verbesserung ihrer Analysefähigkeiten vorschlagen
-
-3. **Gut begründet** ist: Ich werde meine Vorschläge mit Lerntheorien verbinden (Wartezeit, Scaffolding usw.)
-
-4. **Klar** ist: Ich werde einfache Sprache verwenden, die Lehramtsstudierende leicht verstehen können
-
-Meine Zielgruppe sind angehende Lehrkräfte, die lernen, Unterricht zu analysieren. Ich trete als unterstützender Mentor auf, der Ermutigung mit hilfreichem Feedback verbindet.
-
-Ich weiß, dass eine gute Analyse drei Kernbereiche umfasst:
-- **Beschreibung**: Was genau im Unterricht passiert ist
-- **Erklärung**: Warum es passiert ist (unter Verwendung pädagogischer Theorien). Die Videos zeigen deutlich Merkmale von Unterrichtsqualität (z.B. konstruktive Unterstützung; siehe beigefügtes PDF von Praetorius zu Dimensionen von Unterrichtsqualität).
-- **Vorhersage**: Wie es sich auf das Lernen der Schüler:innen auswirken könnte
-
-FORMATIERUNGSANFORDERUNGEN:
-1. Ich MUSS "#### Beschreibung" als Überschrift für den Beschreibungsabschnitt verwenden
-2. Ich MUSS "#### Erklärung" als Überschrift für den Erklärungsabschnitt verwenden
-3. Ich MUSS "#### Vorhersage" als Überschrift für den Vorhersageabschnitt verwenden
-4. Ich MUSS "#### Gesamtbewertung und nächste Schritte" für den Zusammenfassungsabschnitt verwenden
-5. In jedem Abschnitt werde ich mit "**Stärken:**" beginnen, gefolgt von "**Verbesserungsvorschläge:**"
-6. Ich werde meine Antwort mit angemessenen Abständen zwischen den Abschnitten formatieren
-7. Ich werde Aufzählungspunkte für die Auflistung konkreter Punkte verwenden
-8. Ich werde sicherstellen, dass das gesamte Feedback gut strukturiert ist und klare Überschriften hat
-9. Ich werde meine Antworten kurz und prägnant halten und darauf abzielen, nicht mehr als 2-3 kurze Absätze pro Hauptabschnitt (Beschreibung, Erklärung, Vorhersage) und eine kurze Gesamtbewertung zu verfassen.`
+WIE DU DEIN FEEDBACK FORMATIEREN SOLLST:
+Für JEDEN der Abschnitte ("#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Gesamtbewertung und nächste Schritte"):
+1.  **Stärke:** Nenne einen positiven Punkt in einem einzigen, sehr kurzen Satz.
+2.  **Verbesserungsvorschlag:** Gib eine Hauptverbesserungsidee als einzelnen, sehr kurzen Stichpunkt an.
+3.  **Warum?:** Erkläre den Nutzen dieses Vorschlags in einem einzigen, sehr kurzen Satz.
+Stelle sicher, dass jeder Abschnitt (Beschreibung, Erklärung, etc.) nur diese drei Teile enthält. Verwende die exakten Überschriften. Das gesamte Feedback für jeden Abschnitt muss extrem kurz sein. Antworte nur auf Deutsch.`
         };
         
         return prompts[promptType] || prompts['user-friendly English'];
@@ -434,6 +462,8 @@ FORMATIERUNGSANFORDERUNGEN:
     // Clear text area
     function clearText() {
         reflectionText.value = '';
+        // Also clear currentReflectionId if text is cleared, to ensure next generate is a new entry unless a rating/load happens
+        // sessionStoage.removeItem('currentReflectionId'); // Decided against this for now, can be confusing if user accidentally clears.
     }
 
     // Copy feedback to clipboard
@@ -445,192 +475,6 @@ FORMATIERUNGSANFORDERUNGEN:
                 console.error('Could not copy text: ', err);
                 showAlert('Could not copy text. Please try again.', 'danger');
             });
-    }
-
-    // Save feedback to database
-    async function saveFeedback() {
-        const name = nameInput.value.trim();
-        if (!name) {
-            showAlert('Please enter your name before saving.', 'warning');
-            return;
-        }
-
-        const reflection = reflectionText.value.trim();
-        const feedbackText = feedback.innerText || feedback.textContent;
-        
-        if (!reflection || !feedbackText) {
-            showAlert('Missing reflection or feedback. Please generate feedback first.', 'warning');
-            return;
-        }
-
-        console.log('Saving feedback to database...');
-        
-        try {
-            // Store in session directly as strings (not objects)
-            sessionStorage.setItem('reflection', reflection);
-            sessionStorage.setItem('feedback', feedbackText);
-            
-            const { data, error } = await supabase
-                .from('reflections')
-                .insert([
-                    { 
-                        student_name: name, 
-                        reflection_text: reflection, 
-                        feedback_text: feedbackText,
-                        created_at: new Date().toISOString()
-                    }
-                ])
-                .select();
-
-            if (error) throw error;
-            
-            console.log('Save response:', data);
-            
-            // Store the ID for later use with revision - store as string
-            if (data && data.length > 0) {
-                const reflectionId = data[0].id.toString();
-                console.log('Setting currentReflectionId to:', reflectionId);
-                sessionStorage.setItem('currentReflectionId', reflectionId);
-            }
-            
-            showAlert('Feedback saved successfully!', 'success');
-            
-        } catch (error) {
-            console.error('Error saving feedback:', error);
-            showAlert('Error saving feedback. Please try again.', 'danger');
-        }
-    }
-
-    // Show revision panel
-    function showRevisionPanel() {
-        // Make sure we have saved feedback first
-        const reflectionId = sessionStorage.getItem('currentReflectionId');
-        if (!reflectionId) {
-            showAlert('Please save your feedback first before editing.', 'warning');
-            saveBtn.classList.add('btn-pulse');
-            setTimeout(() => saveBtn.classList.remove('btn-pulse'), 2000);
-            return;
-        }
-        
-        // Display the revision panel with animation
-        revisionSection.classList.add('workflow-step');
-        revisionSection.style.display = 'block';
-        
-        // Set the original text from the reflection textarea or session storage
-        const originalText = sessionStorage.getItem('reflection') || reflectionText.value.trim();
-        revisedText.value = originalText;
-        
-        // Set focus to the revision textarea
-        revisedText.focus();
-        
-        // Show a helpful message about the edit workflow
-        showAlert('Edit your reflection based on the feedback. When you click "Save Revision", your revised text will replace your original reflection.', 'info');
-        
-        // Smooth scroll to revision section
-        revisionSection.scrollIntoView({ behavior: 'smooth' });
-        
-        console.log('Showing revision panel, original text length:', originalText.length);
-    }
-
-    // Save revised reflection to database
-    async function saveRevision() {
-        const name = nameInput.value.trim();
-        if (!name) {
-            showAlert('Please enter your name before saving.', 'warning');
-            return;
-        }
-
-        const revised = revisedText.value.trim();
-        if (!revised) {
-            showAlert('Please enter your revised reflection.', 'warning');
-            return;
-        }
-        
-        // Ensure we have a valid Supabase client
-        if (!supabase) {
-            console.error('Supabase client not initialized');
-            showAlert('Database connection not available. Please refresh the page and try again.', 'danger');
-            return;
-        }
-
-        // Check if text is too large
-        if (revised.length > 10000) {
-            showAlert('Your revision is too long. Please keep it under 10,000 characters.', 'warning');
-            return;
-        }
-
-        console.log('Attempting to save revision...');
-        console.log('Name:', name);
-        console.log('Revision length:', revised.length);
-        
-        // Get the stored reflection ID (as string)
-        const reflectionId = sessionStorage.getItem('currentReflectionId');
-        console.log('Reflection ID from session:', reflectionId);
-        
-        if (!reflectionId) {
-            showAlert('Session data lost. Please save your feedback again.', 'warning');
-            return;
-        }
-        
-        // Show loading indicator
-        toggleLoading(true);
-        
-        try {
-            // Prepare the data - ensure proper escaping for special characters
-            const dataToSave = { 
-                student_name: name,
-                revised_text: revised,
-                updated_at: new Date().toISOString()
-            };
-            
-            console.log('Data to save:', dataToSave);
-            
-            // Convert ID to number for database query
-            const idNumber = parseInt(reflectionId, 10);
-            
-            if (isNaN(idNumber)) {
-                throw new Error('Invalid reflection ID format');
-            }
-            
-            console.log('Updating existing record with ID:', idNumber);
-            
-            // Use a simpler approach to avoid JSON parsing issues
-            const result = await supabase
-                .from('reflections')
-                .update(dataToSave)
-                .eq('id', idNumber);
-
-            if (result.error) {
-                throw result.error;
-            }
-            
-            // Save successfully revised text to session storage as a string
-            sessionStorage.setItem('revisedReflection', revised);
-            
-            // Update the original reflection textarea with the revised text
-            reflectionText.value = revised;
-            
-            // Hide the revision section
-            revisionSection.style.display = 'none';
-            
-            // Scroll back to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Show success message
-            showAlert('Revision saved successfully! The revised text has been copied to the main input.', 'success');
-            
-            // Highlight the generate button to suggest next action
-            setTimeout(() => {
-                generateBtn.classList.add('btn-pulse');
-                setTimeout(() => generateBtn.classList.remove('btn-pulse'), 3000);
-            }, 1000);
-            
-        } catch (error) {
-            console.error('Error saving revision:', error);
-            showAlert(`Error saving revision: ${error.message}. Please check console for details.`, 'danger');
-        } finally {
-            toggleLoading(false);
-        }
     }
 
     // Submit rating for feedback
@@ -647,9 +491,12 @@ FORMATIERUNGSANFORDERUNGEN:
         console.log('Rating for reflection ID:', reflectionId);
         
         if (!reflectionId) {
-            showAlert('Please save your feedback first before rating.', 'warning');
-            saveBtn.classList.add('btn-pulse');
-            setTimeout(() => saveBtn.classList.remove('btn-pulse'), 2000);
+            // Save button is removed, adjust alert
+            showAlert('Please generate feedback first. Your work is saved upon generation.', 'warning');
+             if (!generateBtn.disabled) {
+                generateBtn.classList.add('btn-pulse');
+                setTimeout(() => generateBtn.classList.remove('btn-pulse'), 2000);
+            }
             return;
         }
         
@@ -675,59 +522,6 @@ FORMATIERUNGSANFORDERUNGEN:
             console.error('Error submitting rating:', error);
             showAlert('Error submitting rating. Please try again.', 'danger');
         }
-    }
-
-    // Compare original and revised reflections
-    function compareReflections() {
-        const original = sessionStorage.getItem('reflection') || reflectionText.value.trim();
-        const revised = revisedText.value.trim();
-        
-        if (!original || !revised) {
-            showAlert('Both original and revised reflections are needed for comparison.', 'warning');
-            return;
-        }
-        
-        // Create a modal for comparison
-        const modalHtml = `
-        <div class="modal fade" id="compareModal" tabindex="-1" aria-labelledby="compareModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="compareModalLabel">Compare Reflections</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6 class="text-center">Original Reflection</h6>
-                                <div class="p-3 border rounded" style="white-space: pre-wrap; background-color: #f8f9fa;">${original}</div>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-center">Revised Reflection</h6>
-                                <div class="p-3 border rounded" style="white-space: pre-wrap; background-color: #f8f9fa;">${revised}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
-        
-        // Add the modal to the DOM
-        if (document.getElementById('compareModal')) {
-            document.getElementById('compareModal').remove();
-        }
-        
-        const modalContainer = document.createElement('div');
-        modalContainer.innerHTML = modalHtml;
-        document.body.appendChild(modalContainer);
-        
-        // Show the modal
-        const compareModal = new bootstrap.Modal(document.getElementById('compareModal'));
-        compareModal.show();
     }
 
     // Initialize Supabase client
