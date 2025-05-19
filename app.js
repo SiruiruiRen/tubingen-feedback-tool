@@ -187,7 +187,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         language: language,
                         style: style,
                         session_id: currentSessionId,
-                        updated_at: new Date().toISOString()
+                        updated_at: new Date().toISOString(),
+                        feedback_rating: null,
+                        usefulness_rating: null,
+                        rated_at: null
                     })
                     .eq('id', parseInt(reflectionId, 10))
                     .select();
@@ -236,6 +239,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             showAlert(alertMessage, 'success');
             reviseReflectionBtn.style.display = 'inline-block';
+            
+            // Reset UI for ratings after any feedback generation (new or update)
+            currentQualityRating = null;
+            currentUsefulnessRating = null;
+            createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
+            createRatingButtons(usefulnessRatingButtonsContainer, 5, 'usefulness');
+            qualityRatingHoverLabel.textContent = '';
+            usefulnessRatingHoverLabel.textContent = '';
             
         } catch (error) {
             console.error('Error in generateFeedback process:', error);
