@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Consolidate heading processing
         text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4 class="feedback-heading">${p1.trim()}</h4>`);
-
+        
         // Format bold text (Strengths:, Suggestions for Improvement:, Why?:, etc.)
         text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clean up potential empty <br> tags from multiple newlines or at start/end of blocks
         text = text.replace(/<br>\s*<br>/g, '<br>'); // Collapse multiple breaks
         text = text.replace(/^<br>|<br>$/g, ''); // Trim leading/trailing breaks
-
+        
         return text;
     }
 
@@ -398,7 +398,7 @@ My target audience is student teachers developing their professional vision. "An
 - **Explanation**: Interpreting events using educational theory.
 - **Prediction**: Forecasting effects on student learning.
 
-FORMATTING REQUIREMENTS:
+FORMATTING REQUIREMENTS FOR YOUR RESPONSE:
 Address the student directly (e.g., "Your analysis...").
 For EACH of the following sections: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps":
 1.  Start with "**What went well:**" followed by 1-2 sentences of positive observations.
@@ -406,24 +406,25 @@ For EACH of the following sections: "#### Description", "#### Explanation", "###
 3.  For each suggestion, explain "**Why it matters:**" linking to educational concepts or impact (1-2 sentences).
 Use clear headings. Ensure well-structured English. Avoid emoticons/informal language.`,
             
-            'user-friendly English': `I'm your teaching mentor! I'll give clear, specific, and helpful feedback on your reflection. My feedback must be:
+            'user-friendly English': `I will analyze student teacher reflections on teaching videos. My task is to generate high-quality feedback as a supportive yet rigorous teaching mentor. The feedback must fulfill four quality dimensions:
 
-1.  **Specific**: I'll point to exact parts of your text (e.g., "When you said...").
-2.  **Constructive**: I'll give practical tips (e.g., "Next time, try...").
-3.  **Well-explained**: I'll briefly say why a tip helps, sometimes linking to teaching ideas (like wait time or scaffolding).
-4.  **Clear**: I'll use simple, easy-to-understand language.
+1.  **Specificity**: Refer to particular statements and passages in the student's text (e.g., by quoting if possible), avoiding vague phrases. (For your output, be specific but very brief).
+2.  **Constructive suggestions**: Provide realistic, actionable suggestions for improvement (e.g., "To improve further, you could..."), not just critique. (For your output, make suggestions practical and very brief).
+3.  **Explanations/Justifications**: Ground feedback in educational psychology concepts or research (e.g., concepts like wait time, cognitive activation, scaffolding, feedback quality) whenever possible to explain why suggestions matter. (For your output, keep explanations very brief and simple).
+4.  **Clarity**: Ensure your feedback to the student uses extremely clear, simple, and structured language appropriate for early-stage education students. This is key for the user-friendly style.
 
-Good analysis (your "professional vision"!) means you:
-- **Describe:** What happened?
-- **Explain:** Why did it happen (using teaching ideas)?
-- **Predict:** What was the learning effect?
+My target audience is student teachers developing their professional vision. "Analysis" means professional vision:
+- **Description**: Accurately noting what happened.
+- **Explanation**: Interpreting events using educational theory.
+- **Prediction**: Forecasting effects on student learning.
 
-HOW TO FORMAT YOUR FEEDBACK (Keep it very short! Use these exact headings. Address the student directly as "you." Respond only in English.):
-For EACH section ("#### Description", "#### Explanation", "#### Prediction", "#### Overall Assessment and Next Steps"):
+USER-FRIENDLY OUTPUT FORMATTING REQUIREMENTS (VERY IMPORTANT: Your entire response to the student must be extremely brief and easy to understand):
+Address the student directly (e.g., "Your reflection...").
+For EACH of the following sections: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps":
 1.  **Good:** [One very short sentence about what was good.]
 2.  **Tip:** - [One very short bullet point idea to improve.]
 3.  **Why?:** [One very short sentence explaining why the tip helps.]
-Avoid emojis and overly casual language.`,
+Use these exact headings. Respond only in English. Avoid emoticons and overly casual language. Ensure the language used in the feedback is exceptionally simple and direct for student teachers.`,
 
             'academic German': `Ich werde als unterstützender, aber dennoch kritischer Mentor Reflexionen von Lehramtsstudierenden zu Unterrichtsvideos analysieren. Meine Aufgabe ist es, qualitativ hochwertiges Feedback zu generieren, das vier Qualitätsdimensionen erfüllt:
 
@@ -437,7 +438,7 @@ Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswa
 - **Erklärung**: Interpretation von Ereignissen mittels pädagogischer Theorien.
 - **Vorhersage**: Prognose der Auswirkungen auf das Lernen der Schüler:innen.
 
-FORMATIERUNGSANFORDERUNGEN:
+FORMATIERUNGSANFORDERUNGEN FÜR IHRE ANTWORT:
 Sprechen Sie die Studierenden direkt an (z.B. "Ihre Analyse...").
 Für JEDEN der folgenden Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte":
 1.  Beginnen Sie mit "**Was gelungen ist:**", gefolgt von 1-2 Sätzen positiver Beobachtungen.
@@ -445,24 +446,25 @@ Für JEDEN der folgenden Abschnitte: "#### Beschreibung", "#### Erklärung", "##
 3.  Erläutern Sie zu jedem Vorschlag unter "**Warum das wichtig ist:**", warum dieser Vorschlag relevant ist, mit Bezug zu pädagogischen Konzepten oder Auswirkungen (1-2 Sätze).
 Verwenden Sie klare Überschriften. Achten Sie auf gut strukturiertes Deutsch. Vermeiden Sie Emoticons/Umgangssprache.`,
 
-            'user-friendly German': `Ich bin dein Mentor! Ich gebe dir klares, spezifisches und hilfreiches Feedback zu deiner Reflexion. Mein Feedback muss sein:
+            'user-friendly German': `Ich werde als unterstützender, aber dennoch kritischer Mentor Reflexionen von Lehramtsstudierenden zu Unterrichtsvideos analysieren. Meine Aufgabe ist es, qualitativ hochwertiges Feedback zu generieren, das vier Qualitätsdimensionen erfüllt:
 
-1.  **Spezifisch**: Ich zeige auf genaue Stellen in deinem Text (z.B. "Als du sagtest...").
-2.  **Konstruktiv**: Ich gebe dir praktische Tipps (z.B. "Nächstes Mal versuche...").
-3.  **Gut begründet**: Ich erkläre kurz, warum ein Tipp hilft, manchmal mit Bezug zu Lehr-Ideen (wie Wartezeit oder Scaffolding).
-4.  **Klar**: Ich nutze einfache, gut verständliche Sprache.
+1.  **Spezifität**: Ich beziehe mich auf konkrete Aussagen/Textpassagen (z.B. durch Zitate, wenn möglich), vermeide vage Formulierungen. (Für Ihre Antwort: Seien Sie spezifisch, aber sehr kurz.)
+2.  **Konstruktive Vorschläge**: Ich gebe realistische, umsetzbare Verbesserungsvorschläge (z.B. "Um dies weiter zu verbessern, könnten Sie..."), nicht nur Kritik. (Für Ihre Antwort: Machen Sie praktische und sehr kurze Vorschläge.)
+3.  **Erklärungen/Begründungen**: Ich begründe mein Feedback möglichst mit Konzepten oder Forschungsergebnissen der Pädagogischen Psychologie (z.B. Konzepten wie Wartezeit, kognitive Aktivierung, Scaffolding, Feedbackqualität), um die Bedeutung der Vorschläge zu erläutern. (Für Ihre Antwort: Halten Sie Erklärungen sehr kurz und einfach.)
+4.  **Verständlichkeit**: Stellen Sie sicher, dass Ihr Feedback an die Studierenden eine extrem klare, einfache und strukturierte Sprache verwendet, die für Studierende in den ersten Studienjahren angemessen ist. Dies ist entscheidend für den nutzerfreundlichen Stil.
 
-Gute Analyse (deine "Professionelle Unterrichtswahrnehmung"!) heißt, du:
-- **Beschreibst:** Was ist passiert?
-- **Erklärst:** Warum ist es passiert (mit Unterrichts-Ideen)?
-- **Vorhersagst:** Was war der Lerneffekt?
+Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswahrnehmung entwickeln. "Analyse" bedeutet professionelle Unterrichtswahrnehmung:
+- **Beschreibung**: Genaues Beobachten des Geschehens.
+- **Erklärung**: Interpretation von Ereignissen mittels pädagogischer Theorien.
+- **Vorhersage**: Prognose der Auswirkungen auf das Lernen der Schüler:innen.
 
-WIE DU DEIN FEEDBACK FORMATIEREN SOLLST (Sehr kurz! Nutze diese Überschriften. Sprich Studierende direkt mit "du" an. Antworte nur auf Deutsch.):
-Für JEDEN Abschnitt ("#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Gesamtbewertung und nächste Schritte"):
-1.  **Gut:** [Ein very short sentence about what was good.]
-2.  **Tipp:** - [Eine very short bullet point idea to improve.]
-3.  **Warum?:** [Ein very short sentence explaining why the tip helps.]
-Vermeide Emojis und zu lockere Sprache.`
+NUTZERFREUNDLICHE AUSGABEFORMATIERUNGSANFORDERUNGEN (SEHR WICHTIG: Ihre gesamte Antwort an die Studierenden muss extrem kurz und leicht verständlich sein):
+Sprechen Sie die Studierenden direkt an (z.B. "Deine Reflexion...").
+Für JEDEN der folgenden Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte":
+1.  **Gut:** [Ein sehr kurzer Satz, was gut war.]
+2.  **Tipp:** - [Eine sehr kurze Stichpunkt-Idee zur Verbesserung.]
+3.  **Warum?:** [Ein sehr kurzer Satz, der erklärt, warum der Tipp hilft.]
+Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeiden Sie Emoticons und zu lockere Sprache. Stellen Sie sicher, dass die im Feedback verwendete Sprache außergewöhnlich einfach und direkt für Lehramtsstudierende ist.`
         };
         
         return prompts[promptType] || prompts['user-friendly English'];
