@@ -56,7 +56,7 @@ My target audience is student teachers developing their professional vision. "An
 
 USER-FRIENDLY OUTPUT FORMATTING REQUIREMENTS (VERY IMPORTANT: Your entire response to the student must be extremely brief and easy to understand):
 Address the student directly (e.g., "Your reflection...").
-For EACH of the following sections: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps":
+For EACH section ("#### Description", "#### Explanation", "#### Prediction", "#### Overall Assessment and Next Steps"):
 1.  **Good:** [One very short sentence about what was good.]
 2.  **Tip:** - [One very short bullet point idea to improve.]
 3.  **Why?:** [One very short sentence explaining why the tip helps.]
@@ -153,7 +153,7 @@ Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswa
 
 NUTZERFREUNDLICHE AUSGABEFORMATIERUNGSANFORDERUNGEN (SEHR WICHTIG: Ihre gesamte Antwort an die Studierenden muss extrem kurz und leicht verständlich sein):
 Sprechen Sie die Studierenden direkt an (z.B. "Deine Reflexion...").
-Für JEDEN der folgenden Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte":
+Für JEDEN Abschnitt ("#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Gesamtbewertung und nächste Schritte"):
 1.  **Gut:** [Ein sehr kurzer Satz, was gut war.]
 2.  **Tipp:** - [Eine sehr kurze Stichpunkt-Idee zur Verbesserung.]
 3.  **Warum?:** [Ein sehr kurzer Satz, der erklärt, warum der Tipp hilft.]
