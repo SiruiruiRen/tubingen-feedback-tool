@@ -29,11 +29,14 @@ My target audience is student teachers developing their professional vision. "An
 
 FORMATTING REQUIREMENTS FOR YOUR RESPONSE:
 Address the student directly (e.g., "Your analysis...").
-For EACH of the following sections: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps":
-1.  Start with "**What went well:**" followed by 1-2 sentences of positive observations.
-2.  Then, provide "**Constructive suggestion:**" with 1-2 actionable bullet points (1-2 sentences each).
-3.  For each suggestion, explain "**Why it matters:**" linking to educational concepts or impact (1-2 sentences).
-Use clear headings. Ensure well-structured English. Avoid emoticons/informal language.
+The following four main sections MUST be included: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps".
+
+For EACH of these four main sections, you MUST structure your response using these exact labels:
+1.  **Strength:** [Followed by 1-2 sentences of positive observations relevant to that main section.]
+2.  **Suggestions:** - [Followed by 1-2 actionable bullet points (each 1-2 sentences) relevant to that main section.]
+3.  **Why?:** [Followed by an explanation (1-2 sentences, or more if explaining multiple suggestions) linking the suggestion(s) to educational concepts or impact.]
+
+Use clear headings for the main sections. Ensure well-structured English. Avoid emoticons/informal language.
 ```
 
 ## User-Friendly Version (English) <!-- Corresponds to 'user-friendly English' in app.js -->
@@ -123,11 +126,14 @@ Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswa
 
 FORMATIERUNGSANFORDERUNGEN FÜR IHRE ANTWORT:
 Sprechen Sie die Studierenden direkt an (z.B. "Ihre Analyse...").
-Für JEDEN der folgenden Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte":
-1.  Beginnen Sie mit "**Was gelungen ist:**", gefolgt von 1-2 Sätzen positiver Beobachtungen.
-2.  Geben Sie dann unter "**Konstruktiver Vorschlag:**" 1-2 umsetzbare Stichpunkte (jeweils 1-2 Sätze).
-3.  Erläutern Sie zu jedem Vorschlag unter "**Warum das wichtig ist:**", warum dieser Vorschlag relevant ist, mit Bezug zu pädagogischen Konzepten oder Auswirkungen (1-2 Sätze).
-Verwenden Sie klare Überschriften. Achten Sie auf gut strukturiertes Deutsch. Vermeiden Sie Emoticons/Umgangssprache.
+Die folgenden vier Hauptabschnitte MÜSSEN enthalten sein: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte".
+
+Für JEDEN dieser vier Hauptabschnitte MÜSSEN Sie Ihre Antwort unter Verwendung dieser genauen Bezeichnungen wie folgt strukturieren:
+1.  **Stärke:** [Gefolgt von 1-2 Sätzen positiver Beobachtungen, die für diesen Hauptabschnitt relevant sind.]
+2.  **Verbesserungsvorschläge:** - [Gefolgt von 1-2 umsetzbaren Stichpunkten (jeweils 1-2 Sätze), die für diesen Hauptabschnitt relevant sind.]
+3.  **Warum?:** [Gefolgt von einer Erklärung (1-2 Sätze oder mehr, falls mehrere Vorschläge erklärt werden), die den/die Vorschlag/Vorschläge mit pädagogischen Konzepten oder Auswirkungen in Verbindung bringt.]
+
+Verwenden Sie klare Überschriften für die Hauptabschnitte. Achten Sie auf gut strukturiertes Deutsch. Vermeiden Sie Emoticons/Umgangssprache.
 ```
 
 ## German User-Friendly Version <!-- Corresponds to 'user-friendly German' in app.js -->
