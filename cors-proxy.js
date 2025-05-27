@@ -12,9 +12,6 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 // Enable CORS for all routes
 app.use(cors());
 
-// Serve static files
-app.use(express.static(path.join(__dirname, './')));
-
 // Proxy middleware options
 const options = {
   target: 'https://api.openai.com',
@@ -37,18 +34,12 @@ const apiProxy = createProxyMiddleware('/api/openai', options);
 // Use the proxy middleware
 app.use('/api/openai', apiProxy);
 
-// Main route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Handle all other routes (for SPA)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+// Optional: Add a health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
 });
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`CORS proxy server running at http://localhost:${PORT}`);
-  console.log(`Access the application at http://localhost:${PORT}/index.html`);
-}); // Force rebuild Wed May 28 00:57:23 CST 2025
+  console.log(`CORS API proxy server running at http://localhost:${PORT}`);
+});

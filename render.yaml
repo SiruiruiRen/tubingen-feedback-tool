@@ -1,23 +1,28 @@
 services:
-  # Static web app service for the frontend
+  # Static web app service for the frontend - THIS WILL SERVE THE MAIN APP
   - type: web
     name: tubingen-feedback-tool
     runtime: static
+    # Ensure it serves from the root directory where index.html, app.js, styles.css are
     staticPublishPath: ./
     routes:
+      # Rewrite rule for single-page applications (SPA)
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
-      - key: NODE_VERSION
+      - key: NODE_VERSION # May not be strictly necessary for static but good practice
         value: 18.x
 
-  # Web service for the CORS proxy
+  # Web service for the CORS proxy - DEDICATED API PROXY ONLY
   - type: web
     name: tubingen-feedback-cors-proxy
     runtime: node
     buildCommand: npm install
     startCommand: node cors-proxy.js
+    # This service will be accessed via its own URL for API calls, e.g., /api/openai/...
+    # Health check path can be a simple endpoint if Express is used, or removed if not applicable
+    healthCheckPath: / # Or a specific health check endpoint if you add one
     envVars:
       - key: NODE_VERSION
         value: 18.x
