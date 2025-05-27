@@ -259,22 +259,23 @@ textarea {
 
 /* Compact Distribution Display */
 .analysis-distribution-compact {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .distribution-text-compact {
-  font-size: 1rem;
+  font-size: 0.875rem;
   color: var(--dark-gray);
   font-weight: 500;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border-left: 4px solid var(--primary-color);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--primary-color);
   display: inline-block;
 }
 
 .distribution-text-compact i {
   color: var(--primary-color);
+  font-size: 0.875rem;
 }
 
 .distribution-item {
@@ -367,18 +368,7 @@ textarea {
   position: relative;
 }
 
-/* Style different feedback components */
-#feedback-extended strong.feedback-strength, #feedback-short strong.feedback-strength {
-  color: var(--success-color);
-}
-
-#feedback-extended strong.feedback-suggestion, #feedback-short strong.feedback-suggestion {
-  color: var(--warning-color);
-}
-
-#feedback-extended strong.feedback-why, #feedback-short strong.feedback-why {
-  color: var(--info-color);
-}
+/* Style different feedback components - removed, using consistent blue color instead */
 
 /* Apply colors to all strong elements that match keywords */
 #feedback-extended strong, #feedback-short strong {
@@ -388,19 +378,9 @@ textarea {
   margin-bottom: 0.25rem;
 }
 
-/* Specific colors for feedback keywords */
-#feedback-extended strong.feedback-strength,
-#feedback-short strong.feedback-strength {
-  color: #2e7d32;
-}
-
-#feedback-extended strong.feedback-suggestion,
-#feedback-short strong.feedback-suggestion {
-  color: #f57c00;
-}
-
-#feedback-extended strong.feedback-why,
-#feedback-short strong.feedback-why {
+/* Consistent blue color for all feedback keywords */
+#feedback-extended strong.feedback-keyword,
+#feedback-short strong.feedback-keyword {
   color: #1976d2;
 }
 
