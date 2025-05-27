@@ -548,48 +548,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add analysis distribution visualization if available
         if (analysisResult && (analysisResult.description || analysisResult.explanation || analysisResult.prediction)) {
-            // Add text summary
+            // Add text summary only - more concise
             const distributionText = translations[currentLanguage].distribution_summary
                 .replace('{description}', analysisResult.description)
                 .replace('{explanation}', analysisResult.explanation)
                 .replace('{prediction}', analysisResult.prediction);
             
             formattedText += `
-                <div class="analysis-distribution">
-                    <h5>${currentLanguage === 'en' ? 'Content Distribution Analysis' : 'Inhaltsverteilungsanalyse'}</h5>
-                    <p class="distribution-text">${distributionText}</p>
-                    <div class="distribution-item">
-                        <div class="distribution-label">
-                            <span>${currentLanguage === 'en' ? 'Description' : 'Beschreibung'}</span>
-                            <span>${analysisResult.description}%</span>
-                        </div>
-                        <div class="distribution-bar">
-                            <div class="distribution-fill description" style="width: ${analysisResult.description}%">
-                                ${analysisResult.description > 15 ? analysisResult.description + '%' : ''}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="distribution-item">
-                        <div class="distribution-label">
-                            <span>${currentLanguage === 'en' ? 'Explanation' : 'Erklärung'}</span>
-                            <span>${analysisResult.explanation}%</span>
-                        </div>
-                        <div class="distribution-bar">
-                            <div class="distribution-fill explanation" style="width: ${analysisResult.explanation}%">
-                                ${analysisResult.explanation > 15 ? analysisResult.explanation + '%' : ''}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="distribution-item">
-                        <div class="distribution-label">
-                            <span>${currentLanguage === 'en' ? 'Prediction' : 'Vorhersage'}</span>
-                            <span>${analysisResult.prediction}%</span>
-                        </div>
-                        <div class="distribution-bar">
-                            <div class="distribution-fill prediction" style="width: ${analysisResult.prediction}%">
-                                ${analysisResult.prediction > 15 ? analysisResult.prediction + '%' : ''}
-                            </div>
-                        </div>
+                <div class="analysis-distribution-compact">
+                    <div class="distribution-text-compact">
+                        <i class="bi bi-pie-chart-fill me-2"></i>
+                        ${distributionText}
                     </div>
                 </div>
             `;
