@@ -26,14 +26,15 @@ const translations = {
         what_is_def: "What is description, explanation, and prediction?",
         learn_key_concepts: "Learn the Key Concepts for Better Reflection",
         concepts_help: "Understanding these three dimensions will help you write more comprehensive teaching reflections",
+        click_to_expand: "Click to expand and learn more",
         description: "Description",
-        description_def: "Accurately noting what happened in the classroom - observing and reporting specific behaviors, interactions, and events.",
+        description_def: "Accurately observing and reporting what happened in the classroom - specific behaviors, interactions, and events without interpretation.",
         description_example: "\"The teacher asked a question and waited 3 seconds before calling on a student.\"",
         explanation: "Explanation",
-        explanation_def: "Interpreting observed events using educational theory and research - understanding why things happened.",
+        explanation_def: "Interpreting observed events using educational theory, research, and pedagogical knowledge - understanding why things happened.",
         explanation_example: "\"The wait time allowed students to formulate thoughtful responses, increasing participation.\"",
         prediction: "Prediction",
-        prediction_def: "Forecasting potential effects on student learning and future classroom dynamics based on observations.",
+        prediction_def: "Anticipating future outcomes and effects on student learning based on observed teaching practices and their interpretations.",
         prediction_example: "\"This approach will likely encourage shy students to participate more in future discussions.\"",
         example: "Example:",
         reflection_input: "Student Teacher Reflection",
@@ -65,14 +66,15 @@ const translations = {
         what_is_def: "Was ist Beschreibung, Erklärung und Vorhersage?",
         learn_key_concepts: "Lernen Sie die Schlüsselkonzepte für bessere Reflexion",
         concepts_help: "Das Verständnis dieser drei Dimensionen hilft Ihnen, umfassendere Unterrichtsreflexionen zu schreiben",
+        click_to_expand: "Klicken Sie zum Erweitern und mehr erfahren",
         description: "Beschreibung",
-        description_def: "Genaues Beobachten des Geschehens im Klassenzimmer - Beobachten und Berichten spezifischer Verhaltensweisen, Interaktionen und Ereignisse.",
+        description_def: "Genaues Beobachten und Berichten des Geschehens im Klassenzimmer - spezifische Verhaltensweisen, Interaktionen und Ereignisse ohne Interpretation.",
         description_example: "\"Die Lehrkraft stellte eine Frage und wartete 3 Sekunden, bevor sie einen Schüler aufrief.\"",
         explanation: "Erklärung",
-        explanation_def: "Interpretation von beobachteten Ereignissen mittels pädagogischer Theorie und Forschung - Verstehen, warum Dinge passiert sind.",
+        explanation_def: "Interpretation von beobachteten Ereignissen mittels pädagogischer Theorie, Forschung und pädagogischem Wissen - Verstehen, warum Dinge passiert sind.",
         explanation_example: "\"Die Wartezeit ermöglichte es den Schülern, durchdachte Antworten zu formulieren und erhöhte die Beteiligung.\"",
         prediction: "Vorhersage",
-        prediction_def: "Prognose potenzieller Auswirkungen auf das Lernen der Schüler und zukünftige Klassendynamiken basierend auf Beobachtungen.",
+        prediction_def: "Antizipation zukünftiger Ergebnisse und Auswirkungen auf das Lernen der Schüler basierend auf beobachteten Unterrichtspraktiken und deren Interpretationen.",
         prediction_example: "\"Dieser Ansatz wird wahrscheinlich schüchterne Schüler ermutigen, sich in zukünftigen Diskussionen mehr zu beteiligen.\"",
         example: "Beispiel:",
         reflection_input: "Reflexion des Lehramtsstudierenden",
@@ -131,6 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     let currentReflectionId = null;
     let currentAnalysisResult = null; // Store analysis result for display
+    let definitionsExpanded = false; // Track if definitions were expanded
 
     // Event listeners
     generateBtn.addEventListener('click', generateFeedback);
@@ -142,6 +145,18 @@ document.addEventListener('DOMContentLoaded', function() {
     langDe.addEventListener('change', () => updateLanguage('de'));
     extendedTab.addEventListener('click', () => switchToTab('extended'));
     shortTab.addEventListener('click', () => switchToTab('short'));
+
+    // Track definitions expansion
+    const definitionsHeader = document.querySelector('.definitions-header');
+    definitionsHeader.addEventListener('click', () => {
+        definitionsExpanded = !definitionsExpanded;
+        console.log('Definitions expanded:', definitionsExpanded);
+        
+        // Update interaction data if we have a current reflection
+        if (currentReflectionId) {
+            updateDefinitionsInteraction();
+        }
+    });
 
     // Initialize Supabase client
     const supabase = initSupabase();
@@ -336,7 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
             extendedTime: Math.round(timeTracking.extended.totalTime / 1000), // Convert to seconds
             shortTime: Math.round(timeTracking.short.totalTime / 1000),
             switchCount: tabSwitchCount,
-            lastViewedVersion: currentFeedbackType
+            lastViewedVersion: currentFeedbackType,
+            definitionsExpanded: definitionsExpanded
         };
     }
 
@@ -348,6 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
             short: { totalTime: 0, lastStarted: null }
         };
         currentReflectionId = null;
+        definitionsExpanded = false;
     }
 
     // Feedback generation
@@ -570,15 +587,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // Consolidate heading processing
         text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4 class="feedback-heading">${p1.trim()}</h4>`);
         
-        // Format bold text
+        // Format bold text with proper color classes
         text = text.replace(/\*\*(.+?)\*\*/g, (match, p1) => {
             const content = p1.trim();
             let className = '';
             
-            // Determine class based on content
-            if (content.match(/^(Strength|Stärke|Good|Gut):?$/i)) {
+            // Determine class based on content - check for exact matches
+            if (content.match(/^(Strength|Stärke):?$/i)) {
                 className = 'feedback-strength';
-            } else if (content.match(/^(Suggestions|Verbesserungsvorschläge|Tip|Tipp):?$/i)) {
+            } else if (content.match(/^(Good|Gut):?$/i)) {
+                className = 'feedback-strength';
+            } else if (content.match(/^(Suggestions?|Verbesserungsvorschläge?):?$/i)) {
+                className = 'feedback-suggestion';
+            } else if (content.match(/^(Tip|Tipp):?$/i)) {
                 className = 'feedback-suggestion';
             } else if (content.match(/^(Why|Warum)\??:?$/i)) {
                 className = 'feedback-why';
@@ -1027,5 +1048,37 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
         }
     }
 
-    
+    // Function to update definitions interaction in database
+    async function updateDefinitionsInteraction() {
+        if (!currentReflectionId || !supabase) return;
+        
+        try {
+            const { data: currentData, error: fetchError } = await supabase
+                .from('reflections')
+                .select('interaction_data')
+                .eq('id', currentReflectionId)
+                .single();
+            
+            if (fetchError) {
+                console.error('Error fetching current interaction data:', fetchError);
+                return;
+            }
+            
+            const interactionData = currentData.interaction_data || {};
+            interactionData.definitionsExpanded = true;
+            interactionData.definitionsExpandedAt = new Date().toISOString();
+            
+            const { error: updateError } = await supabase
+                .from('reflections')
+                .update({ interaction_data: interactionData })
+                .eq('id', currentReflectionId);
+            
+            if (updateError) {
+                console.error('Error updating definitions interaction:', updateError);
+            }
+        } catch (error) {
+            console.error('Error in updateDefinitionsInteraction:', error);
+        }
+    }
+
 }); 
