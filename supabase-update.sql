@@ -34,6 +34,21 @@ ADD COLUMN IF NOT EXISTS ease_rating INTEGER CHECK (ease_rating >= 1 AND ease_ra
 ALTER TABLE reflections 
 ADD COLUMN IF NOT EXISTS umux_score DECIMAL(5,2);
 
+-- Add rated_at column to track when ratings were submitted
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS rated_at TIMESTAMP WITH TIME ZONE;
+
+-- Add language and style columns if they don't exist
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS language VARCHAR(5) DEFAULT 'en';
+
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS style VARCHAR(20) DEFAULT 'academic';
+
+-- Add session_id column for tracking user sessions
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS session_id VARCHAR(50);
+
 -- Add index on video_id for better query performance
 CREATE INDEX IF NOT EXISTS idx_reflections_video_id ON reflections(video_id);
 
@@ -42,6 +57,9 @@ CREATE INDEX IF NOT EXISTS idx_reflections_revision_from ON reflections(revision
 
 -- Add index on UMUX score for analysis
 CREATE INDEX IF NOT EXISTS idx_reflections_umux_score ON reflections(umux_score);
+
+-- Add index on session_id for session tracking
+CREATE INDEX IF NOT EXISTS idx_reflections_session_id ON reflections(session_id);
 
 -- Update existing rows to have default values (optional)
 -- UPDATE reflections 

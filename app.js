@@ -906,14 +906,38 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
                 .eq('id', reflectionId)
                 .select();
 
-            if (error) throw error;
+            if (error) {
+                // Check if it's a missing column error
+                if (error.code === 'PGRST204' || error.message.includes('capabilities_rating') || error.message.includes('column')) {
+                    const errorMsg = currentLanguage === 'en' 
+                        ? 'Database needs to be updated for the rating system. Please check DATABASE_UPDATE_INSTRUCTIONS.md or contact support.'
+                        : 'Die Datenbank muss für das Bewertungssystem aktualisiert werden. Bitte prüfen Sie DATABASE_UPDATE_INSTRUCTIONS.md oder kontaktieren Sie den Support.';
+                    showAlert(errorMsg, 'danger');
+                    console.error('Database schema error - missing rating columns:', error);
+                    return;
+                }
+                throw error;
+            }
             
             console.log('Rating update response:', data);
             showAlert(currentLanguage === 'en' ? 'Thank you for your feedback!' : 'Vielen Dank für Ihr Feedback!', 'success');
             
         } catch (error) {
             console.error('Error submitting rating:', error);
-            showAlert(currentLanguage === 'en' ? 'Error submitting rating. Please try again.' : 'Fehler beim Senden der Bewertung. Bitte versuchen Sie es erneut.', 'danger');
+            
+            // Provide more specific error messages
+            let errorMessage;
+            if (error.message.includes('column') || error.code === 'PGRST204') {
+                errorMessage = currentLanguage === 'en' 
+                    ? 'Database schema error. Please update the database using the instructions in DATABASE_UPDATE_INSTRUCTIONS.md'
+                    : 'Datenbankschema-Fehler. Bitte aktualisieren Sie die Datenbank mit den Anweisungen in DATABASE_UPDATE_INSTRUCTIONS.md';
+            } else {
+                errorMessage = currentLanguage === 'en' 
+                    ? 'Error submitting rating. Please try again.' 
+                    : 'Fehler beim Senden der Bewertung. Bitte versuchen Sie es erneut.';
+            }
+            
+            showAlert(errorMessage, 'danger');
         }
     }
 
