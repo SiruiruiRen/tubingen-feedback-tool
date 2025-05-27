@@ -876,4 +876,297 @@ textarea {
     flex: 0 0 auto;
     width: 50%;
   }
+}
+
+/* Beautiful Definitions Section - Horizontal Layout */
+.definitions-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.definitions-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  transform: rotate(-30deg);
+  pointer-events: none;
+}
+
+.definitions-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.definitions-header h5 {
+  color: var(--primary-dark);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.definitions-header p {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.definitions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.definition-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: default;
+}
+
+.definition-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+}
+
+.description-card::before {
+  background: linear-gradient(90deg, var(--description-color) 0%, #00bcd4 100%);
+}
+
+.explanation-card::before {
+  background: linear-gradient(90deg, var(--explanation-color) 0%, #8e24aa 100%);
+}
+
+.prediction-card::before {
+  background: linear-gradient(90deg, var(--prediction-color) 0%, #43a047 100%);
+}
+
+.definition-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.description-card:hover {
+  border-color: var(--description-color);
+  background: linear-gradient(135deg, rgba(0, 172, 193, 0.05) 0%, rgba(0, 188, 212, 0.05) 100%);
+}
+
+.explanation-card:hover {
+  border-color: var(--explanation-color);
+  background: linear-gradient(135deg, rgba(123, 31, 162, 0.05) 0%, rgba(142, 36, 170, 0.05) 100%);
+}
+
+.prediction-card:hover {
+  border-color: var(--prediction-color);
+  background: linear-gradient(135deg, rgba(56, 142, 60, 0.05) 0%, rgba(67, 160, 71, 0.05) 100%);
+}
+
+.definition-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.definition-card h6 {
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.description-card h6 {
+  color: var(--description-color);
+}
+
+.explanation-card h6 {
+  color: var(--explanation-color);
+}
+
+.prediction-card h6 {
+  color: var(--prediction-color);
+}
+
+.definition-card p {
+  color: var(--dark-gray);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.definition-example {
+  background: rgba(0,0,0,0.03);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-top: auto;
+  border-left: 3px solid;
+}
+
+.description-card .definition-example {
+  border-left-color: var(--description-color);
+}
+
+.explanation-card .definition-example {
+  border-left-color: var(--explanation-color);
+}
+
+.prediction-card .definition-example {
+  border-left-color: var(--prediction-color);
+}
+
+.definition-example small {
+  display: block;
+  line-height: 1.4;
+}
+
+.definition-example small:first-child {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+/* Remove old accordion styles */
+#definitionsCollapse .card-body {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 0 0 8px 8px;
+  padding: 1rem;
+}
+
+.definition-item {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.definition-item:last-child {
+  margin-bottom: 0;
+}
+
+.definition-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+}
+
+.definition-item:nth-child(1)::before {
+  background: var(--description-color);
+}
+
+.definition-item:nth-child(2)::before {
+  background: var(--explanation-color);
+}
+
+.definition-item:nth-child(3)::before {
+  background: var(--prediction-color);
+}
+
+.definition-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.definition-item strong {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.definition-item:nth-child(1) strong {
+  color: var(--description-color);
+}
+
+.definition-item:nth-child(2) strong {
+  color: var(--explanation-color);
+}
+
+.definition-item:nth-child(3) strong {
+  color: var(--prediction-color);
+}
+
+.definition-item strong::before {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.definition-item:nth-child(1) strong::before {
+  content: "📝";
+}
+
+.definition-item:nth-child(2) strong::before {
+  content: "🔍";
+}
+
+.definition-item:nth-child(3) strong::before {
+  content: "🔮";
+}
+
+.definition-item span {
+  color: var(--dark-gray);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Accordion chevron animation */
+.btn[data-bs-toggle="collapse"] {
+  background: none;
+  border: none;
+  color: var(--primary-dark);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn[data-bs-toggle="collapse"]:hover {
+  color: var(--primary-color);
+}
+
+.btn[data-bs-toggle="collapse"] .bi-chevron-down {
+  transition: transform 0.3s ease;
+}
+
+.btn[data-bs-toggle="collapse"]:not(.collapsed) .bi-chevron-down {
+  transform: rotate(180deg);
+}
+
+/* Responsive adjustments for definitions */
+@media (max-width: 768px) {
+  .definitions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .definitions-section {
+    padding: 1.5rem;
+  }
+  
+  .definition-card {
+    padding: 1.25rem;
+  }
 } 
