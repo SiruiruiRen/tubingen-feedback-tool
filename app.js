@@ -51,7 +51,8 @@ const translations = {
         easy_to_use: "This system is easy to use:",
         submit_rating: "Submit Rating",
         umux_labels: ['', 'Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
-        distribution_summary: "Your reflection contains: {description}% description, {explanation}% explanation, and {prediction}% prediction."
+        distribution_summary: "Your reflection contains: {description}% description, {explanation}% explanation, and {prediction}% prediction.",
+        no_changes_warning: "You clicked 'Revise Reflection' but haven't made any changes to the text. Please edit your reflection before generating new feedback, or the feedback will be identical to what you already received."
     },
     de: {
         title: "Lehrer Professional Vision Feedback",
@@ -91,7 +92,8 @@ const translations = {
         easy_to_use: "Dieses System ist einfach zu bedienen:",
         submit_rating: "Bewertung abgeben",
         umux_labels: ['', 'Stimme überhaupt nicht zu', 'Stimme nicht zu', 'Neutral', 'Stimme zu', 'Stimme voll zu'],
-        distribution_summary: "Ihre Reflexion enthält: {description}% Beschreibung, {explanation}% Erklärung und {prediction}% Vorhersage."
+        distribution_summary: "Ihre Reflexion enthält: {description}% Beschreibung, {explanation}% Erklärung und {prediction}% Vorhersage.",
+        no_changes_warning: "Sie haben 'Reflexion überarbeiten' geklickt, aber keine Änderungen am Text vorgenommen. Bitte bearbeiten Sie Ihre Reflexion, bevor Sie neues Feedback generieren, sonst wird das Feedback identisch zu dem bereits erhaltenen sein."
     }
 };
 
@@ -134,6 +136,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentReflectionId = null;
     let currentAnalysisResult = null; // Store analysis result for display
     let definitionsExpanded = false; // Track if definitions were expanded
+    let revisionInitiated = false; // Track if user clicked revise
+    let originalReflectionForRevision = null; // Store original text when revise is clicked
 
     // Event listeners
     generateBtn.addEventListener('click', generateFeedback);
@@ -365,6 +369,8 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         currentReflectionId = null;
         definitionsExpanded = false;
+        revisionInitiated = false;
+        originalReflectionForRevision = null;
     }
 
     // Feedback generation
@@ -385,6 +391,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!reflectionText.value.trim()) {
             showAlert(currentLanguage === 'en' ? 'Please enter a reflection text first.' : 'Bitte geben Sie zuerst einen Reflexionstext ein.', 'warning');
+            reflectionText.focus();
+            return;
+        }
+
+        // Check if user clicked revise but didn't actually change the reflection
+        if (revisionInitiated && originalReflectionForRevision && reflectionText.value.trim() === originalReflectionForRevision.trim()) {
+            showAlert(translations[currentLanguage].no_changes_warning, 'warning');
             reflectionText.focus();
             return;
         }
@@ -847,6 +860,8 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
         currentCapabilitiesRating = null;
         currentEaseRating = null;
         currentAnalysisResult = null;
+        revisionInitiated = false;
+        originalReflectionForRevision = null;
         createRatingButtons(capabilitiesRatingButtonsContainer, 5, 'capabilities');
         createRatingButtons(easeRatingButtonsContainer, 5, 'ease');
         capabilitiesRatingHoverLabel.textContent = '';
@@ -974,9 +989,19 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
         const previousReflection = sessionStorage.getItem('reflection');
         if (previousReflection) {
             reflectionText.value = previousReflection;
-            showAlert('Your previous reflection has been loaded. Edit it here and click "Generate Feedback" for new feedback. This will be saved as a new entry.', 'info');
+            // Set revision tracking variables
+            revisionInitiated = true;
+            originalReflectionForRevision = previousReflection;
+            
+            const message = currentLanguage === 'en' 
+                ? 'Your previous reflection has been loaded. Edit it here and click "Generate Feedback" for new feedback. This will be saved as a new entry.'
+                : 'Ihre vorherige Reflexion wurde geladen. Bearbeiten Sie sie hier und klicken Sie auf "Feedback generieren" für neues Feedback. Dies wird als neuer Eintrag gespeichert.';
+            showAlert(message, 'info');
         } else {
-            showAlert('No previous reflection found in this session to load.', 'warning');
+            const message = currentLanguage === 'en' 
+                ? 'No previous reflection found in this session to load.'
+                : 'Keine vorherige Reflexion in dieser Sitzung gefunden.';
+            showAlert(message, 'warning');
         }
         reflectionText.scrollIntoView({ behavior: 'smooth' });
         reflectionText.focus();
