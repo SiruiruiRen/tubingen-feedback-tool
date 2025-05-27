@@ -165,7 +165,29 @@ The application uses a simple data schema with a primary "reflections" table:
 - revised_text - Student's revised reflection (optional)
 - feedback_rating - Numerical rating of feedback quality (1-5)
 - usefulness_rating - Numerical rating of feedback usefulness (1-5)
+- interaction_data - JSON object tracking user interaction with feedback tabs:
+  - extendedTime - Time spent viewing extended feedback (seconds)
+  - shortTime - Time spent viewing short feedback (seconds)
+  - switchCount - Number of times user switched between tabs
+  - lastViewedVersion - Which version was being viewed when rating was submitted
+- revision_initiated_from - Which feedback version ('extended' or 'short') was active when revision was initiated
+- pre_revision_interaction - JSON object with interaction data captured when revision was initiated
 - timestamps - For creation, updates, and ratings
+
+## Interaction Tracking
+
+The application tracks how users interact with the dual feedback system:
+
+1. **Time Tracking** - Measures time spent on each feedback version
+2. **Switch Count** - Counts how many times users switch between Extended and Short feedback
+3. **Revision Source** - Records which version was being viewed when "Revise Reflection" was clicked
+4. **Rating Context** - Captures the interaction pattern when feedback is rated
+
+This data helps researchers understand:
+- Which feedback format is more engaging
+- How students compare the two versions
+- Which version is more useful for revision
+- User preferences and behavior patterns
 
 ## License
 

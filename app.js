@@ -112,6 +112,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentUsefulnessRating = null;
     let currentLanguage = 'en';
     let currentFeedbackType = 'extended'; // Track which feedback is currently shown
+    
+    // Tracking variables for user interaction
+    let tabSwitchCount = 0;
+    let timeTracking = {
+        extended: { totalTime: 0, lastStarted: null },
+        short: { totalTime: 0, lastStarted: null }
+    };
+    let currentReflectionId = null;
 
     // Event listeners
     generateBtn.addEventListener('click', generateFeedback);
@@ -121,8 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
     submitRatingBtn.addEventListener('click', submitRating);
     langEn.addEventListener('change', () => updateLanguage('en'));
     langDe.addEventListener('change', () => updateLanguage('de'));
-    extendedTab.addEventListener('click', () => currentFeedbackType = 'extended');
-    shortTab.addEventListener('click', () => currentFeedbackType = 'short');
+    extendedTab.addEventListener('click', () => switchToTab('extended'));
+    shortTab.addEventListener('click', () => switchToTab('short'));
 
     // Initialize Supabase client
     const supabase = initSupabase();
@@ -293,6 +301,55 @@ document.addEventListener('DOMContentLoaded', function() {
     createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
     createRatingButtons(usefulnessRatingButtonsContainer, 5, 'usefulness');
 
+    // Function to switch tabs and track the interaction
+    function switchToTab(tabType) {
+        // Stop tracking time for the previous tab
+        if (currentFeedbackType && timeTracking[currentFeedbackType].lastStarted) {
+            const elapsed = Date.now() - timeTracking[currentFeedbackType].lastStarted;
+            timeTracking[currentFeedbackType].totalTime += elapsed;
+            timeTracking[currentFeedbackType].lastStarted = null;
+        }
+        
+        // Update current tab
+        currentFeedbackType = tabType;
+        
+        // Start tracking time for the new tab
+        timeTracking[tabType].lastStarted = Date.now();
+        
+        // Increment switch count if feedback has been generated
+        if (feedbackTabs.classList.contains('d-none') === false) {
+            tabSwitchCount++;
+            console.log(`Tab switched to ${tabType}. Total switches: ${tabSwitchCount}`);
+        }
+    }
+
+    // Function to get time tracking summary
+    function getTimeTrackingSummary() {
+        // Ensure we capture the time for the currently active tab
+        if (currentFeedbackType && timeTracking[currentFeedbackType].lastStarted) {
+            const elapsed = Date.now() - timeTracking[currentFeedbackType].lastStarted;
+            timeTracking[currentFeedbackType].totalTime += elapsed;
+            timeTracking[currentFeedbackType].lastStarted = Date.now(); // Reset the timer
+        }
+        
+        return {
+            extendedTime: Math.round(timeTracking.extended.totalTime / 1000), // Convert to seconds
+            shortTime: Math.round(timeTracking.short.totalTime / 1000),
+            switchCount: tabSwitchCount,
+            lastViewedVersion: currentFeedbackType
+        };
+    }
+
+    // Reset tracking when new feedback is generated
+    function resetTracking() {
+        tabSwitchCount = 0;
+        timeTracking = {
+            extended: { totalTime: 0, lastStarted: null },
+            short: { totalTime: 0, lastStarted: null }
+        };
+        currentReflectionId = null;
+    }
+
     // Feedback generation
     async function generateFeedback() {
         const studentName = nameInput.value.trim();
@@ -314,6 +371,9 @@ document.addEventListener('DOMContentLoaded', function() {
             reflectionText.focus();
             return;
         }
+
+        // Reset tracking for new feedback generation
+        resetTracking();
 
         // Determine language based on the radio button selection
         const language = langEn.checked ? 'en' : 'de';
@@ -345,6 +405,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show the feedback tabs
             feedbackTabs.classList.remove('d-none');
+            
+            // Start tracking time for the default tab (extended)
+            timeTracking.extended.lastStarted = Date.now();
 
             // Save to database
             console.log('Saving new reflection and feedback to database...');
@@ -372,11 +435,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             console.log('Save response (new record):', data);
-            let newRecordId = null;
             if (data && data.length > 0) {
-                newRecordId = data[0].id.toString();
-                sessionStorage.setItem('lastGeneratedReflectionIdForRating', newRecordId);
-                console.log('New reflection saved. ID for rating purposes:', newRecordId);
+                currentReflectionId = data[0].id.toString();
+                sessionStorage.setItem('lastGeneratedReflectionIdForRating', currentReflectionId);
+                console.log('New reflection saved. ID for rating purposes:', currentReflectionId);
             }
             
             const alertMessage = currentLanguage === 'en' 
@@ -747,7 +809,7 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
 
     // Submit rating for feedback
     async function submitRating() {
-        const reflectionId = sessionStorage.getItem('lastGeneratedReflectionIdForRating'); // Use the correct ID for rating
+        const reflectionId = sessionStorage.getItem('lastGeneratedReflectionIdForRating');
         console.log('Rating for reflection ID:', reflectionId);
         
         if (!reflectionId) {
@@ -767,15 +829,20 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
             return;
         }
         
+        // Get interaction tracking data
+        const trackingData = getTimeTrackingSummary();
+        
         try {
             console.log('Submitting ratings:', { feedbackRatingValue, usefulnessRatingValue });
+            console.log('Interaction tracking:', trackingData);
             
             const { data, error } = await supabase
                 .from('reflections')
                 .update({ 
                     feedback_rating: feedbackRatingValue,
                     usefulness_rating: usefulnessRatingValue,
-                    rated_at: new Date().toISOString()
+                    rated_at: new Date().toISOString(),
+                    interaction_data: trackingData // Store interaction tracking
                 })
                 .eq('id', reflectionId)
                 .select();
@@ -793,6 +860,30 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
 
     // Handle click for the Revise Reflection button
     function handleReviseReflectionClick() {
+        // Capture which version was being viewed when revise was clicked
+        const trackingData = getTimeTrackingSummary();
+        console.log('Revise clicked while viewing:', trackingData.lastViewedVersion);
+        console.log('Full tracking data at revise:', trackingData);
+        
+        // Store tracking data for this revision action
+        if (currentReflectionId) {
+            // Update the database with revision tracking data
+            supabase
+                .from('reflections')
+                .update({ 
+                    revision_initiated_from: trackingData.lastViewedVersion,
+                    pre_revision_interaction: trackingData
+                })
+                .eq('id', currentReflectionId)
+                .then(({ data, error }) => {
+                    if (error) {
+                        console.error('Error updating revision tracking:', error);
+                    } else {
+                        console.log('Revision tracking updated:', data);
+                    }
+                });
+        }
+        
         const previousReflection = sessionStorage.getItem('reflection');
         if (previousReflection) {
             reflectionText.value = previousReflection;

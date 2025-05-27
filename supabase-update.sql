@@ -13,8 +13,22 @@ ADD COLUMN IF NOT EXISTS feedback_text_short TEXT;
 ALTER TABLE reflections 
 ADD COLUMN IF NOT EXISTS analysis_percentages JSONB;
 
+-- Add interaction tracking columns
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS interaction_data JSONB;
+
+-- Add revision tracking columns
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS revision_initiated_from VARCHAR(20);
+
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS pre_revision_interaction JSONB;
+
 -- Add index on video_id for better query performance
 CREATE INDEX IF NOT EXISTS idx_reflections_video_id ON reflections(video_id);
+
+-- Add index on revision_initiated_from for analysis queries
+CREATE INDEX IF NOT EXISTS idx_reflections_revision_from ON reflections(revision_initiated_from);
 
 -- Update existing rows to have default values (optional)
 -- UPDATE reflections 
