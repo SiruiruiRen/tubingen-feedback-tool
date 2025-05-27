@@ -54,7 +54,8 @@ const translations = {
         distribution_summary: "Your reflection contains: {description}% description, {explanation}% explanation, and {prediction}% prediction.",
         no_changes_warning: "You clicked 'Revise Reflection' but haven't made any changes to the text. Please edit your reflection before generating new feedback, or the feedback will be identical to what you already received.",
         extended_tooltip: "Detailed academic feedback with comprehensive analysis",
-        short_tooltip: "Concise, easy-to-read feedback with key points"
+        short_tooltip: "Concise, easy-to-read feedback with key points",
+        workflow_tooltip: "1. Enter name and select video. 2. Write reflection. 3. Generate feedback (Extended/Short). 4. View definitions below. 5. Copy feedback or revise reflection. 6. Rate the system."
     },
     de: {
         title: "Lehrer Professional Vision Feedback",
@@ -97,7 +98,8 @@ const translations = {
         distribution_summary: "Ihre Reflexion enthält: {description}% Beschreibung, {explanation}% Erklärung und {prediction}% Vorhersage.",
         no_changes_warning: "Sie haben 'Reflexion überarbeiten' geklickt, aber keine Änderungen am Text vorgenommen. Bitte bearbeiten Sie Ihre Reflexion, bevor Sie neues Feedback generieren, sonst wird das Feedback identisch zu dem bereits erhaltenen sein.",
         extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse",
-        short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten"
+        short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten",
+        workflow_tooltip: "1. Name eingeben und Video auswählen. 2. Reflexion schreiben. 3. Feedback generieren (Erweitert/Kurz). 4. Definitionen unten ansehen. 5. Feedback kopieren oder Reflexion überarbeiten. 6. System bewerten."
     }
 };
 
@@ -121,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const feedbackTabs = document.querySelector('.feedback-tabs');
     const extendedTab = document.getElementById('extended-tab');
     const shortTab = document.getElementById('short-tab');
+    const workflowInfoIcon = document.getElementById('workflow-info-icon');
     
     // Language and style selections
     const langEn = document.getElementById('lang-en');
@@ -229,6 +232,9 @@ document.addEventListener('DOMContentLoaded', function() {
         copyBtn.setAttribute('title', texts.copy);
         reviseReflectionBtn.setAttribute('title', texts.revise);
         submitRatingBtn.setAttribute('title', texts.submit);
+        
+        // Update workflow info tooltip
+        workflowInfoIcon.setAttribute('title', trans.workflow_tooltip);
         
         // Reinitialize tooltips for regular elements
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
