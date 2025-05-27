@@ -397,8 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Generated short feedback:', shortFeedback);
             
             // Format and display both feedbacks
-            const formattedExtended = formatFeedback(extendedFeedback);
-            const formattedShort = formatFeedback(shortFeedback);
+            const formattedExtended = formatFeedback(extendedFeedback, analysisResult);
+            const formattedShort = formatFeedback(shortFeedback, analysisResult);
             
             feedbackExtended.innerHTML = formattedExtended;
             feedbackShort.innerHTML = formattedShort;
@@ -540,14 +540,75 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Format feedback text with proper HTML
-    function formatFeedback(text) {
+    function formatFeedback(text, analysisResult = null) {
         if (!text) return '';
+        
+        let formattedText = '';
+        
+        // Add analysis distribution visualization if available
+        if (analysisResult && (analysisResult.description || analysisResult.explanation || analysisResult.prediction)) {
+            formattedText += `
+                <div class="analysis-distribution">
+                    <h5>${currentLanguage === 'en' ? 'Content Distribution Analysis' : 'Inhaltsverteilungsanalyse'}</h5>
+                    <div class="distribution-item">
+                        <div class="distribution-label">
+                            <span>${currentLanguage === 'en' ? 'Description' : 'Beschreibung'}</span>
+                            <span>${analysisResult.description}%</span>
+                        </div>
+                        <div class="distribution-bar">
+                            <div class="distribution-fill description" style="width: ${analysisResult.description}%">
+                                ${analysisResult.description > 15 ? analysisResult.description + '%' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="distribution-item">
+                        <div class="distribution-label">
+                            <span>${currentLanguage === 'en' ? 'Explanation' : 'Erklärung'}</span>
+                            <span>${analysisResult.explanation}%</span>
+                        </div>
+                        <div class="distribution-bar">
+                            <div class="distribution-fill explanation" style="width: ${analysisResult.explanation}%">
+                                ${analysisResult.explanation > 15 ? analysisResult.explanation + '%' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="distribution-item">
+                        <div class="distribution-label">
+                            <span>${currentLanguage === 'en' ? 'Prediction' : 'Vorhersage'}</span>
+                            <span>${analysisResult.prediction}%</span>
+                        </div>
+                        <div class="distribution-bar">
+                            <div class="distribution-fill prediction" style="width: ${analysisResult.prediction}%">
+                                ${analysisResult.prediction > 15 ? analysisResult.prediction + '%' : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Process the feedback text
+        text = text.trim();
         
         // Consolidate heading processing
         text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4 class="feedback-heading">${p1.trim()}</h4>`);
         
         // Format bold text
-        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/\*\*(.+?)\*\*/g, (match, p1) => {
+            const content = p1.trim();
+            let className = '';
+            
+            // Determine class based on content
+            if (content.match(/^(Strength|Stärke|Good|Gut):?$/i)) {
+                className = 'feedback-strength';
+            } else if (content.match(/^(Suggestions|Verbesserungsvorschläge|Tip|Tipp):?$/i)) {
+                className = 'feedback-suggestion';
+            } else if (content.match(/^(Why|Warum)\??:?$/i)) {
+                className = 'feedback-why';
+            }
+            
+            return `<strong${className ? ` class="${className}"` : ''}>${content}</strong>`;
+        });
         
         // Format list items
         text = text.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
@@ -572,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function() {
         text = text.replace(/<br>\s*<br>/g, '<br>');
         text = text.replace(/^<br>|<br>$/g, '');
         
-        return text;
+        return formattedText + text;
     }
 
     // Call OpenAI API
