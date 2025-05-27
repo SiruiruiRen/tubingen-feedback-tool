@@ -755,27 +755,45 @@ textarea {
 /* Feedback Tabs */
 .feedback-tabs {
   margin-top: -8px;
+  margin-bottom: 1rem;
 }
 
 .feedback-tabs .nav-pills {
-  --bs-nav-pills-border-radius: 6px;
+  --bs-nav-pills-border-radius: 8px;
   --bs-nav-pills-link-active-bg: var(--primary-color);
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 0.25rem;
+  border: 2px solid #e9ecef;
 }
 
 .feedback-tabs .nav-link {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--dark-gray);
   transition: all 0.3s ease;
+  border-radius: 6px;
+  margin: 0 0.25rem;
+  border: 2px solid transparent;
+  min-width: 100px;
+  text-align: center;
 }
 
 .feedback-tabs .nav-link:hover {
   background-color: rgba(63, 81, 181, 0.1);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(63, 81, 181, 0.2);
 }
 
 .feedback-tabs .nav-link.active {
   background-color: var(--primary-color);
   color: white;
+  border-color: var(--primary-dark);
+  box-shadow: 0 4px 8px rgba(63, 81, 181, 0.3);
+  transform: translateY(-1px);
 }
 
 /* Tab Content */

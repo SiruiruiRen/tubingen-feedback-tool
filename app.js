@@ -785,7 +785,7 @@ USER-FRIENDLY OUTPUT FORMATTING REQUIREMENTS (VERY IMPORTANT: Your entire respon
 Address the student directly (e.g., "Your reflection...").
 For EACH section ("#### Description", "#### Explanation", "#### Prediction", "#### Overall Assessment and Next Steps"):
 1.  **Good:** [One very short sentence about what was good.]
-2.  **Tip:** - [One very short bullet point idea to improve.]
+2.  **Tip:** [One very short idea to improve, without any bullet points or hyphens.]
 3.  **Why?:** [One very short sentence explaining why the tip helps.]
 Use these exact headings. Respond only in English. Avoid emoticons and overly casual language. Ensure the language used in the feedback is exceptionally simple and direct for student teachers.`,
 
@@ -828,7 +828,7 @@ NUTZERFREUNDLICHE AUSGABEFORMATIERUNGSANFORDERUNGEN (SEHR WICHTIG: Ihre gesamte 
 Sprechen Sie die Studierenden direkt an (z.B. "Deine Reflexion...").
 Für JEDEN Abschnitt ("#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Gesamtbewertung und nächste Schritte"):
 1.  **Gut:** [Ein sehr kurzer Satz, was gut war.]
-2.  **Tipp:** - [Eine sehr kurze Stichpunkt-Idee zur Verbesserung.]
+2.  **Tipp:** [Eine sehr kurze Idee zur Verbesserung, ohne Stichpunkte oder Bindestriche.]
 3.  **Warum?:** [Ein sehr kurzer Satz, der erklärt, warum der Tipp hilft.]
 Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeiden Sie Emoticons und zu lockere Sprache. Stellen Sie sicher, dass die im Feedback verwendete Sprache außergewöhnlich einfach und direkt für Lehramtsstudierende ist.`
         };
