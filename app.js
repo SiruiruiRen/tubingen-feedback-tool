@@ -294,6 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+    console.log('Tooltips initialized for', tooltipTriggerList.length, 'elements');
 
     // Function to create rating buttons
     function createRatingButtons(container, count, groupName) {

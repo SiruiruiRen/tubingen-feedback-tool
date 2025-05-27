@@ -384,8 +384,8 @@ textarea {
 /* Black and bold for all feedback keywords */
 #feedback-extended strong.feedback-keyword,
 #feedback-short strong.feedback-keyword {
-  color: #000000;
-  font-weight: 700;
+  color: #000000 !important;
+  font-weight: 700 !important;
 }
 
 #feedback-extended ul, #feedback-short ul {
