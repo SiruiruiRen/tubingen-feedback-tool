@@ -52,7 +52,9 @@ const translations = {
         submit_rating: "Submit Rating",
         umux_labels: ['', 'Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
         distribution_summary: "Your reflection contains: {description}% description, {explanation}% explanation, and {prediction}% prediction.",
-        no_changes_warning: "You clicked 'Revise Reflection' but haven't made any changes to the text. Please edit your reflection before generating new feedback, or the feedback will be identical to what you already received."
+        no_changes_warning: "You clicked 'Revise Reflection' but haven't made any changes to the text. Please edit your reflection before generating new feedback, or the feedback will be identical to what you already received.",
+        extended_tooltip: "Detailed academic feedback with comprehensive analysis",
+        short_tooltip: "Concise, easy-to-read feedback with key points"
     },
     de: {
         title: "Lehrer Professional Vision Feedback",
@@ -93,7 +95,9 @@ const translations = {
         submit_rating: "Bewertung abgeben",
         umux_labels: ['', 'Stimme überhaupt nicht zu', 'Stimme nicht zu', 'Neutral', 'Stimme zu', 'Stimme voll zu'],
         distribution_summary: "Ihre Reflexion enthält: {description}% Beschreibung, {explanation}% Erklärung und {prediction}% Vorhersage.",
-        no_changes_warning: "Sie haben 'Reflexion überarbeiten' geklickt, aber keine Änderungen am Text vorgenommen. Bitte bearbeiten Sie Ihre Reflexion, bevor Sie neues Feedback generieren, sonst wird das Feedback identisch zu dem bereits erhaltenen sein."
+        no_changes_warning: "Sie haben 'Reflexion überarbeiten' geklickt, aber keine Änderungen am Text vorgenommen. Bitte bearbeiten Sie Ihre Reflexion, bevor Sie neues Feedback generieren, sonst wird das Feedback identisch zu dem bereits erhaltenen sein.",
+        extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse",
+        short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten"
     }
 };
 
@@ -218,13 +222,15 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         const texts = tooltipTexts[lang];
+        const trans = translations[lang];
+        
         generateBtn.setAttribute('title', texts.generate);
         clearBtn.setAttribute('title', texts.clear);
         copyBtn.setAttribute('title', texts.copy);
         reviseReflectionBtn.setAttribute('title', texts.revise);
         submitRatingBtn.setAttribute('title', texts.submit);
         
-        // Reinitialize tooltips
+        // Reinitialize tooltips for regular elements
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.forEach(function (tooltipTriggerEl) {
             const existingTooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
@@ -232,6 +238,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 existingTooltip.dispose();
             }
             new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Handle tab tooltips separately (since they use data-bs-toggle="tab")
+        const extendedTooltip = bootstrap.Tooltip.getInstance(extendedTab);
+        if (extendedTooltip) {
+            extendedTooltip.dispose();
+        }
+        new bootstrap.Tooltip(extendedTab, {
+            title: trans.extended_tooltip,
+            placement: 'top'
+        });
+        
+        const shortTooltip = bootstrap.Tooltip.getInstance(shortTab);
+        if (shortTooltip) {
+            shortTooltip.dispose();
+        }
+        new bootstrap.Tooltip(shortTab, {
+            title: trans.short_tooltip,
+            placement: 'top'
         });
     }
 
