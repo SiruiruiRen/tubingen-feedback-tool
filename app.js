@@ -209,14 +209,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTooltips(lang) {
         const tooltipTexts = {
             en: {
-                generate: "Generate AI feedback based on your reflection",
+                generate: "Generate both Extended (detailed academic) and Short (concise) feedback versions based on your reflection. Requires name and video selection.",
                 clear: "Clear the reflection text",
                 copy: "Copy feedback to clipboard",
                 revise: "Edit your reflection in the main text area and generate new feedback",
                 submit: "Submit your rating of the feedback"
             },
             de: {
-                generate: "KI-Feedback basierend auf Ihrer Reflexion generieren",
+                generate: "Generieren Sie sowohl erweiterte (detaillierte akademische) als auch kurze (prägnante) Feedback-Versionen basierend auf Ihrer Reflexion. Erfordert Name und Video-Auswahl.",
                 clear: "Reflexionstext löschen",
                 copy: "Feedback in Zwischenablage kopieren",
                 revise: "Bearbeiten Sie Ihre Reflexion im Haupttextbereich und generieren Sie neues Feedback",
