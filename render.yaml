@@ -3,7 +3,6 @@ services:
   - type: web
     name: tubingen-feedback-tool
     runtime: static
-    buildCommand: npm install
     staticPublishPath: ./
     routes:
       - type: rewrite
