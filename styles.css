@@ -880,13 +880,19 @@ textarea {
 
 /* Beautiful Definitions Section - Horizontal Layout */
 .definitions-section {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: linear-gradient(135deg, #fff8e1 0%, #fff3e0 100%);
   border-radius: 15px;
-  padding: 2rem;
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   margin-bottom: 2rem;
   position: relative;
   overflow: hidden;
+  border: 2px solid #ffd54f;
+  transition: all 0.3s ease;
+}
+
+.definitions-section:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .definitions-section::before {
@@ -896,14 +902,20 @@ textarea {
   right: -50%;
   width: 100%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(circle, rgba(255,193,7,0.1) 0%, rgba(255,255,255,0) 70%);
   transform: rotate(-30deg);
   pointer-events: none;
 }
 
 .definitions-header {
-  text-align: center;
-  margin-bottom: 2rem;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.definitions-header:hover {
+  background: rgba(255,193,7,0.05);
 }
 
 .definitions-header h5 {
@@ -918,11 +930,31 @@ textarea {
   color: #6c757d;
 }
 
+.expand-indicator {
+  font-size: 2rem;
+  color: #ffa000;
+  transition: all 0.3s ease;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.definitions-header[aria-expanded="true"] .expand-indicator i {
+  transform: rotate(180deg);
+}
+
+#definitionsContent {
+  padding: 0 2rem 2rem 2rem;
+}
+
 .definitions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
-  margin-top: 1.5rem;
+  margin-top: 0;
 }
 
 .definition-card {
@@ -1045,115 +1077,18 @@ textarea {
   margin-bottom: 0.25rem;
 }
 
-/* Remove old accordion styles */
-#definitionsCollapse .card-body {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 0 0 8px 8px;
-  padding: 1rem;
+/* Pulse animation for attention */
+.definitions-section {
+  animation: subtle-pulse 4s ease-in-out infinite;
 }
 
-.definition-item {
-  padding: 1rem;
-  margin-bottom: 0.75rem;
-  border-radius: 10px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.definition-item:last-child {
-  margin-bottom: 0;
-}
-
-.definition-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-}
-
-.definition-item:nth-child(1)::before {
-  background: var(--description-color);
-}
-
-.definition-item:nth-child(2)::before {
-  background: var(--explanation-color);
-}
-
-.definition-item:nth-child(3)::before {
-  background: var(--prediction-color);
-}
-
-.definition-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.definition-item strong {
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.definition-item:nth-child(1) strong {
-  color: var(--description-color);
-}
-
-.definition-item:nth-child(2) strong {
-  color: var(--explanation-color);
-}
-
-.definition-item:nth-child(3) strong {
-  color: var(--prediction-color);
-}
-
-.definition-item strong::before {
-  margin-right: 0.5rem;
-  font-size: 1.2rem;
-}
-
-.definition-item:nth-child(1) strong::before {
-  content: "📝";
-}
-
-.definition-item:nth-child(2) strong::before {
-  content: "🔍";
-}
-
-.definition-item:nth-child(3) strong::before {
-  content: "🔮";
-}
-
-.definition-item span {
-  color: var(--dark-gray);
-  line-height: 1.6;
-  font-size: 0.95rem;
-}
-
-/* Accordion chevron animation */
-.btn[data-bs-toggle="collapse"] {
-  background: none;
-  border: none;
-  color: var(--primary-dark);
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn[data-bs-toggle="collapse"]:hover {
-  color: var(--primary-color);
-}
-
-.btn[data-bs-toggle="collapse"] .bi-chevron-down {
-  transition: transform 0.3s ease;
-}
-
-.btn[data-bs-toggle="collapse"]:not(.collapsed) .bi-chevron-down {
-  transform: rotate(180deg);
+@keyframes subtle-pulse {
+  0%, 100% { 
+    border-color: #ffd54f;
+  }
+  50% { 
+    border-color: #ffb300;
+  }
 }
 
 /* Responsive adjustments for definitions */
@@ -1162,8 +1097,12 @@ textarea {
     grid-template-columns: 1fr;
   }
   
-  .definitions-section {
+  .definitions-header {
     padding: 1.5rem;
+  }
+  
+  #definitionsContent {
+    padding: 0 1.5rem 1.5rem 1.5rem;
   }
   
   .definition-card {
