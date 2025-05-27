@@ -591,15 +591,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // Format bold text with proper color classes
         text = text.replace(/\*\*(.+?)\*\*/g, (match, p1) => {
             const content = p1.trim();
-            let className = 'feedback-keyword'; // Use same class for all keywords
             
-            // Check if it's one of our keywords
-            if (content.match(/^(Strength|Stärke|Good|Gut|Suggestions?|Verbesserungsvorschläge?|Tip|Tipp|Why|Warum)\??:?$/i)) {
-                return `<strong class="${className}">${content}</strong>`;
+            // Check if it's one of our keywords - more flexible matching
+            if (content.match(/^(Strength|Stärke|Good|Gut|Suggestions?|Verbesserungsvorschläge?|Tip|Tipp|Why|Warum)\??:?\s*$/i)) {
+                return `<strong class="feedback-keyword">${content}</strong>`;
             }
             
             // For other bold text, just return without special class
             return `<strong>${content}</strong>`;
+        });
+        
+        // Also catch keywords that might not be in ** format
+        text = text.replace(/\b(Good|Gut|Tip|Tipp|Why|Warum|Strength|Stärke|Suggestions?|Verbesserungsvorschläge?)\s*:/gi, (match, keyword) => {
+            return `<strong class="feedback-keyword">${keyword}:</strong>`;
         });
         
         // Format list items

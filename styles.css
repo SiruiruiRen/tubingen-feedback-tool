@@ -259,7 +259,7 @@ textarea {
 
 /* Compact Distribution Display */
 .analysis-distribution-compact {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .distribution-text-compact {
@@ -271,7 +271,8 @@ textarea {
   border-radius: 0;
   border-left: none;
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
+  line-height: 1.2;
 }
 
 .distribution-text-compact i {
@@ -375,7 +376,7 @@ textarea {
   color: var(--primary-dark);
   font-weight: 600;
   display: inline-block;
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.1rem;
 }
 
 /* Black and bold for all feedback keywords */
