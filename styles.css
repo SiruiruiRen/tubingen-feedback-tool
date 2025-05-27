@@ -259,23 +259,23 @@ textarea {
 
 /* Compact Distribution Display */
 .analysis-distribution-compact {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .distribution-text-compact {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   color: var(--dark-gray);
-  font-weight: 500;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  border-left: 3px solid var(--primary-color);
-  display: inline-block;
+  font-weight: 600;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  border-left: none;
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
 .distribution-text-compact i {
-  color: var(--primary-color);
-  font-size: 0.875rem;
+  display: none;
 }
 
 .distribution-item {
@@ -324,9 +324,9 @@ textarea {
 /* Feedback Formatting Styles - More Colorful */
 #feedback-extended h4.feedback-heading, #feedback-short h4.feedback-heading {
   font-size: 1.2rem;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 8px;
   font-weight: 600;
   position: relative;
@@ -363,8 +363,8 @@ textarea {
 }
 
 #feedback-extended .section-content, #feedback-short .section-content {
-  margin-bottom: 1rem;
-  padding-left: 1rem;
+  margin-bottom: 0.75rem;
+  padding-left: 0.75rem;
   position: relative;
 }
 
@@ -375,25 +375,26 @@ textarea {
   color: var(--primary-dark);
   font-weight: 600;
   display: inline-block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 
-/* Consistent blue color for all feedback keywords */
+/* Black and bold for all feedback keywords */
 #feedback-extended strong.feedback-keyword,
 #feedback-short strong.feedback-keyword {
-  color: #1976d2;
+  color: #000000;
+  font-weight: 700;
 }
 
 #feedback-extended ul, #feedback-short ul {
   padding-left: 1.5rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
   list-style-type: none;
 }
 
 #feedback-extended ul li, #feedback-short ul li {
-  margin-bottom: 0.5rem;
-  line-height: 1.5;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
   padding-left: 1.5rem;
   position: relative;
 }
@@ -409,7 +410,7 @@ textarea {
 #feedback-extended br, #feedback-short br {
   display: block;
   content: "";
-  margin-top: 0.15rem;
+  margin-top: 0.1rem;
 }
 
 /* Loading Spinner */

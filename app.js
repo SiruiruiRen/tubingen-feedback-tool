@@ -565,17 +565,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add analysis distribution visualization if available
         if (analysisResult && (analysisResult.description || analysisResult.explanation || analysisResult.prediction)) {
-            // Add text summary only - more concise
+            // Add text summary with section title
             const distributionText = translations[currentLanguage].distribution_summary
                 .replace('{description}', analysisResult.description)
                 .replace('{explanation}', analysisResult.explanation)
                 .replace('{prediction}', analysisResult.prediction);
             
+            const sectionTitle = currentLanguage === 'en' ? 'Analysis Distribution:' : 'Analyse-Verteilung:';
+            
             formattedText += `
                 <div class="analysis-distribution-compact">
                     <div class="distribution-text-compact">
-                        <i class="bi bi-pie-chart-fill me-2"></i>
-                        ${distributionText}
+                        <strong>${sectionTitle}</strong> ${distributionText}
                     </div>
                 </div>
             `;
