@@ -1,6 +1,6 @@
-# Tübingen Teacher Feedback Tool
+# Teacher Professional Vision Feedback
 
-A web-based tool for generating high-quality feedback on student teacher reflections.
+A web-based tool for generating high-quality feedback on student teacher reflections with support for multiple languages and feedback styles.
 
 ## Live Demo
 
@@ -25,10 +25,12 @@ A web-based tool for generating high-quality feedback on student teacher reflect
 
 ## Features
 
-- AI-generated feedback on teaching reflections
-- Support for both English and German languages
-- Academic and user-friendly feedback styles
-- Feedback quality dimensions based on research
+- AI-generated feedback on teaching reflections in both extended and short formats
+- Support for both English and German languages with full UI translation
+- Automatic analysis of reflection content distribution (description, explanation, prediction)
+- Targeted feedback based on areas needing improvement
+- Video selection tracking for different teaching scenarios
+- Interactive definitions for professional vision concepts
 - Save feedback to database and revise reflections
 - Rate feedback quality and usefulness
 
@@ -65,6 +67,21 @@ A web-based tool for generating high-quality feedback on student teacher reflect
 
 5. Open your browser and navigate to `http://localhost:3000`
 
+## Database Updates
+
+If you have an existing database, run the following SQL to add new columns:
+
+```sql
+-- Add video_id column
+ALTER TABLE reflections ADD COLUMN IF NOT EXISTS video_id VARCHAR(10);
+
+-- Add short feedback column
+ALTER TABLE reflections ADD COLUMN IF NOT EXISTS feedback_text_short TEXT;
+
+-- Add analysis percentages column
+ALTER TABLE reflections ADD COLUMN IF NOT EXISTS analysis_percentages JSONB;
+```
+
 ## Deployment Options
 
 ### Option 1: Render
@@ -99,16 +116,16 @@ For the frontend part:
 ## Usage
 
 1. Enter your name in the settings panel
-2. Select your preferred language (English or German)
-3. Choose a feedback style (Academic or User-friendly)
+2. Select the video you watched (Videos 1-8)
+3. Select your preferred language (English or German) - the entire interface will update
 4. Enter or paste the student teacher's reflection in the text area
 5. Click "Generate Feedback"
-6. Review the generated feedback
-7. Optionally:
-   - Copy the feedback to clipboard
-   - Save the feedback to the database
+6. View both extended and short versions of the feedback using the tabs
+7. Review the generated feedback
+8. Optionally:
+   - Copy the current feedback to clipboard
    - Rate the quality and usefulness of the feedback
-   - Edit and revise the reflection based on feedback
+   - Revise your reflection based on the feedback
 
 ## Project Structure
 
@@ -116,6 +133,7 @@ For the frontend part:
 - `app.js`: Application logic and API integration
 - `cors-proxy.js`: Local proxy server for handling API requests
 - `supabase-setup.sql`: Database schema for Supabase
+- `supabase-update.sql`: Database update script for new features
 
 ## Security Note
 
@@ -139,8 +157,11 @@ The feedback adheres to four quality criteria:
 
 The application uses a simple data schema with a primary "reflections" table:
 - student_name - Name of the student
+- video_id - ID of the video watched
 - reflection_text - Original reflection text
-- feedback_text - Generated feedback
+- feedback_text - Generated extended feedback
+- feedback_text_short - Generated short feedback
+- analysis_percentages - JSON object with percentage distribution of content types
 - revised_text - Student's revised reflection (optional)
 - feedback_rating - Numerical rating of feedback quality (1-5)
 - usefulness_rating - Numerical rating of feedback usefulness (1-5)

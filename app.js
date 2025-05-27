@@ -11,8 +11,75 @@ const model = 'gpt-4o';
 const SUPABASE_URL = 'https://immrkllzjvhdnzesmaat.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltbXJrbGx6anZoZG56ZXNtYWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzk2MzgsImV4cCI6MjA2Mjc1NTYzOH0.glhn-u4mNpKHsH6qiwdecXyYOWhdxDrTVDIvNivKVf8';
 
-// No need for API key in client code when using the proxy
-// We'll set up the proxy to handle this securely
+// Language translations
+const translations = {
+    en: {
+        title: "Teacher Professional Vision Feedback",
+        subtitle: "Generate high-quality feedback on teaching reflections",
+        settings: "Settings",
+        your_name: "Your Name:",
+        enter_name: "Enter your name",
+        video_watched: "Video Watched:",
+        select_video: "Select a video...",
+        language: "Language:",
+        generate_feedback: "Generate Feedback",
+        what_is_def: "What is description, explanation, and prediction?",
+        description: "Description:",
+        description_def: "Accurately noting what happened in the classroom - observing and reporting specific behaviors, interactions, and events.",
+        explanation: "Explanation:",
+        explanation_def: "Interpreting observed events using educational theory and research - understanding why things happened.",
+        prediction: "Prediction:",
+        prediction_def: "Forecasting potential effects on student learning and future classroom dynamics based on observations.",
+        reflection_input: "Student Teacher Reflection",
+        paste_reflection: "Paste the student teacher's reflection here...",
+        clear: "Clear",
+        generated_feedback: "Generated Feedback",
+        feedback_placeholder: "Feedback will appear here after generation...",
+        extended: "Extended",
+        short: "Short",
+        copy: "Copy",
+        revise_reflection: "Revise Reflection",
+        rate_feedback: "Rate this feedback:",
+        quality: "Quality:",
+        usefulness: "Usefulness:",
+        submit_rating: "Submit Rating",
+        quality_labels: ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],
+        usefulness_labels: ['', 'Not useful', 'Slightly useful', 'Moderately useful', 'Very useful', 'Extremely useful']
+    },
+    de: {
+        title: "Lehrer Professional Vision Feedback",
+        subtitle: "Generieren Sie hochwertiges Feedback zu Unterrichtsreflexionen",
+        settings: "Einstellungen",
+        your_name: "Ihr Name:",
+        enter_name: "Geben Sie Ihren Namen ein",
+        video_watched: "Angesehenes Video:",
+        select_video: "Wählen Sie ein Video...",
+        language: "Sprache:",
+        generate_feedback: "Feedback generieren",
+        what_is_def: "Was ist Beschreibung, Erklärung und Vorhersage?",
+        description: "Beschreibung:",
+        description_def: "Genaues Beobachten des Geschehens im Klassenzimmer - Beobachten und Berichten spezifischer Verhaltensweisen, Interaktionen und Ereignisse.",
+        explanation: "Erklärung:",
+        explanation_def: "Interpretation von beobachteten Ereignissen mittels pädagogischer Theorie und Forschung - Verstehen, warum Dinge passiert sind.",
+        prediction: "Vorhersage:",
+        prediction_def: "Prognose potenzieller Auswirkungen auf das Lernen der Schüler und zukünftige Klassendynamiken basierend auf Beobachtungen.",
+        reflection_input: "Reflexion des Lehramtsstudierenden",
+        paste_reflection: "Fügen Sie hier die Reflexion des Lehramtsstudierenden ein...",
+        clear: "Löschen",
+        generated_feedback: "Generiertes Feedback",
+        feedback_placeholder: "Feedback wird hier nach der Generierung angezeigt...",
+        extended: "Erweitert",
+        short: "Kurz",
+        copy: "Kopieren",
+        revise_reflection: "Reflexion überarbeiten",
+        rate_feedback: "Bewerten Sie dieses Feedback:",
+        quality: "Qualität:",
+        usefulness: "Nützlichkeit:",
+        submit_rating: "Bewertung abgeben",
+        quality_labels: ['', 'Schlecht', 'Befriedigend', 'Gut', 'Sehr gut', 'Ausgezeichnet'],
+        usefulness_labels: ['', 'Nicht nützlich', 'Wenig nützlich', 'Mäßig nützlich', 'Sehr nützlich', 'Äußerst nützlich']
+    }
+};
 
 // DOM elements
 document.addEventListener('DOMContentLoaded', function() {
@@ -21,8 +88,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const copyBtn = document.getElementById('copy-btn');
     const reviseReflectionBtn = document.getElementById('revise-reflection-btn');
     const reflectionText = document.getElementById('reflection-text');
-    const feedback = document.getElementById('feedback');
+    const feedbackExtended = document.getElementById('feedback-extended');
+    const feedbackShort = document.getElementById('feedback-short');
     const nameInput = document.getElementById('student-name');
+    const videoSelect = document.getElementById('video-select');
     const feedbackRating = document.getElementById('feedback-rating');
     const usefulnessRating = document.getElementById('usefulness-rating');
     const submitRatingBtn = document.getElementById('submit-rating-btn');
@@ -31,17 +100,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const usefulnessRatingButtonsContainer = document.getElementById('usefulness-rating-buttons');
     const qualityRatingHoverLabel = document.getElementById('quality-rating-hover-label');
     const usefulnessRatingHoverLabel = document.getElementById('usefulness-rating-hover-label');
+    const feedbackTabs = document.querySelector('.feedback-tabs');
+    const extendedTab = document.getElementById('extended-tab');
+    const shortTab = document.getElementById('short-tab');
     
     // Language and style selections
     const langEn = document.getElementById('lang-en');
     const langDe = document.getElementById('lang-de');
-    const styleSelector = document.getElementById('style');
 
     let currentQualityRating = null;
     let currentUsefulnessRating = null;
-
-    const qualityLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
-    const usefulnessLabels = ['', 'Not useful', 'Slightly useful', 'Moderately useful', 'Very useful', 'Extremely useful'];
+    let currentLanguage = 'en';
+    let currentFeedbackType = 'extended'; // Track which feedback is currently shown
 
     // Event listeners
     generateBtn.addEventListener('click', generateFeedback);
@@ -49,6 +119,10 @@ document.addEventListener('DOMContentLoaded', function() {
     copyBtn.addEventListener('click', copyFeedback);
     reviseReflectionBtn.addEventListener('click', handleReviseReflectionClick);
     submitRatingBtn.addEventListener('click', submitRating);
+    langEn.addEventListener('change', () => updateLanguage('en'));
+    langDe.addEventListener('change', () => updateLanguage('de'));
+    extendedTab.addEventListener('click', () => currentFeedbackType = 'extended');
+    shortTab.addEventListener('click', () => currentFeedbackType = 'short');
 
     // Initialize Supabase client
     const supabase = initSupabase();
@@ -56,6 +130,83 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verify Supabase connection
     if (supabase) {
         verifySupabaseConnection(supabase);
+    }
+
+    // Function to update language
+    function updateLanguage(lang) {
+        currentLanguage = lang;
+        const trans = translations[lang];
+        
+        // Update all elements with data-lang-key
+        document.querySelectorAll('[data-lang-key]').forEach(element => {
+            const key = element.getAttribute('data-lang-key');
+            if (trans[key]) {
+                element.textContent = trans[key];
+            }
+        });
+        
+        // Update placeholders
+        document.querySelectorAll('[data-lang-key-placeholder]').forEach(element => {
+            const key = element.getAttribute('data-lang-key-placeholder');
+            if (trans[key]) {
+                element.placeholder = trans[key];
+            }
+        });
+        
+        // Update tooltips
+        updateTooltips(lang);
+        
+        // Update rating labels
+        updateRatingLabels();
+    }
+
+    // Function to update tooltips based on language
+    function updateTooltips(lang) {
+        const tooltipTexts = {
+            en: {
+                generate: "Generate AI feedback based on your reflection",
+                clear: "Clear the reflection text",
+                copy: "Copy feedback to clipboard",
+                revise: "Edit your reflection in the main text area and generate new feedback",
+                submit: "Submit your rating of the feedback"
+            },
+            de: {
+                generate: "KI-Feedback basierend auf Ihrer Reflexion generieren",
+                clear: "Reflexionstext löschen",
+                copy: "Feedback in Zwischenablage kopieren",
+                revise: "Bearbeiten Sie Ihre Reflexion im Haupttextbereich und generieren Sie neues Feedback",
+                submit: "Senden Sie Ihre Bewertung des Feedbacks"
+            }
+        };
+        
+        const texts = tooltipTexts[lang];
+        generateBtn.setAttribute('title', texts.generate);
+        clearBtn.setAttribute('title', texts.clear);
+        copyBtn.setAttribute('title', texts.copy);
+        reviseReflectionBtn.setAttribute('title', texts.revise);
+        submitRatingBtn.setAttribute('title', texts.submit);
+        
+        // Reinitialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            const existingTooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+            if (existingTooltip) {
+                existingTooltip.dispose();
+            }
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+
+    // Function to update rating labels
+    function updateRatingLabels() {
+        const labels = translations[currentLanguage];
+        // Update hover labels if ratings are selected
+        if (currentQualityRating !== null) {
+            qualityRatingHoverLabel.textContent = labels.quality_labels[currentQualityRating];
+        }
+        if (currentUsefulnessRating !== null) {
+            usefulnessRatingHoverLabel.textContent = labels.usefulness_labels[currentUsefulnessRating];
+        }
     }
 
     // Function to get or create a session ID
@@ -78,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to create rating buttons
     function createRatingButtons(container, count, groupName) {
         container.innerHTML = ''; // Clear existing buttons
-        const labels = groupName === 'quality' ? qualityLabels : usefulnessLabels;
+        const labels = groupName === 'quality' ? translations[currentLanguage].quality_labels : translations[currentLanguage].usefulness_labels;
         const hoverLabelElement = groupName === 'quality' ? qualityRatingHoverLabel : usefulnessRatingHoverLabel;
 
         for (let i = 1; i <= count; i++) {
@@ -146,46 +297,71 @@ document.addEventListener('DOMContentLoaded', function() {
     async function generateFeedback() {
         const studentName = nameInput.value.trim();
         if (!studentName) {
-            showAlert('Please enter your name before generating feedback.', 'warning');
-            nameInput.focus(); // Set focus to name input
+            showAlert(currentLanguage === 'en' ? 'Please enter your name before generating feedback.' : 'Bitte geben Sie Ihren Namen ein, bevor Sie Feedback generieren.', 'warning');
+            nameInput.focus();
+            return;
+        }
+
+        const videoSelected = videoSelect.value;
+        if (!videoSelected) {
+            showAlert(currentLanguage === 'en' ? 'Please select a video before generating feedback.' : 'Bitte wählen Sie ein Video aus, bevor Sie Feedback generieren.', 'warning');
+            videoSelect.focus();
             return;
         }
 
         if (!reflectionText.value.trim()) {
-            showAlert('Please enter a reflection text first.', 'warning');
-            reflectionText.focus(); // Set focus to reflection text area
+            showAlert(currentLanguage === 'en' ? 'Please enter a reflection text first.' : 'Bitte geben Sie zuerst einen Reflexionstext ein.', 'warning');
+            reflectionText.focus();
             return;
         }
 
         // Determine language based on the radio button selection
         const language = langEn.checked ? 'en' : 'de';
-        const style = styleSelector.value;
-        const currentSessionId = getOrCreateSessionId(); // Get or create session ID
+        const currentSessionId = getOrCreateSessionId();
         
         // Show loading spinner
         toggleLoading(true);
         
         try {
-            const generatedFeedbackText = await callOpenAI(reflectionText.value, language, style);
-            console.log('Generated feedback:', generatedFeedbackText);
+            // First, analyze the reflection to get percentage distribution
+            const analysisResult = await analyzeReflection(reflectionText.value, language);
+            console.log('Analysis result:', analysisResult);
             
-            const formattedResponse = formatFeedback(generatedFeedbackText);
-            feedback.innerHTML = formattedResponse;
+            // Generate both extended and short feedback
+            const [extendedFeedback, shortFeedback] = await Promise.all([
+                callOpenAI(reflectionText.value, language, 'academic', analysisResult),
+                callOpenAI(reflectionText.value, language, 'user-friendly', analysisResult)
+            ]);
+            
+            console.log('Generated extended feedback:', extendedFeedback);
+            console.log('Generated short feedback:', shortFeedback);
+            
+            // Format and display both feedbacks
+            const formattedExtended = formatFeedback(extendedFeedback);
+            const formattedShort = formatFeedback(shortFeedback);
+            
+            feedbackExtended.innerHTML = formattedExtended;
+            feedbackShort.innerHTML = formattedShort;
+            
+            // Show the feedback tabs
+            feedbackTabs.classList.remove('d-none');
 
-            // Always insert a new record
-            console.log('Saving new reflection and feedback to database (always new record)...');
+            // Save to database
+            console.log('Saving new reflection and feedback to database...');
             const { data, error } = await supabase
                 .from('reflections')
                 .insert([
                     { 
-                        student_name: studentName, 
+                        student_name: studentName,
+                        video_id: videoSelected,
                         reflection_text: reflectionText.value, 
-                        feedback_text: generatedFeedbackText, 
+                        feedback_text: extendedFeedback, // Save extended version as primary
+                        feedback_text_short: shortFeedback, // Save short version
+                        analysis_percentages: analysisResult,
                         language: language,
-                        style: style,
+                        style: 'both', // Since we generate both
                         session_id: currentSessionId, 
                         created_at: new Date().toISOString(),
-                        // Ratings will be null by default on new insert, so no need to specify them here
                     }
                 ])
                 .select();
@@ -199,26 +375,27 @@ document.addEventListener('DOMContentLoaded', function() {
             let newRecordId = null;
             if (data && data.length > 0) {
                 newRecordId = data[0].id.toString();
-                // Store this ID specifically for potential rating of THIS feedback instance
                 sessionStorage.setItem('lastGeneratedReflectionIdForRating', newRecordId);
                 console.log('New reflection saved. ID for rating purposes:', newRecordId);
             }
             
-            const alertMessage = 'Feedback generated and saved as a new entry!';
+            const alertMessage = currentLanguage === 'en' 
+                ? 'Feedback generated and saved as a new entry!' 
+                : 'Feedback generiert und als neuer Eintrag gespeichert!';
             
-            sessionStorage.setItem('reflection', reflectionText.value); // Still useful for pre-fill if desired elsewhere
-            sessionStorage.setItem('feedback', generatedFeedbackText); // Still useful for display
+            sessionStorage.setItem('reflection', reflectionText.value);
+            sessionStorage.setItem('feedbackExtended', extendedFeedback);
+            sessionStorage.setItem('feedbackShort', shortFeedback);
             sessionStorage.setItem('currentLanguage', language);
-            sessionStorage.setItem('currentStyle', style);
             
             showAlert(alertMessage, 'success');
             
-            // Show revise button if a reflection was successfully generated and stored
+            // Show revise button
             if (sessionStorage.getItem('reflection')) {
                 reviseReflectionBtn.style.display = 'inline-block'; 
             }
 
-            // Reset UI for ratings, as this is new feedback
+            // Reset UI for ratings
             currentQualityRating = null;
             currentUsefulnessRating = null;
             createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
@@ -229,11 +406,74 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error in generateFeedback process:', error);
             showAlert(`Error: ${error.message}. Please check console for details.`, 'danger');
-            feedback.innerHTML = '<p class="text-danger">Failed to generate or save feedback. Please try again or check the console.</p>';
-            // Keep revise button hidden or hide it if it was an error on the very first try
+            feedbackExtended.innerHTML = '<p class="text-danger">Failed to generate or save feedback. Please try again or check the console.</p>';
+            feedbackShort.innerHTML = '<p class="text-danger">Failed to generate or save feedback. Please try again or check the console.</p>';
             reviseReflectionBtn.style.display = 'none'; 
         } finally {
             toggleLoading(false);
+        }
+    }
+
+    // Analyze reflection to get percentage distribution
+    async function analyzeReflection(reflection, language) {
+        const analysisPrompt = language === 'en' 
+            ? `Analyze this teaching reflection and determine the percentage distribution of content across three categories:
+               1. Description (noting what happened)
+               2. Explanation (interpreting using theory)
+               3. Prediction (forecasting effects)
+               
+               Return ONLY a JSON object with percentages like: {"description": 40, "explanation": 35, "prediction": 25}`
+            : `Analysieren Sie diese Unterrichtsreflexion und bestimmen Sie die prozentuale Verteilung des Inhalts über drei Kategorien:
+               1. Beschreibung (Beobachtung des Geschehens)
+               2. Erklärung (Interpretation mit Theorie)
+               3. Vorhersage (Prognose der Auswirkungen)
+               
+               Geben Sie NUR ein JSON-Objekt mit Prozentsätzen zurück wie: {"description": 40, "explanation": 35, "prediction": 25}`;
+
+        const requestData = {
+            model: model,
+            messages: [
+                {
+                    role: "system",
+                    content: "You are an expert in analyzing teaching reflections. Analyze the text and return ONLY a JSON object with percentage distribution."
+                },
+                {
+                    role: "user",
+                    content: analysisPrompt + "\n\nReflection:\n" + reflection
+                }
+            ],
+            temperature: 0.3,
+            max_tokens: 100
+        };
+
+        try {
+            const response = await fetch(OPENAI_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Error analyzing reflection');
+            }
+
+            const result = await response.json();
+            const content = result.choices[0].message.content;
+            
+            // Parse JSON from response
+            const jsonMatch = content.match(/\{.*\}/);
+            if (jsonMatch) {
+                return JSON.parse(jsonMatch[0]);
+            }
+            
+            // Default if parsing fails
+            return { description: 33, explanation: 33, prediction: 34 };
+        } catch (error) {
+            console.error('Error in reflection analysis:', error);
+            // Return default distribution if analysis fails
+            return { description: 33, explanation: 33, prediction: 34 };
         }
     }
 
@@ -244,58 +484,40 @@ document.addEventListener('DOMContentLoaded', function() {
         // Consolidate heading processing
         text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4 class="feedback-heading">${p1.trim()}</h4>`);
         
-        // Format bold text (Strengths:, Suggestions for Improvement:, Why?:, etc.)
+        // Format bold text
         text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         
-        // Format list items starting with - or *
-        // Ensure lists are only created if list items are present
+        // Format list items
         text = text.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
         
-        // Wrap consecutive list items in ul tags more robustly
+        // Wrap consecutive list items in ul tags
         text = text.replace(/(<li>.*?<\/li>\s*)+/g, (match) => `<ul>${match.trim()}</ul>`);
         
-        // Add structure for sections. This is tricky with dynamic content.
-        // Let's assume headings define sections. We want space *between* full sections.
-        // Wrap content after h4 in a div, until the next h4 or end of string.
+        // Add structure for sections
         let sections = text.split(/(?=<h4)/);
         text = sections.map(section => {
             if (section.startsWith('<h4')) {
-                // Find the end of the h4 tag
                 const h4EndIndex = section.indexOf('</h4>') + 5;
                 const heading = section.substring(0, h4EndIndex);
                 const content = section.substring(h4EndIndex);
-                // Wrap content in a div for better styling and separation
                 return `${heading}<div class="section-content">${content.trim()}</div>`;
             }
-            return section; // Should not happen if split correctly
+            return section;
         }).join('');
         
-        // Replace newlines with <br> INSIDE list items or general text, but not excessively.
-        // Be careful not to add <br> inside <ul> or after <h4> directly.
-        // This is complex; a simpler approach is often better.
-        // The current CSS with `white-space: pre-wrap` for feedback might handle newlines well.
-        // However, explicit <br> can be needed if `pre-wrap` isn't sufficient or for specific formatting.
-        // For now, let's be more conservative with <br> replacement if CSS handles it.
-        // The main issue is that Markdown newlines are not always HTML newlines.
-        // Let's apply <br> more selectively.
-        // The previous global replace was: text = text.replace(/\n/g, '<br>');
-        // This might be too aggressive if CSS `white-space: pre-wrap` is used on the container.
-        // If `pre-wrap` is active, we might only need <br> for explicit line breaks not part of Markdown's usual block formatting.
-        // For now, I will keep the original global newline replacement as it was there before,
-        // but it's an area for potential refinement if formatting issues arise.
+        // Replace newlines with <br>
         text = text.replace(/\n/g, '<br>');
-        // Clean up potential empty <br> tags from multiple newlines or at start/end of blocks
-        text = text.replace(/<br>\s*<br>/g, '<br>'); // Collapse multiple breaks
-        text = text.replace(/^<br>|<br>$/g, ''); // Trim leading/trailing breaks
+        text = text.replace(/<br>\s*<br>/g, '<br>');
+        text = text.replace(/^<br>|<br>$/g, '');
         
         return text;
     }
 
     // Call OpenAI API
-    async function callOpenAI(reflection, language, style) {
+    async function callOpenAI(reflection, language, style, analysisResult) {
         console.log(`Using language: ${language}, style: ${style}`);
         const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
-        const systemPrompt = getSystemPrompt(promptType);
+        const systemPrompt = getSystemPrompt(promptType, analysisResult);
         
         console.log('Calling OpenAI API with system prompt:', promptType);
         
@@ -384,7 +606,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Get the appropriate system prompt based on style and language
-    function getSystemPrompt(promptType) {
+    function getSystemPrompt(promptType, analysisResult) {
+        // Calculate which areas need more focus based on the analysis
+        let focusAreas = [];
+        if (analysisResult) {
+            if (analysisResult.description < 30) focusAreas.push('description');
+            if (analysisResult.explanation < 30) focusAreas.push('explanation');
+            if (analysisResult.prediction < 20) focusAreas.push('prediction');
+        }
+        
+        const focusInstruction = focusAreas.length > 0 
+            ? `\n\nIMPORTANT: The student's reflection shows the following distribution: Description ${analysisResult.description}%, Explanation ${analysisResult.explanation}%, Prediction ${analysisResult.prediction}%. Please emphasize feedback on improving ${focusAreas.join(' and ')} aspects.`
+            : '';
+
         const prompts = {
             'academic English': `I will analyze student teacher reflections on teaching videos. My task is to generate high-quality feedback as a supportive yet rigorous teaching mentor. The feedback must fulfill four quality dimensions:
 
@@ -396,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
 My target audience is student teachers developing their professional vision. "Analysis" means professional vision:
 - **Description**: Accurately noting what happened.
 - **Explanation**: Interpreting events using educational theory.
-- **Prediction**: Forecasting effects on student learning.
+- **Prediction**: Forecasting effects on student learning.${focusInstruction}
 
 FORMATTING REQUIREMENTS FOR YOUR RESPONSE:
 Address the student directly (e.g., "Your analysis...").
@@ -419,7 +653,7 @@ Use clear headings for the main sections. Ensure well-structured English. Avoid 
 My target audience is student teachers developing their professional vision. "Analysis" means professional vision:
 - **Description**: Accurately noting what happened.
 - **Explanation**: Interpreting events using educational theory.
-- **Prediction**: Forecasting effects on student learning.
+- **Prediction**: Forecasting effects on student learning.${focusInstruction}
 
 USER-FRIENDLY OUTPUT FORMATTING REQUIREMENTS (VERY IMPORTANT: Your entire response to the student must be extremely brief and easy to understand):
 Address the student directly (e.g., "Your reflection...").
@@ -439,7 +673,7 @@ Use these exact headings. Respond only in English. Avoid emoticons and overly ca
 Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswahrnehmung entwickeln. "Analyse" bedeutet professionelle Unterrichtswahrnehmung:
 - **Beschreibung**: Genaues Beobachten des Geschehens.
 - **Erklärung**: Interpretation von Ereignissen mittels pädagogischer Theorien.
-- **Vorhersage**: Prognose der Auswirkungen auf das Lernen der Schüler:innen.
+- **Vorhersage**: Prognose der Auswirkungen auf das Lernen der Schüler:innen.${focusInstruction ? focusInstruction.replace('Description', 'Beschreibung').replace('Explanation', 'Erklärung').replace('Prediction', 'Vorhersage').replace('improving', 'Verbesserung von') : ''}
 
 FORMATIERUNGSANFORDERUNGEN FÜR IHRE ANTWORT:
 Sprechen Sie die Studierenden direkt an (z.B. "Ihre Analyse...").
@@ -462,7 +696,7 @@ Verwenden Sie klare Überschriften für die Hauptabschnitte. Achten Sie auf gut 
 Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswahrnehmung entwickeln. "Analyse" bedeutet professionelle Unterrichtswahrnehmung:
 - **Beschreibung**: Genaues Beobachten des Geschehens.
 - **Erklärung**: Interpretation von Ereignissen mittels pädagogischer Theorien.
-- **Vorhersage**: Prognose der Auswirkungen auf das Lernen der Schüler:innen.
+- **Vorhersage**: Prognose der Auswirkungen auf das Lernen der Schüler:innen.${focusInstruction ? focusInstruction.replace('Description', 'Beschreibung').replace('Explanation', 'Erklärung').replace('Prediction', 'Vorhersage').replace('improving', 'Verbesserung von') : ''}
 
 NUTZERFREUNDLICHE AUSGABEFORMATIERUNGSANFORDERUNGEN (SEHR WICHTIG: Ihre gesamte Antwort an die Studierenden muss extrem kurz und leicht verständlich sein):
 Sprechen Sie die Studierenden direkt an (z.B. "Deine Reflexion...").
@@ -484,10 +718,12 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
     // Clear text area
     function clearText() {
         reflectionText.value = '';
-        feedback.innerHTML = '<p class="text-muted">Feedback will appear here after generation...</p>';
+        feedbackExtended.innerHTML = '<p class="text-muted">Feedback will appear here after generation...</p>';
+        feedbackShort.innerHTML = '<p class="text-muted">Feedback will appear here after generation...</p>';
         sessionStorage.removeItem('lastGeneratedReflectionIdForRating'); // Clear this as well
         sessionStorage.removeItem('reflection');
-        sessionStorage.removeItem('feedback');
+        sessionStorage.removeItem('feedbackExtended');
+        sessionStorage.removeItem('feedbackShort');
         reviseReflectionBtn.style.display = 'none';
         currentQualityRating = null;
         currentUsefulnessRating = null;
@@ -499,12 +735,13 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
 
     // Copy feedback to clipboard
     function copyFeedback() {
-        const textToCopy = feedback.innerText || feedback.textContent;
+        const currentFeedback = currentFeedbackType === 'extended' ? feedbackExtended : feedbackShort;
+        const textToCopy = currentFeedback.innerText || currentFeedback.textContent;
         navigator.clipboard.writeText(textToCopy)
-            .then(() => showAlert('Feedback copied to clipboard!', 'success'))
+            .then(() => showAlert(currentLanguage === 'en' ? 'Feedback copied to clipboard!' : 'Feedback in Zwischenablage kopiert!', 'success'))
             .catch(err => {
                 console.error('Could not copy text: ', err);
-                showAlert('Could not copy text. Please try again.', 'danger');
+                showAlert(currentLanguage === 'en' ? 'Could not copy text. Please try again.' : 'Text konnte nicht kopiert werden. Bitte versuchen Sie es erneut.', 'danger');
             });
     }
 
@@ -559,7 +796,7 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
         const previousReflection = sessionStorage.getItem('reflection');
         if (previousReflection) {
             reflectionText.value = previousReflection;
-            showAlert('Your previous reflection has been loaded. Edit it here and click \"Generate Feedback\" for new feedback. This will be saved as a new entry.', 'info');
+            showAlert('Your previous reflection has been loaded. Edit it here and click "Generate Feedback" for new feedback. This will be saved as a new entry.', 'info');
         } else {
             showAlert('No previous reflection found in this session to load.', 'warning');
         }

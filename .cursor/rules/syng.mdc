@@ -1,0 +1,71 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Development Workflow: Tübingen Teacher Feedback Tool
+
+This guide outlines the steps to modify the application, update your GitHub repository, and deploy changes to Render.
+
+## 1. Making Local Changes
+
+*   **Edit Files:** Make your desired code changes in your local project directory (`/Users/sirui/Desktop/tubigen/`).
+    *   Common files you might edit:
+        *   `index.html` (for UI structure)
+        *   `app.js` (for frontend logic, API calls, prompts)
+        *   `styles.css` (for UI appearance)
+        *   `cors-proxy.js` (for backend proxy logic - less frequent)
+        *   `render.yaml` (for Render service configuration - less frequent)
+        *   `README.md` (for project documentation)
+*   **Test Locally (If Applicable):** If you have a local development server setup (e.g., using `npm run dev` if configured in `package.json`), test your changes to ensure they work as expected.
+
+## 2. Committing Changes to Git
+
+Once you're satisfied with your local changes:
+
+*   **Stage Changes:**
+    *   Open your terminal in the project directory (`/Users/sirui/Desktop/tubigen/`).
+    *   Add the files you've changed to the staging area.
+        *   To add specific files: `git add file1.js file2.html`
+        *   To add all changed files (tracked by Git): `git add .`
+    *   *Example:* `git add app.js index.html styles.css`
+
+*   **Commit Changes:**
+    *   Create a commit with a clear, descriptive message explaining what you changed.
+    *   Command: `git commit -m "Your descriptive commit message"`
+    *   *Example:* `git commit -m "Fix login bug and update user profile page"`
+
+## 3. Pushing Changes to GitHub
+
+*   **Push Commits:**
+    *   Push your local commits from your current working branch (e.g., `clean-branch` or `main`) to the `main` branch on your GitHub repository.
+    *   Command: `git push origin <your-local-branch-name>:main`
+    *   *If your local branch is already `main` and tracking `origin/main`:* `git push origin main` or simply `git push`
+    *   *Example (if your local branch is `clean-branch`):* `git push origin clean-branch:main`
+
+    *   **Troubleshooting Pushes:**
+        *   **Rejected (fetch first / divergent branches):** If the push is rejected because the remote `main` branch has changes you don't have locally:
+            1.  Pull the remote changes: `git pull origin main --no-rebase` (This merges remote changes. If you used `--rebase` before and are comfortable, you can use that, but `--no-rebase` is often simpler if unsure).
+            2.  Resolve any merge conflicts if they occur (Git will guide you; edit the conflicted files, then `git add <resolved-file>` and `git commit`).
+            3.  Try pushing again: `git push origin <your-local-branch-name>:main`
+        *   **Secret Scanning Violation:** If GitHub blocks the push due to secrets:
+            1.  **Best:** Remove the secret from your Git history (advanced).
+            2.  **Alternative:** Go to the URL provided by GitHub in the error message to allow the specific secret (understand the security implications). Then, try pushing again.
+
+## 4. Render Auto-Deployment
+
+*   **Automatic Update:** Your Render services (`tubingen-feedback-tool` static site and `tubingen-feedback-cors-proxy` web service) are configured via `render.yaml` to auto-deploy whenever changes are pushed to the `main` branch of your `SiruiruiRen/tubingen-feedback-tool` GitHub repository.
+*   **Monitor Deployment:**
+    *   Go to your Render Dashboard: [https://dashboard.render.com](https://dashboard.render.com)
+    *   Navigate to your services (`tubingen-feedback-tool` and `tubingen-feedback-cors-proxy`).
+    *   Check the "Events" or "Deploys" tab to see if a new deployment has started.
+    *   Check the "Logs" tab for each service to monitor the deployment process and ensure there are no errors.
+*   **Verify Changes:** Once Render indicates the deployment is "Live" or "Successful," open your application URL (`https://tubingen-feedback-tool.onrender.com` for the frontend) to verify your changes.
+
+## Important Notes:
+
+*   **API Keys & Environment Variables on Render:** If you need to change sensitive information like your `OPENAI_API_KEY`:
+    *   Update it directly in the "Environment" section of your `tubingen-feedback-cors-proxy` service on Render.
+    *   **Do not commit API keys directly into your code or `render.yaml`** (except for the `sync: false` placeholder if needed, but the actual key value should be in Render's secure environment variables).
+*   **`render.yaml` Changes:** If you modify `render.yaml` (e.g., to change build commands, add services, or manage non-sensitive environment variables), committing and pushing this file will trigger Render to update its service configurations.
+*   **Branching Strategy (Optional but Recommended):** For larger changes, consider working on a separate feature branch locally (`git checkout -b new-feature-branch`), making your commits there, and then merging that branch into your local `main` (or `clean-branch`) before pushing to `origin main`. This keeps your `main` branch cleaner.
