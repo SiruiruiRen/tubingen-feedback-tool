@@ -586,13 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const sectionTitle = currentLanguage === 'en' ? 'Analysis Distribution:' : 'Analyse-Verteilung:';
             
-            formattedText += `
-                <div class="analysis-distribution-compact">
-                    <div class="distribution-text-compact">
-                        <strong>${sectionTitle}</strong> ${distributionText}
-                    </div>
-                </div>
-            `;
+            formattedText += `<div class="analysis-distribution-compact"><div class="distribution-text-compact"><strong>${sectionTitle}</strong> ${distributionText}</div></div>`;
         }
         
         // Process the feedback text

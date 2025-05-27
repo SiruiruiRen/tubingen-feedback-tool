@@ -259,8 +259,8 @@ textarea {
 
 /* Compact Distribution Display */
 .analysis-distribution-compact {
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -270,11 +270,11 @@ textarea {
   font-weight: 600;
   background: none;
   padding: 0;
+  margin: 0;
   border-radius: 0;
   border-left: none;
-  display: block;
-  margin-bottom: 0;
-  line-height: 1.2;
+  display: inline;
+  line-height: 1;
 }
 
 .distribution-text-compact i {
@@ -337,7 +337,7 @@ textarea {
 }
 
 #feedback-extended h4.feedback-heading:first-child, #feedback-short h4.feedback-heading:first-child {
-  margin-top: 0.5rem;
+  margin-top: 0;
 }
 
 /* Color coding for different sections */
