@@ -236,7 +236,7 @@ textarea {
 .analysis-distribution h5 {
   color: var(--primary-dark);
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
 }
@@ -244,6 +244,17 @@ textarea {
 .analysis-distribution h5::before {
   content: "📊";
   margin-right: 0.5rem;
+}
+
+.distribution-text {
+  font-size: 1.1rem;
+  color: var(--dark-gray);
+  margin-bottom: 1rem;
+  font-weight: 500;
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
 }
 
 .distribution-item {
@@ -421,7 +432,13 @@ textarea {
 }
 
 .feedback-item {
-  margin-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.feedback-item .form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--dark-gray);
 }
 
 .rating-hover-label {
@@ -431,6 +448,23 @@ textarea {
   margin-left: 8px;
   min-height: 1.2em;
   display: inline-block;
+}
+
+.btn-rating {
+  padding: 8px 12px;
+  font-size: 1rem;
+  line-height: 1;
+  min-width: 40px;
+  font-weight: 500;
+}
+
+.btn-rating:hover {
+  transform: translateY(-2px);
+}
+
+.btn-rating.active {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(63, 81, 181, 0.3);
 }
 
 .btn-rating-star {

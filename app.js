@@ -45,12 +45,12 @@ const translations = {
         short: "Short",
         copy: "Copy",
         revise_reflection: "Revise Reflection",
-        rate_feedback: "Rate this feedback:",
-        quality: "Quality:",
-        usefulness: "Usefulness:",
+        rate_system: "Rate this system:",
+        capabilities_meet: "This system's capabilities meet my requirements:",
+        easy_to_use: "This system is easy to use:",
         submit_rating: "Submit Rating",
-        quality_labels: ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'],
-        usefulness_labels: ['', 'Not useful', 'Slightly useful', 'Moderately useful', 'Very useful', 'Extremely useful']
+        umux_labels: ['', 'Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+        distribution_summary: "Your reflection contains: {description}% description, {explanation}% explanation, and {prediction}% prediction."
     },
     de: {
         title: "Lehrer Professional Vision Feedback",
@@ -84,12 +84,12 @@ const translations = {
         short: "Kurz",
         copy: "Kopieren",
         revise_reflection: "Reflexion überarbeiten",
-        rate_feedback: "Bewerten Sie dieses Feedback:",
-        quality: "Qualität:",
-        usefulness: "Nützlichkeit:",
+        rate_system: "Bewerten Sie dieses System:",
+        capabilities_meet: "Die Funktionen dieses Systems erfüllen meine Anforderungen:",
+        easy_to_use: "Dieses System ist einfach zu bedienen:",
         submit_rating: "Bewertung abgeben",
-        quality_labels: ['', 'Schlecht', 'Befriedigend', 'Gut', 'Sehr gut', 'Ausgezeichnet'],
-        usefulness_labels: ['', 'Nicht nützlich', 'Wenig nützlich', 'Mäßig nützlich', 'Sehr nützlich', 'Äußerst nützlich']
+        umux_labels: ['', 'Stimme überhaupt nicht zu', 'Stimme nicht zu', 'Neutral', 'Stimme zu', 'Stimme voll zu'],
+        distribution_summary: "Ihre Reflexion enthält: {description}% Beschreibung, {explanation}% Erklärung und {prediction}% Vorhersage."
     }
 };
 
@@ -104,14 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const feedbackShort = document.getElementById('feedback-short');
     const nameInput = document.getElementById('student-name');
     const videoSelect = document.getElementById('video-select');
-    const feedbackRating = document.getElementById('feedback-rating');
-    const usefulnessRating = document.getElementById('usefulness-rating');
     const submitRatingBtn = document.getElementById('submit-rating-btn');
     const loadingSpinner = document.getElementById('loading-spinner');
-    const qualityRatingButtonsContainer = document.getElementById('quality-rating-buttons');
-    const usefulnessRatingButtonsContainer = document.getElementById('usefulness-rating-buttons');
-    const qualityRatingHoverLabel = document.getElementById('quality-rating-hover-label');
-    const usefulnessRatingHoverLabel = document.getElementById('usefulness-rating-hover-label');
+    const capabilitiesRatingButtonsContainer = document.getElementById('capabilities-rating-buttons');
+    const easeRatingButtonsContainer = document.getElementById('ease-rating-buttons');
+    const capabilitiesRatingHoverLabel = document.getElementById('capabilities-rating-hover-label');
+    const easeRatingHoverLabel = document.getElementById('ease-rating-hover-label');
     const feedbackTabs = document.querySelector('.feedback-tabs');
     const extendedTab = document.getElementById('extended-tab');
     const shortTab = document.getElementById('short-tab');
@@ -120,8 +118,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const langEn = document.getElementById('lang-en');
     const langDe = document.getElementById('lang-de');
 
-    let currentQualityRating = null;
-    let currentUsefulnessRating = null;
+    let currentCapabilitiesRating = null;
+    let currentEaseRating = null;
     let currentLanguage = 'en';
     let currentFeedbackType = 'extended'; // Track which feedback is currently shown
     
@@ -132,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         short: { totalTime: 0, lastStarted: null }
     };
     let currentReflectionId = null;
+    let currentAnalysisResult = null; // Store analysis result for display
 
     // Event listeners
     generateBtn.addEventListener('click', generateFeedback);
@@ -221,11 +220,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateRatingLabels() {
         const labels = translations[currentLanguage];
         // Update hover labels if ratings are selected
-        if (currentQualityRating !== null) {
-            qualityRatingHoverLabel.textContent = labels.quality_labels[currentQualityRating];
+        if (currentCapabilitiesRating !== null) {
+            capabilitiesRatingHoverLabel.textContent = labels.umux_labels[currentCapabilitiesRating];
         }
-        if (currentUsefulnessRating !== null) {
-            usefulnessRatingHoverLabel.textContent = labels.usefulness_labels[currentUsefulnessRating];
+        if (currentEaseRating !== null) {
+            easeRatingHoverLabel.textContent = labels.umux_labels[currentEaseRating];
         }
     }
 
@@ -249,41 +248,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to create rating buttons
     function createRatingButtons(container, count, groupName) {
         container.innerHTML = ''; // Clear existing buttons
-        const labels = groupName === 'quality' ? translations[currentLanguage].quality_labels : translations[currentLanguage].usefulness_labels;
-        const hoverLabelElement = groupName === 'quality' ? qualityRatingHoverLabel : usefulnessRatingHoverLabel;
+        const labels = translations[currentLanguage].umux_labels;
+        const hoverLabelElement = groupName === 'capabilities' ? capabilitiesRatingHoverLabel : easeRatingHoverLabel;
 
         for (let i = 1; i <= count; i++) {
             const button = document.createElement('button');
             button.type = 'button';
-            button.classList.add('btn', 'btn-outline-secondary', 'btn-rating-star');
-            button.innerHTML = '☆'; // Default to empty star
+            button.classList.add('btn', 'btn-outline-secondary', 'btn-rating');
+            button.textContent = i;
             button.dataset.value = i;
             button.addEventListener('click', function() {
                 handleRatingButtonClick(this, groupName, labels[i]);
             });
             button.addEventListener('mouseover', function() {
                 hoverLabelElement.textContent = labels[i];
-                // Temporarily fill stars up to the hovered one
-                const buttonsInGroup = container.querySelectorAll('.btn-rating-star');
-                buttonsInGroup.forEach((btn, index) => {
-                    btn.innerHTML = index < i ? '★' : '☆';
-                    btn.classList.toggle('filled', index < i);
-                });
             });
             button.addEventListener('mouseout', function() {
-                const currentRating = groupName === 'quality' ? currentQualityRating : currentUsefulnessRating;
+                const currentRating = groupName === 'capabilities' ? currentCapabilitiesRating : currentEaseRating;
                 if (currentRating !== null) {
                     hoverLabelElement.textContent = labels[currentRating];
                 } else {
                     hoverLabelElement.textContent = '';
                 }
-                // Restore stars based on actual current rating
-                const buttonsInGroup = container.querySelectorAll('.btn-rating-star');
-                buttonsInGroup.forEach((btn, index) => {
-                    const isFilled = currentRating !== null && index < currentRating;
-                    btn.innerHTML = isFilled ? '★' : '☆';
-                    btn.classList.toggle('filled', isFilled);
-                });
             });
             container.appendChild(button);
         }
@@ -292,26 +278,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle rating button click
     function handleRatingButtonClick(button, groupName, labelText) {
         const value = parseInt(button.dataset.value);
-        const buttonsInGroup = button.parentElement.querySelectorAll('.btn-rating-star');
-        const hoverLabelElement = groupName === 'quality' ? qualityRatingHoverLabel : usefulnessRatingHoverLabel;
+        const buttonsInGroup = button.parentElement.querySelectorAll('.btn-rating');
+        const hoverLabelElement = groupName === 'capabilities' ? capabilitiesRatingHoverLabel : easeRatingHoverLabel;
         
-        buttonsInGroup.forEach((btn, index) => {
-            const isFilled = index < value;
-            btn.innerHTML = isFilled ? '★' : '☆'; // Update star symbols
-            btn.classList.toggle('filled', isFilled);
+        buttonsInGroup.forEach((btn) => {
+            btn.classList.remove('active', 'btn-primary');
+            btn.classList.add('btn-outline-secondary');
         });
         
-        if (groupName === 'quality') {
-            currentQualityRating = value;
-        } else if (groupName === 'usefulness') {
-            currentUsefulnessRating = value;
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('active', 'btn-primary');
+        
+        if (groupName === 'capabilities') {
+            currentCapabilitiesRating = value;
+        } else if (groupName === 'ease') {
+            currentEaseRating = value;
         }
-        hoverLabelElement.textContent = labelText; // Keep selected label visible
+        hoverLabelElement.textContent = labelText;
     }
 
     // Initialize rating buttons
-    createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
-    createRatingButtons(usefulnessRatingButtonsContainer, 5, 'usefulness');
+    createRatingButtons(capabilitiesRatingButtonsContainer, 5, 'capabilities');
+    createRatingButtons(easeRatingButtonsContainer, 5, 'ease');
 
     // Function to switch tabs and track the interaction
     function switchToTab(tabType) {
@@ -398,6 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // First, analyze the reflection to get percentage distribution
             const analysisResult = await analyzeReflection(reflectionText.value, language);
             console.log('Analysis result:', analysisResult);
+            currentAnalysisResult = analysisResult; // Store for later use
             
             // Generate both extended and short feedback
             const [extendedFeedback, shortFeedback] = await Promise.all([
@@ -470,12 +459,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Reset UI for ratings
-            currentQualityRating = null;
-            currentUsefulnessRating = null;
-            createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
-            createRatingButtons(usefulnessRatingButtonsContainer, 5, 'usefulness');
-            qualityRatingHoverLabel.textContent = '';
-            usefulnessRatingHoverLabel.textContent = '';
+            currentCapabilitiesRating = null;
+            currentEaseRating = null;
+            createRatingButtons(capabilitiesRatingButtonsContainer, 5, 'capabilities');
+            createRatingButtons(easeRatingButtonsContainer, 5, 'ease');
+            capabilitiesRatingHoverLabel.textContent = '';
+            easeRatingHoverLabel.textContent = '';
             
         } catch (error) {
             console.error('Error in generateFeedback process:', error);
@@ -559,9 +548,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add analysis distribution visualization if available
         if (analysisResult && (analysisResult.description || analysisResult.explanation || analysisResult.prediction)) {
+            // Add text summary
+            const distributionText = translations[currentLanguage].distribution_summary
+                .replace('{description}', analysisResult.description)
+                .replace('{explanation}', analysisResult.explanation)
+                .replace('{prediction}', analysisResult.prediction);
+            
             formattedText += `
                 <div class="analysis-distribution">
                     <h5>${currentLanguage === 'en' ? 'Content Distribution Analysis' : 'Inhaltsverteilungsanalyse'}</h5>
+                    <p class="distribution-text">${distributionText}</p>
                     <div class="distribution-item">
                         <div class="distribution-label">
                             <span>${currentLanguage === 'en' ? 'Description' : 'Beschreibung'}</span>
@@ -853,19 +849,21 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
     // Clear text area
     function clearText() {
         reflectionText.value = '';
-        feedbackExtended.innerHTML = '<p class="text-muted">Feedback will appear here after generation...</p>';
-        feedbackShort.innerHTML = '<p class="text-muted">Feedback will appear here after generation...</p>';
-        sessionStorage.removeItem('lastGeneratedReflectionIdForRating'); // Clear this as well
+        feedbackExtended.innerHTML = `<p class="text-muted" data-lang-key="feedback_placeholder">${translations[currentLanguage].feedback_placeholder}</p>`;
+        feedbackShort.innerHTML = `<p class="text-muted" data-lang-key="feedback_placeholder">${translations[currentLanguage].feedback_placeholder}</p>`;
+        sessionStorage.removeItem('lastGeneratedReflectionIdForRating');
         sessionStorage.removeItem('reflection');
         sessionStorage.removeItem('feedbackExtended');
         sessionStorage.removeItem('feedbackShort');
         reviseReflectionBtn.style.display = 'none';
-        currentQualityRating = null;
-        currentUsefulnessRating = null;
-        createRatingButtons(qualityRatingButtonsContainer, 5, 'quality');
-        createRatingButtons(usefulnessRatingButtonsContainer, 5, 'usefulness');
-        qualityRatingHoverLabel.textContent = '';
-        usefulnessRatingHoverLabel.textContent = '';
+        currentCapabilitiesRating = null;
+        currentEaseRating = null;
+        currentAnalysisResult = null;
+        createRatingButtons(capabilitiesRatingButtonsContainer, 5, 'capabilities');
+        createRatingButtons(easeRatingButtonsContainer, 5, 'ease');
+        capabilitiesRatingHoverLabel.textContent = '';
+        easeRatingHoverLabel.textContent = '';
+        feedbackTabs.classList.add('d-none');
     }
 
     // Copy feedback to clipboard
@@ -886,7 +884,7 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
         console.log('Rating for reflection ID:', reflectionId);
         
         if (!reflectionId) {
-            showAlert('Please generate feedback first before rating.', 'warning');
+            showAlert(currentLanguage === 'en' ? 'Please generate feedback first before rating.' : 'Bitte generieren Sie zuerst Feedback, bevor Sie bewerten.', 'warning');
              if (!generateBtn.disabled) {
                 generateBtn.classList.add('btn-pulse');
                 setTimeout(() => generateBtn.classList.remove('btn-pulse'), 2000);
@@ -894,26 +892,30 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
             return;
         }
         
-        const feedbackRatingValue = currentQualityRating;
-        const usefulnessRatingValue = currentUsefulnessRating;
+        const capabilitiesRatingValue = currentCapabilitiesRating;
+        const easeRatingValue = currentEaseRating;
         
-        if (feedbackRatingValue === null || usefulnessRatingValue === null) {
-            showAlert('Please select ratings for both quality and usefulness before submitting.', 'warning');
+        if (capabilitiesRatingValue === null || easeRatingValue === null) {
+            showAlert(currentLanguage === 'en' ? 'Please select ratings for both questions before submitting.' : 'Bitte wählen Sie Bewertungen für beide Fragen aus, bevor Sie absenden.', 'warning');
             return;
         }
         
         // Get interaction tracking data
         const trackingData = getTimeTrackingSummary();
         
+        // Calculate UMUX-Lite score
+        const umuxScore = ((capabilitiesRatingValue - 1) + (easeRatingValue - 1)) * 100 / 8;
+        
         try {
-            console.log('Submitting ratings:', { feedbackRatingValue, usefulnessRatingValue });
+            console.log('Submitting ratings:', { capabilitiesRatingValue, easeRatingValue, umuxScore });
             console.log('Interaction tracking:', trackingData);
             
             const { data, error } = await supabase
                 .from('reflections')
                 .update({ 
-                    feedback_rating: feedbackRatingValue,
-                    usefulness_rating: usefulnessRatingValue,
+                    capabilities_rating: capabilitiesRatingValue,
+                    ease_rating: easeRatingValue,
+                    umux_score: umuxScore,
                     rated_at: new Date().toISOString(),
                     interaction_data: trackingData // Store interaction tracking
                 })
@@ -923,11 +925,11 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
             if (error) throw error;
             
             console.log('Rating update response:', data);
-            showAlert('Thank you for your feedback!', 'success');
+            showAlert(currentLanguage === 'en' ? 'Thank you for your feedback!' : 'Vielen Dank für Ihr Feedback!', 'success');
             
         } catch (error) {
             console.error('Error submitting rating:', error);
-            showAlert('Error submitting rating. Please try again.', 'danger');
+            showAlert(currentLanguage === 'en' ? 'Error submitting rating. Please try again.' : 'Fehler beim Senden der Bewertung. Bitte versuchen Sie es erneut.', 'danger');
         }
     }
 

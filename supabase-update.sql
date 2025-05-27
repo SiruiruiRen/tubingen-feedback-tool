@@ -24,11 +24,24 @@ ADD COLUMN IF NOT EXISTS revision_initiated_from VARCHAR(20);
 ALTER TABLE reflections 
 ADD COLUMN IF NOT EXISTS pre_revision_interaction JSONB;
 
+-- Add UMUX-Lite rating columns
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS capabilities_rating INTEGER CHECK (capabilities_rating >= 1 AND capabilities_rating <= 5);
+
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS ease_rating INTEGER CHECK (ease_rating >= 1 AND ease_rating <= 5);
+
+ALTER TABLE reflections 
+ADD COLUMN IF NOT EXISTS umux_score DECIMAL(5,2);
+
 -- Add index on video_id for better query performance
 CREATE INDEX IF NOT EXISTS idx_reflections_video_id ON reflections(video_id);
 
 -- Add index on revision_initiated_from for analysis queries
 CREATE INDEX IF NOT EXISTS idx_reflections_revision_from ON reflections(revision_initiated_from);
+
+-- Add index on UMUX score for analysis
+CREATE INDEX IF NOT EXISTS idx_reflections_umux_score ON reflections(umux_score);
 
 -- Update existing rows to have default values (optional)
 -- UPDATE reflections 
