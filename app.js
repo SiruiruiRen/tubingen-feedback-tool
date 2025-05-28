@@ -53,9 +53,10 @@ const translations = {
         umux_labels: ['', 'Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
         distribution_summary: "Your reflection contains: {description}% description, {explanation}% explanation, and {prediction}% prediction.",
         no_changes_warning: "You clicked 'Revise Reflection' but haven't made any changes to the text. Please edit your reflection before generating new feedback, or the feedback will be identical to what you already received.",
-        extended_tooltip: "Detailed academic feedback with comprehensive analysis",
-        short_tooltip: "Concise, easy-to-read feedback with key points",
-        workflow_tooltip: "1. Enter name and select video. 2. Write reflection. 3. Generate feedback (Extended/Short). 4. View definitions below. 5. Copy feedback or revise reflection. 6. Rate the system."
+        extended_tooltip: "Detailed academic feedback with comprehensive analysis and educational theory references",
+        short_tooltip: "Concise, easy-to-read feedback with key points and practical tips",
+        workflow_tooltip: "1. Enter name and select video. 2. Write reflection. 3. Generate feedback (Extended/Short). 4. View definitions below. 5. Copy feedback or revise reflection. 6. Rate the system.",
+        generate_tooltip: "Generate both Extended (detailed academic) and Short (concise) feedback versions. Requires name and video selection."
     },
     de: {
         title: "Lehrer Professional Vision Feedback",
@@ -97,9 +98,10 @@ const translations = {
         umux_labels: ['', 'Stimme überhaupt nicht zu', 'Stimme nicht zu', 'Neutral', 'Stimme zu', 'Stimme voll zu'],
         distribution_summary: "Ihre Reflexion enthält: {description}% Beschreibung, {explanation}% Erklärung und {prediction}% Vorhersage.",
         no_changes_warning: "Sie haben 'Reflexion überarbeiten' geklickt, aber keine Änderungen am Text vorgenommen. Bitte bearbeiten Sie Ihre Reflexion, bevor Sie neues Feedback generieren, sonst wird das Feedback identisch zu dem bereits erhaltenen sein.",
-        extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse",
-        short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten",
-        workflow_tooltip: "1. Name eingeben und Video auswählen. 2. Reflexion schreiben. 3. Feedback generieren (Erweitert/Kurz). 4. Definitionen unten ansehen. 5. Feedback kopieren oder Reflexion überarbeiten. 6. System bewerten."
+        extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse und pädagogischen Theoriereferenzen",
+        short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten und praktischen Tipps",
+        workflow_tooltip: "1. Name eingeben und Video auswählen. 2. Reflexion schreiben. 3. Feedback generieren (Erweitert/Kurz). 4. Definitionen unten ansehen. 5. Feedback kopieren oder Reflexion überarbeiten. 6. System bewerten.",
+        generate_tooltip: "Generieren Sie sowohl erweiterte (detaillierte akademische) als auch kurze (prägnante) Feedback-Versionen. Erfordert Name und Video-Auswahl."
     }
 };
 
@@ -209,14 +211,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTooltips(lang) {
         const tooltipTexts = {
             en: {
-                generate: "Generate both Extended (detailed academic) and Short (concise) feedback versions based on your reflection. Requires name and video selection.",
                 clear: "Clear the reflection text",
                 copy: "Copy feedback to clipboard",
                 revise: "Edit your reflection in the main text area and generate new feedback",
                 submit: "Submit your rating of the feedback"
             },
             de: {
-                generate: "Generieren Sie sowohl erweiterte (detaillierte akademische) als auch kurze (prägnante) Feedback-Versionen basierend auf Ihrer Reflexion. Erfordert Name und Video-Auswahl.",
                 clear: "Reflexionstext löschen",
                 copy: "Feedback in Zwischenablage kopieren",
                 revise: "Bearbeiten Sie Ihre Reflexion im Haupttextbereich und generieren Sie neues Feedback",
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const texts = tooltipTexts[lang];
         const trans = translations[lang];
         
-        generateBtn.setAttribute('title', texts.generate);
+        generateBtn.setAttribute('title', trans.generate_tooltip);
         clearBtn.setAttribute('title', texts.clear);
         copyBtn.setAttribute('title', texts.copy);
         reviseReflectionBtn.setAttribute('title', texts.revise);
@@ -289,6 +289,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return sessionId;
     }
 
+    // Initialize language first to set up tooltips properly
+    updateLanguage('en');
+    
     // Initialize Bootstrap tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -643,6 +646,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Also catch keywords that might not be in ** format
         text = text.replace(/\b(Good|Gut|Tip|Tipp|Why|Warum|Strength|Stärke|Suggestions?|Verbesserungsvorschläge?)\s*:/gi, (match, keyword) => {
             return `<strong class="feedback-keyword">${keyword}:</strong>`;
+        });
+        
+        // Specifically ensure "Why?" and "Warum?" are bolded even without colon
+        text = text.replace(/\b(Why\?|Warum\?)/gi, (match, keyword) => {
+            return `<strong class="feedback-keyword">${keyword}</strong>`;
         });
         
         // Format list items
@@ -1154,4 +1162,4 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
         }
     }
 
-}); /* Force rebuild - Wed May 28 00:44:30 CST 2025 */
+}); /* Force rebuild - Wed May 28 01:15:00 CST 2025 - Added bolded Why? and improved tooltips */
