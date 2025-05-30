@@ -813,7 +813,7 @@ Use clear headings for the main sections. Ensure well-structured English. Avoid 
 
 1.  **Specificity**: Refer to particular statements and passages in the student's text (e.g., by quoting if possible), avoiding vague phrases. (For your output, be specific but very brief).
 2.  **Constructive suggestions**: Provide realistic, actionable suggestions for improvement (e.g., "To improve further, you could..."), not just critique. (For your output, make suggestions practical and very brief).
-3.  **Explanations/Justifications**: Ground feedback in educational psychology concepts or research whenever possible to explain why suggestions matter. (For your output, keep explanations very brief and simple). Key theories to reference include: Behaviorism, Cognitivism, Constructivism, Cognitive Load Theory, Self-Determination Theory, Goal Orientation Theory, self-regulated learning, metacognitive strategies, instructional quality dimensions (classroom management, cognitive activation, supportive climate), observational learning, self-efficacy, wait time, scaffolding, and feedback quality.
+3.  **Explanations/Justifications**: Ground feedback in educational psychology concepts or research (e.g., concepts like wait time, cognitive activation, scaffolding, feedback quality) whenever possible to explain why suggestions matter. (For your output, keep explanations very brief and simple).
 4.  **Clarity**: Ensure your feedback to the student uses extremely clear, simple, and structured language appropriate for early-stage education students. This is key for the user-friendly style.
 
 My target audience is student teachers developing their professional vision. "Analysis" means professional vision:
@@ -856,7 +856,7 @@ Verwenden Sie klare Überschriften für die Hauptabschnitte. Achten Sie auf gut 
 
 1.  **Spezifität**: Ich beziehe mich auf konkrete Aussagen/Textpassagen (z.B. durch Zitate, wenn möglich), vermeide vage Formulierungen. (Für Ihre Antwort: Seien Sie spezifisch, aber sehr kurz.)
 2.  **Konstruktive Vorschläge**: Ich gebe realistische, umsetzbare Verbesserungsvorschläge (z.B. "Um dies weiter zu verbessern, könnten Sie..."), nicht nur Kritik. (Für Ihre Antwort: Machen Sie praktische und sehr kurze Vorschläge.)
-3.  **Erklärungen/Begründungen**: Ich begründe mein Feedback möglichst mit Konzepten oder Forschungsergebnissen der Pädagogischen Psychologie, um die Bedeutung der Vorschläge zu erläutern. (Für Ihre Antwort: Halten Sie Erklärungen sehr kurz und einfach.) Wichtige Theorien sind: Behaviorismus, Kognitivismus, Konstruktivismus, Cognitive Load Theory, Selbstbestimmungstheorie, Zielorientierungstheorie, selbstreguliertes Lernen, metakognitive Strategien, Unterrichtsqualitätsdimensionen (Klassenführung, kognitive Aktivierung, konstruktive Unterstützung), Lernen am Modell, Selbstwirksamkeit, Wartezeit, Scaffolding und Feedbackqualität.
+3.  **Erklärungen/Begründungen**: Ich begründe mein Feedback möglichst mit Konzepten oder Forschungsergebnissen der Pädagogischen Psychologie (z.B. Konzepten wie Wartezeit, kognitive Aktivierung, Scaffolding, Feedbackqualität), um die Bedeutung der Vorschläge zu erläutern. (Für Ihre Antwort: Halten Sie Erklärungen sehr kurz und einfach.)
 4.  **Verständlichkeit**: Stellen Sie sicher, dass Ihr Feedback an die Studierenden eine extrem klare, einfache und strukturierte Sprache verwendet, die für Studierende in den ersten Studienjahren angemessen ist. Dies ist entscheidend für den nutzerfreundlichen Stil.
 
 Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswahrnehmung entwickeln. "Analyse" bedeutet professionelle Unterrichtswahrnehmung:
@@ -1162,4 +1162,4 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
         }
     }
 
-}); /* Force rebuild - Wed May 28 01:30:00 CST 2025 - Added video names and educational theories */
+}); /* Force rebuild - Wed May 28 01:35:00 CST 2025 - Removed theories from user-friendly versions */
