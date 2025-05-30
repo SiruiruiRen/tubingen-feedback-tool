@@ -6,10 +6,10 @@
     <title>Teacher Professional Vision Feedback</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="styles.css?v=20250528-fix4">
+    <link rel="stylesheet" href="styles.css?v=20250528-fix5">
 </head>
 <body>
-    <!-- DEPLOYMENT VERSION: 20250528-fix4 with bolded Why? and improved tooltips -->
+    <!-- DEPLOYMENT VERSION: 20250528-fix5 with video names and educational theories -->
     <div id="alert-container"></div>
     
     <div class="main-container">
@@ -33,14 +33,9 @@
                             <label for="video-select" class="form-label" data-lang-key="video_watched">Video Watched:</label>
                             <select class="form-select" id="video-select">
                                 <option value="" data-lang-key="select_video">Select a video...</option>
-                                <option value="1">Video 1</option>
-                                <option value="2">Video 2</option>
-                                <option value="3">Video 3</option>
-                                <option value="4">Video 4</option>
-                                <option value="5">Video 5</option>
-                                <option value="6">Video 6</option>
-                                <option value="7">Video 7</option>
-                                <option value="8">Video 8</option>
+                                <option value="spider">Spinne fängt Fliege (Spider Catches Fly)</option>
+                                <option value="binomial">Binomische Formeln (Binomial Formulas)</option>
+                                <option value="height">Höhendifferenz (Height Difference)</option>
                             </select>
                         </div>
                         
@@ -215,6 +210,6 @@
             return supabase.createClient(url, key);
         };
     </script>
-    <script src="app.js?v=20250528-fix4"></script>
+    <script src="app.js?v=20250528-fix5"></script>
 </body>
 </html> 

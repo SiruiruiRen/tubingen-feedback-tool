@@ -50,18 +50,7 @@ Once you're satisfied with your local changes:
             3.  Try pushing again: `git push origin <your-local-branch-name>:main`
         *   **Secret Scanning Violation:** If GitHub blocks the push due to secrets:
             1.  **Best:** Remove the secret from your Git history (advanced).
-            2.  **Alternative:** Go to the URL provided by GitHub in the error message to allow the specific secret (understand the security implications). Then, try pushing again.
-
-## 4. Render Auto-Deployment
-
-*   **Automatic Update:** Your Render services (`tubingen-feedback-tool` static site and `tubingen-feedback-cors-proxy` web service) are configured via `render.yaml` to auto-deploy whenever changes are pushed to the `main` branch of your `SiruiruiRen/tubingen-feedback-tool` GitHub repository.
-*   **Monitor Deployment:**
-    *   Go to your Render Dashboard: [https://dashboard.render.com](https://dashboard.render.com)
-    *   Navigate to your services (`tubingen-feedback-tool` and `tubingen-feedback-cors-proxy`).
-    *   Check the "Events" or "Deploys" tab to see if a new deployment has started.
-    *   Check the "Logs" tab for each service to monitor the deployment process and ensure there are no errors.
-*   **Verify Changes:** Once Render indicates the deployment is "Live" or "Successful," open your application URL (`https://tubingen-feedback-tool.onrender.com` for the frontend) to verify your changes.
-
+ 
 ## Important Notes:
 
 *   **API Keys & Environment Variables on Render:** If you need to change sensitive information like your `OPENAI_API_KEY`:
