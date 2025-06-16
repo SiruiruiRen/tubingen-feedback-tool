@@ -834,6 +834,21 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (description > 20 && explanation > 20 && prediction > 10) {
                 initialInstruction = trans.praise_prefix;
             }
+
+            // Add instruction to focus on weak areas
+            let focusAreas = [];
+            if (description < 25) focusAreas.push(trans.description.toLowerCase());
+            if (explanation < 25) focusAreas.push(trans.explanation.toLowerCase());
+            if (prediction < 15) focusAreas.push(trans.prediction.toLowerCase());
+
+            if (focusAreas.length > 0) {
+                const focusJoiner = lang === 'de' ? ' und ' : ' and ';
+                const focusAreasString = focusAreas.join(focusJoiner);
+                const improveInstruction = lang === 'de' 
+                    ? `\nIhre Reflexion ist in den Bereichen ${focusAreasString} schwächer. Bitte geben Sie in diesen Bereichen besonders detailliertes Feedback.`
+                    : `\nYour reflection is weaker in the ${focusAreasString} areas. Please provide especially detailed feedback in these sections.`;
+                initialInstruction += improveInstruction;
+            }
         }
         
         const baseSystemMessage = initialInstruction ? `${initialInstruction}\n\n` : '';
