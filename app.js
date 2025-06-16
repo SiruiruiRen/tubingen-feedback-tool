@@ -265,19 +265,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Handle tab tooltips separately (since they use data-bs-toggle="tab")
-        const extendedTooltip = bootstrap.Tooltip.getInstance(extendedTab);
-        if (extendedTooltip) {
-            extendedTooltip.dispose();
-        }
+        [extendedTab, shortTab].forEach(tabEl => {
+            const existingTooltip = bootstrap.Tooltip.getInstance(tabEl);
+            if (existingTooltip) {
+                existingTooltip.dispose();
+            }
+        });
+
         new bootstrap.Tooltip(extendedTab, {
             title: trans.extended_tooltip,
             placement: 'top'
         });
         
-        const shortTooltip = bootstrap.Tooltip.getInstance(shortTab);
-        if (shortTooltip) {
-            shortTooltip.dispose();
-        }
         new bootstrap.Tooltip(shortTab, {
             title: trans.short_tooltip,
             placement: 'top'
@@ -313,13 +312,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize language first to set up tooltips properly
     updateLanguage('en');
     
-    // Initialize Bootstrap tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-    console.log('Tooltips initialized for', tooltipTriggerList.length, 'elements');
-
     // Function to create rating buttons
     function createRatingButtons(container, count, groupName) {
         container.innerHTML = ''; // Clear existing buttons
