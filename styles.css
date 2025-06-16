@@ -327,7 +327,7 @@ textarea {
 /* Feedback Formatting Styles - More Colorful */
 #feedback-extended h4.feedback-heading, #feedback-short h4.feedback-heading {
   font-size: 1.2rem;
-  margin-top: 1rem;
+  margin-top: 0;
   margin-bottom: 0.5rem;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
@@ -340,35 +340,33 @@ textarea {
   margin-top: 0;
 }
 
-/* Color coding for different sections */
-#feedback-extended h4.feedback-heading:nth-of-type(1), #feedback-short h4.feedback-heading:nth-of-type(1) {
-  background: linear-gradient(135deg, rgba(0, 172, 193, 0.1) 0%, rgba(0, 188, 212, 0.1) 100%);
-  color: var(--description-color);
-  border-left: 4px solid var(--description-color);
+/* Color coding for different sections - NEW ROBUST VERSION */
+.feedback-section {
+    border-left: 4px solid;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(245, 245, 245, 0.5) 100%);
 }
 
-#feedback-extended h4.feedback-heading:nth-of-type(2), #feedback-short h4.feedback-heading:nth-of-type(2) {
-  background: linear-gradient(135deg, rgba(123, 31, 162, 0.1) 0%, rgba(142, 36, 170, 0.1) 100%);
-  color: var(--explanation-color);
-  border-left: 4px solid var(--explanation-color);
+.feedback-section-description {
+    border-color: var(--description-color);
+    background-color: rgba(0, 172, 193, 0.05);
 }
 
-#feedback-extended h4.feedback-heading:nth-of-type(3), #feedback-short h4.feedback-heading:nth-of-type(3) {
-  background: linear-gradient(135deg, rgba(56, 142, 60, 0.1) 0%, rgba(67, 160, 71, 0.1) 100%);
-  color: var(--prediction-color);
-  border-left: 4px solid var(--prediction-color);
+.feedback-section-explanation {
+    border-color: var(--explanation-color);
+    background-color: rgba(123, 31, 162, 0.05);
 }
 
-#feedback-extended h4.feedback-heading:nth-of-type(4), #feedback-short h4.feedback-heading:nth-of-type(4) {
-  background: linear-gradient(135deg, rgba(63, 81, 181, 0.1) 0%, rgba(92, 107, 192, 0.1) 100%);
-  color: var(--primary-dark);
-  border-left: 4px solid var(--primary-color);
+.feedback-section-prediction {
+    border-color: var(--prediction-color);
+    background-color: rgba(56, 142, 60, 0.05);
 }
 
-#feedback-extended .section-content, #feedback-short .section-content {
-  margin-bottom: 0.75rem;
-  padding-left: 0.75rem;
-  position: relative;
+.feedback-section-overall {
+    border-color: var(--primary-color);
+    background-color: rgba(63, 81, 181, 0.05);
 }
 
 /* Style different feedback components - removed, using consistent blue color instead */
@@ -1187,4 +1185,86 @@ textarea {
   .definition-card {
     padding: 1.25rem;
   }
+}
+
+/* 
+  Color coding for different sections is now handled by 
+  the .feedback-section-* classes applied from app.js.
+  The old nth-of-type rules are commented out below.
+*/
+/*
+#feedback-extended h4.feedback-heading:nth-of-type(1), #feedback-short h4.feedback-heading:nth-of-type(1) {
+  background: linear-gradient(135deg, rgba(0, 172, 193, 0.1) 0%, rgba(0, 188, 212, 0.1) 100%);
+  color: var(--description-color);
+  border-left: 4px solid var(--description-color);
+}
+
+#feedback-extended h4.feedback-heading:nth-of-type(2), #feedback-short h4.feedback-heading:nth-of-type(2) {
+  background: linear-gradient(135deg, rgba(123, 31, 162, 0.1) 0%, rgba(142, 36, 170, 0.1) 100%);
+  color: var(--explanation-color);
+  border-left: 4px solid var(--explanation-color);
+}
+
+#feedback-extended h4.feedback-heading:nth-of-type(3), #feedback-short h4.feedback-heading:nth-of-type(3) {
+  background: linear-gradient(135deg, rgba(56, 142, 60, 0.1) 0%, rgba(67, 160, 71, 0.1) 100%);
+  color: var(--prediction-color);
+  border-left: 4px solid var(--prediction-color);
+}
+
+#feedback-extended h4.feedback-heading:nth-of-type(4), #feedback-short h4.feedback-heading:nth-of-type(4) {
+  background: linear-gradient(135deg, rgba(63, 81, 181, 0.1) 0%, rgba(92, 107, 192, 0.1) 100%);
+  color: var(--primary-dark);
+  border-left: 4px solid var(--primary-color);
+}
+*/
+
+#feedback-extended .section-content, #feedback-short .section-content {
+  margin-bottom: 0.75rem;
+  padding-left: 0.75rem;
+  position: relative;
+}
+
+/* Style different feedback components - removed, using consistent blue color instead */
+
+/* Apply colors to all strong elements that match keywords */
+#feedback-extended strong, #feedback-short strong {
+  color: var(--primary-dark);
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 0.1rem;
+}
+
+/* Black and bold for all feedback keywords */
+#feedback-extended strong.feedback-keyword,
+#feedback-short strong.feedback-keyword {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+#feedback-extended ul, #feedback-short ul {
+  padding-left: 1.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  list-style-type: none;
+}
+
+#feedback-extended ul li, #feedback-short ul li {
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+#feedback-extended ul li::before, #feedback-short ul li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+#feedback-extended br, #feedback-short br {
+  display: block;
+  content: "";
+  margin-top: 0.1rem;
 } 

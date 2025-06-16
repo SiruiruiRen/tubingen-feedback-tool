@@ -56,7 +56,9 @@ const translations = {
         extended_tooltip: "Detailed academic feedback with comprehensive analysis and educational theory references",
         short_tooltip: "Concise, easy-to-read feedback with key points and practical tips",
         workflow_tooltip: "1. Enter name and select video. 2. Write reflection. 3. Generate feedback (Extended/Short). 4. View definitions below. 5. Copy feedback or revise reflection. 6. Rate the system.",
-        generate_tooltip: "Generate both Extended (detailed academic) and Short (concise) feedback versions. Requires name and video selection."
+        generate_tooltip: "Generate both Extended (detailed academic) and Short (concise) feedback versions. Requires name and video selection.",
+        words: "words",
+        generate_description: "Generates both a detailed and a short feedback version."
     },
     de: {
         title: "Lehrer Professional Vision Feedback",
@@ -101,7 +103,9 @@ const translations = {
         extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse und pädagogischen Theoriereferenzen",
         short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten und praktischen Tipps",
         workflow_tooltip: "1. Name eingeben und Video auswählen. 2. Reflexion schreiben. 3. Feedback generieren (Erweitert/Kurz). 4. Definitionen unten ansehen. 5. Feedback kopieren oder Reflexion überarbeiten. 6. System bewerten.",
-        generate_tooltip: "Generieren Sie sowohl erweiterte (detaillierte akademische) als auch kurze (prägnante) Feedback-Versionen. Erfordert Name und Video-Auswahl."
+        generate_tooltip: "Generieren Sie sowohl erweiterte (detaillierte akademische) als auch kurze (prägnante) Feedback-Versionen. Erfordert Name und Video-Auswahl.",
+        words: "Wörter",
+        generate_description: "Erzeugt sowohl eine detaillierte als auch eine kurze Feedback-Version."
     }
 };
 
@@ -112,6 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const copyBtn = document.getElementById('copy-btn');
     const reviseReflectionBtn = document.getElementById('revise-reflection-btn');
     const reflectionText = document.getElementById('reflection-text');
+    const wordCount = document.getElementById('word-count');
+    const wordCountContainer = document.getElementById('word-count-container');
     const feedbackExtended = document.getElementById('feedback-extended');
     const feedbackShort = document.getElementById('feedback-short');
     const nameInput = document.getElementById('student-name');
@@ -159,6 +165,12 @@ document.addEventListener('DOMContentLoaded', function() {
     extendedTab.addEventListener('click', () => switchToTab('extended'));
     shortTab.addEventListener('click', () => switchToTab('short'));
 
+    reflectionText.addEventListener('input', () => {
+        const text = reflectionText.value.trim();
+        const words = text === '' ? 0 : text.split(/\s+/).filter(Boolean).length;
+        wordCount.textContent = words;
+    });
+
     // Track definitions expansion
     const definitionsHeader = document.querySelector('.definitions-header');
     definitionsHeader.addEventListener('click', () => {
@@ -205,6 +217,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update rating labels
         updateRatingLabels();
+
+        // Update word count label
+        const wordCountLabel = wordCountContainer.childNodes[2];
+        if (wordCountLabel) {
+            wordCountLabel.textContent = ` ${trans.words}`;
+        }
     }
 
     // Function to update tooltips based on language
@@ -264,6 +282,9 @@ document.addEventListener('DOMContentLoaded', function() {
             title: trans.short_tooltip,
             placement: 'top'
         });
+
+        // Manually trigger word count update on load if there's text
+        reflectionText.dispatchEvent(new Event('input'));
     }
 
     // Function to update rating labels
@@ -531,6 +552,9 @@ document.addEventListener('DOMContentLoaded', function() {
             capabilitiesRatingHoverLabel.textContent = '';
             easeRatingHoverLabel.textContent = '';
             
+            // Reset word count on clear
+            reflectionText.dispatchEvent(new Event('input'));
+            
         } catch (error) {
             console.error('Error in generateFeedback process:', error);
             showAlert(`Error: ${error.message}. Please check console for details.`, 'danger');
@@ -628,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
         text = text.trim();
         
         // Consolidate heading processing
-        text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4 class="feedback-heading">${p1.trim()}</h4>`);
+        text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4>${p1.trim()}</h4>`);
         
         // Format bold text with proper color classes
         text = text.replace(/\*\*(.+?)\*\*/g, (match, p1) => {
@@ -659,14 +683,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Wrap consecutive list items in ul tags
         text = text.replace(/(<li>.*?<\/li>\s*)+/g, (match) => `<ul>${match.trim()}</ul>`);
         
-        // Add structure for sections
-        let sections = text.split(/(?=<h4)/);
+        // Add structure for sections with new color-coded classes
+        let sections = text.split(/(?=<h4>)/);
         text = sections.map(section => {
-            if (section.startsWith('<h4')) {
+            if (section.startsWith('<h4>')) {
                 const h4EndIndex = section.indexOf('</h4>') + 5;
                 const heading = section.substring(0, h4EndIndex);
                 const content = section.substring(h4EndIndex);
-                return `${heading}<div class="section-content">${content.trim()}</div>`;
+                let sectionClass = 'feedback-section';
+                
+                if (heading.includes('Description') || heading.includes('Beschreibung')) {
+                    sectionClass += ' feedback-section-description';
+                } else if (heading.includes('Explanation') || heading.includes('Erklärung')) {
+                    sectionClass += ' feedback-section-explanation';
+                } else if (heading.includes('Prediction') || heading.includes('Vorhersage')) {
+                    sectionClass += ' feedback-section-prediction';
+                } else if (heading.includes('Overall') || heading.includes('Gesamtbewertung')) {
+                    sectionClass += ' feedback-section-overall';
+                }
+
+                return `<div class="${sectionClass}">${heading}<div class="section-content">${content.trim()}</div></div>`;
             }
             return section;
         }).join('');
@@ -802,6 +838,8 @@ FORMATTING REQUIREMENTS FOR YOUR RESPONSE:
 Address the student directly (e.g., "Your analysis...").
 The following four main sections MUST be included: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps".
 
+For the "Description" section, DO NOT judge the quality (e.g., avoid "good description"). Instead, state what was described (e.g., "You described the student's actions") and suggest other things to focus on (e.g., "Consider also describing the teacher's specific instructional moves").
+
 For EACH of these four main sections, you MUST structure your response using these exact labels:
 1.  **Strength:** [Followed by 1-2 sentences of positive observations relevant to that main section.]
 2.  **Suggestions:** - [Followed by 1-2 actionable bullet points (each 1-2 sentences) relevant to that main section.]
@@ -823,6 +861,7 @@ My target audience is student teachers developing their professional vision. "An
 
 USER-FRIENDLY OUTPUT FORMATTING REQUIREMENTS (VERY IMPORTANT: Your entire response to the student must be extremely brief and easy to understand):
 Address the student directly (e.g., "Your reflection...").
+For the "Description" section, don't say "good" or "bad." Just note what was described and give a tip on what else to look for.
 For EACH section ("#### Description", "#### Explanation", "#### Prediction", "#### Overall Assessment and Next Steps"):
 1.  **Good:** [One very short sentence about what was good.]
 2.  **Tip:** [One very short idea to improve, without any bullet points or hyphens.]
@@ -845,6 +884,8 @@ FORMATIERUNGSANFORDERUNGEN FÜR IHRE ANTWORT:
 Sprechen Sie die Studierenden direkt an (z.B. "Ihre Analyse...").
 Die folgenden vier Hauptabschnitte MÜSSEN enthalten sein: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte".
 
+Beurteilen Sie im Abschnitt "Beschreibung" NICHT die Qualität (vermeiden Sie z. B. "gute Beschreibung"). Geben Sie stattdessen an, was beschrieben wurde (z. B. "Sie haben die Handlungen des Schülers beschrieben") und schlagen Sie andere Schwerpunkte vor (z. B. "Beschreiben Sie auch die spezifischen unterrichtlichen Handlungen der Lehrkraft").
+
 Für JEDEN dieser vier Hauptabschnitte MÜSSEN Sie Ihre Antwort unter Verwendung dieser genauen Bezeichnungen wie folgt strukturieren:
 1.  **Stärke:** [Gefolgt von 1-2 Sätzen positiver Beobachtungen, die für diesen Hauptabschnitt relevant sind.]
 2.  **Verbesserungsvorschläge:** - [Gefolgt von 1-2 umsetzbaren Stichpunkten (jeweils 1-2 Sätze), die für diesen Hauptabschnitt relevant sind.]
@@ -866,6 +907,7 @@ Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswa
 
 NUTZERFREUNDLICHE AUSGABEFORMATIERUNGSANFORDERUNGEN (SEHR WICHTIG: Ihre gesamte Antwort an die Studierenden muss extrem kurz und leicht verständlich sein):
 Sprechen Sie die Studierenden direkt an (z.B. "Deine Reflexion...").
+Sagen Sie im Abschnitt "Beschreibung" nicht "gut" oder "schlecht". Notieren Sie nur, was beschrieben wurde und geben Sie einen Tipp, worauf man noch achten kann.
 Für JEDEN Abschnitt ("#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Gesamtbewertung und nächste Schritte"):
 1.  **Gut:** [Ein sehr kurzer Satz, was gut war.]
 2.  **Tipp:** [Eine sehr kurze Idee zur Verbesserung, ohne Stichpunkte oder Bindestriche.]
@@ -884,6 +926,9 @@ Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeide
     // Clear text area
     function clearText() {
         reflectionText.value = '';
+        // Manually trigger word count update
+        reflectionText.dispatchEvent(new Event('input'));
+
         feedbackExtended.innerHTML = `<p class="text-muted" data-lang-key="feedback_placeholder">${translations[currentLanguage].feedback_placeholder}</p>`;
         feedbackShort.innerHTML = `<p class="text-muted" data-lang-key="feedback_placeholder">${translations[currentLanguage].feedback_placeholder}</p>`;
         sessionStorage.removeItem('lastGeneratedReflectionIdForRating');
