@@ -52,6 +52,9 @@ const translations = {
         submit_rating: "Submit Rating",
         umux_labels: ['', 'Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
         distribution_summary: "Your reflection contains: {description}% description, {explanation}% explanation, and {prediction}% prediction.",
+        distribution_summary_with_other: "Your reflection contains: {description}% description, {explanation}% explanation, {prediction}% prediction, and {other}% content outside of professional vision.",
+        praise_prefix: "Good job on this reflection! You have a good balance of the core components of professional vision.",
+        vision_warning: "Warning: A large portion of your text ({other}%) was outside the core professional vision components. For your next reflection, try to focus more on describing, explaining, and predicting.",
         no_changes_warning: "You clicked 'Revise Reflection' but haven't made any changes to the text. Please edit your reflection before generating new feedback, or the feedback will be identical to what you already received.",
         extended_tooltip: "Detailed academic feedback with comprehensive analysis and educational theory references",
         short_tooltip: "Concise, easy-to-read feedback with key points and practical tips",
@@ -99,6 +102,9 @@ const translations = {
         submit_rating: "Bewertung abgeben",
         umux_labels: ['', 'Stimme überhaupt nicht zu', 'Stimme nicht zu', 'Neutral', 'Stimme zu', 'Stimme voll zu'],
         distribution_summary: "Ihre Reflexion enthält: {description}% Beschreibung, {explanation}% Erklärung und {prediction}% Vorhersage.",
+        distribution_summary_with_other: "Ihre Reflexion enthält: {description}% Beschreibung, {explanation}% Erklärung, {prediction}% Vorhersage und {other}% Inhalt außerhalb der professionellen Unterrichtswahrnehmung.",
+        praise_prefix: "Gute Arbeit bei dieser Reflexion! Sie haben eine gute Balance zwischen den Kernkomponenten der professionellen Unterrichtswhrnehmung.",
+        vision_warning: "Warnung: Ein großer Teil Ihres Textes ({other}%) lag außerhalb der Kernkomponenten der professionellen Unterrichtswahrnehmung. Versuchen Sie bei Ihrer nächsten Reflexion, sich mehr auf das Beschreiben, Erklären und Vorhersagen zu konzentrieren.",
         no_changes_warning: "Sie haben 'Reflexion überarbeiten' geklickt, aber keine Änderungen am Text vorgenommen. Bitte bearbeiten Sie Ihre Reflexion, bevor Sie neues Feedback generieren, sonst wird das Feedback identisch zu dem bereits erhaltenen sein.",
         extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse und pädagogischen Theoriereferenzen",
         short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten und praktischen Tipps",
@@ -561,18 +567,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Analyze reflection to get percentage distribution
     async function analyzeReflection(reflection, language) {
         const analysisPrompt = language === 'en' 
-            ? `Analyze this teaching reflection and determine the percentage distribution of content across three categories:
+            ? `Analyze this teaching reflection and determine the percentage distribution of content across four categories:
                1. Description (noting what happened)
                2. Explanation (interpreting using theory)
                3. Prediction (forecasting effects)
+               4. Other (content that does not fit the other three, i.e., content outside of professional vision)
                
-               Return ONLY a JSON object with percentages like: {"description": 40, "explanation": 35, "prediction": 25}`
-            : `Analysieren Sie diese Unterrichtsreflexion und bestimmen Sie die prozentuale Verteilung des Inhalts über drei Kategorien:
+               Return ONLY a JSON object with percentages that sum to 100, like: {"description": 40, "explanation": 35, "prediction": 20, "other": 5}`
+            : `Analysieren Sie diese Unterrichtsreflexion und bestimmen Sie die prozentuale Verteilung des Inhalts über vier Kategorien:
                1. Beschreibung (Beobachtung des Geschehens)
                2. Erklärung (Interpretation mit Theorie)
                3. Vorhersage (Prognose der Auswirkungen)
+               4. Sonstiges (Inhalte, die nicht in die anderen drei Kategorien passen, d.h. Inhalte außerhalb der professionellen Unterrichtswahrnehmung)
                
-               Geben Sie NUR ein JSON-Objekt mit Prozentsätzen zurück wie: {"description": 40, "explanation": 35, "prediction": 25}`;
+               Geben Sie NUR ein JSON-Objekt mit Prozentsätzen zurück, die sich zu 100 addieren, wie: {"description": 40, "explanation": 35, "prediction": 20, "other": 5}`;
 
         const requestData = {
             model: model,
@@ -613,11 +621,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Default if parsing fails
-            return { description: 33, explanation: 33, prediction: 34 };
+            return { description: 33, explanation: 33, prediction: 34, other: 0 };
         } catch (error) {
             console.error('Error in reflection analysis:', error);
             // Return default distribution if analysis fails
-            return { description: 33, explanation: 33, prediction: 34 };
+            return { description: 33, explanation: 33, prediction: 34, other: 0 };
         }
     }
 
@@ -628,12 +636,22 @@ document.addEventListener('DOMContentLoaded', function() {
         let formattedText = '';
         
         // Add analysis distribution visualization if available
-        if (analysisResult && (analysisResult.description || analysisResult.explanation || analysisResult.prediction)) {
-            // Add text summary with section title
-            const distributionText = translations[currentLanguage].distribution_summary
-                .replace('{description}', analysisResult.description)
-                .replace('{explanation}', analysisResult.explanation)
-                .replace('{prediction}', analysisResult.prediction);
+        if (analysisResult) {
+            let distributionText;
+            const trans = translations[currentLanguage];
+
+            if (analysisResult.other > 0) {
+                distributionText = trans.distribution_summary_with_other
+                    .replace('{description}', analysisResult.description)
+                    .replace('{explanation}', analysisResult.explanation)
+                    .replace('{prediction}', analysisResult.prediction)
+                    .replace('{other}', analysisResult.other);
+            } else {
+                distributionText = trans.distribution_summary
+                    .replace('{description}', analysisResult.description)
+                    .replace('{explanation}', analysisResult.explanation)
+                    .replace('{prediction}', analysisResult.prediction);
+            }
             
             const sectionTitle = currentLanguage === 'en' ? 'Analysis Distribution:' : 'Analyse-Verteilung:';
             
@@ -690,6 +708,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     sectionClass += ' feedback-section-explanation';
                 } else if (heading.includes('Prediction') || heading.includes('Vorhersage')) {
                     sectionClass += ' feedback-section-prediction';
+                } else if (heading.includes('Other') || heading.includes('Sonstiges')) {
+                    sectionClass += ' feedback-section-other';
                 } else if (heading.includes('Overall') || heading.includes('Gesamtbewertung')) {
                     sectionClass += ' feedback-section-overall';
                 }
@@ -801,110 +821,91 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get the appropriate system prompt based on style and language
     function getSystemPrompt(promptType, analysisResult) {
-        // Calculate which areas need more focus based on the analysis
-        let focusAreas = [];
+        let initialInstruction = '';
+        const lang = promptType.includes('English') ? 'en' : 'de';
+        const trans = translations[lang];
+
         if (analysisResult) {
-            if (analysisResult.description < 30) focusAreas.push('description');
-            if (analysisResult.explanation < 30) focusAreas.push('explanation');
-            if (analysisResult.prediction < 20) focusAreas.push('prediction');
+            const { description, explanation, prediction, other } = analysisResult;
+            const visionTotal = description + explanation + prediction;
+
+            if (visionTotal < 50) {
+                initialInstruction = trans.vision_warning.replace('{other}', other);
+            } else if (description > 20 && explanation > 20 && prediction > 10) {
+                initialInstruction = trans.praise_prefix;
+            }
         }
         
-        const focusInstruction = focusAreas.length > 0 
-            ? `\n\nIMPORTANT: The student's reflection shows the following distribution: Description ${analysisResult.description}%, Explanation ${analysisResult.explanation}%, Prediction ${analysisResult.prediction}%. Please emphasize feedback on improving ${focusAreas.join(' and ')} aspects.`
-            : '';
+        const baseSystemMessage = initialInstruction ? `${initialInstruction}\n\n` : '';
 
         const prompts = {
-            'academic English': `I will analyze student teacher reflections on teaching videos. My task is to generate high-quality feedback as a supportive yet rigorous teaching mentor. The feedback must fulfill four quality dimensions:
+            'academic English': baseSystemMessage + `You are a supportive yet rigorous teaching mentor. Your main task is to analyze a student teacher's reflection on a teaching video and provide high-quality feedback based on the following quality dimensions and structure.
 
-1.  **Specificity**: Refer to particular statements and passages in the student's text (e.g., by quoting if possible), avoiding vague phrases.
-2.  **Constructive suggestions**: Provide realistic, actionable suggestions for improvement (e.g., "To improve further, you could..."), not just critique.
-3.  **Explanations/Justifications**: Ground feedback in educational psychology concepts or research whenever possible to explain why suggestions matter. Draw from these key theories and concepts: Behaviorism (classical and operant conditioning), Cognitivism (information processing, memory models), Constructivism (learning as an active, self-directed process), Situated learning (learning in authentic contexts), Cognitive Load Theory (Sweller): differentiation between intrinsic, extraneous, and germane cognitive load, Self-Determination Theory (Deci & Ryan): basic psychological needs for autonomy, competence, and relatedness, Expectancy-Value Theory (Eccles & Wigfield), Goal Orientation Theory (mastery vs. performance goals), Attribution Theory (Weiner), Models of self-regulated learning (e.g., Zimmerman), Metacognitive strategies (planning, monitoring, reflection), Opportunity-Use Model (e.g., Helmke), Three basic dimensions of instructional quality (classroom management, cognitive activation, supportive climate), Observational learning / Self-efficacy, wait time, scaffolding, feedback quality.
-4.  **Clarity**: Ensure your feedback uses clear, structured language appropriate for early-stage education students.
+**Quality Dimensions:**
+1.  **Specificity**: Refer to particular statements and passages in the student's text.
+2.  **Constructive suggestions**: Provide realistic, actionable suggestions for improvement.
+3.  **Explanations/Justifications**: Ground feedback in educational psychology concepts or research.
+4.  **Clarity**: Use clear, structured language appropriate for early-stage education students.
 
-My target audience is student teachers developing their professional vision. "Analysis" means professional vision:
+**Core Content (Professional Vision):**
 - **Description**: Accurately noting what happened.
 - **Explanation**: Interpreting events using educational theory.
-- **Prediction**: Forecasting effects on student learning.${focusInstruction}
+- **Prediction**: Forecasting effects on student learning.
 
-FORMATTING REQUIREMENTS FOR YOUR RESPONSE:
-Address the student directly (e.g., "Your analysis...").
-The following four main sections MUST be included: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps".
-
-For the "Description" section, DO NOT judge the quality (e.g., avoid "good description"). Instead, state what was described (e.g., "You described the student's actions") and suggest other things to focus on (e.g., "Consider also describing the teacher's specific instructional moves").
-
-For EACH of these four main sections, you MUST structure your response using these exact labels:
-1.  **Strength:** [Followed by 1-2 sentences of positive observations relevant to that main section.]
-2.  **Suggestions:** - [Followed by 1-2 actionable bullet points (each 1-2 sentences) relevant to that main section.]
-3.  **Why?:** [Followed by an explanation (1-2 sentences, or more if explaining multiple suggestions) linking the suggestion(s) to educational concepts or impact.]
-
-Use clear headings for the main sections. Ensure well-structured English. Avoid emoticons/informal language.`,
+**FORMATTING REQUIREMENTS:**
+- Address the student directly (e.g., "Your analysis...").
+- Include these four sections exactly: "#### Description", "#### Explanation", "#### Prediction", and "#### Overall Assessment and Next Steps".
+- **For "Description"**: Do NOT judge the quality (e.g., avoid "good description"). State what was described and suggest other things to focus on.
+- **For each section**: Use these exact sub-headings: "Strength:", "Suggestions:", and "Why?:".
+- Use well-structured English. Avoid emoticons.`,
             
-            'user-friendly English': `I will analyze student teacher reflections on teaching videos. My task is to generate high-quality feedback as a supportive yet rigorous teaching mentor. The feedback must fulfill four quality dimensions:
+            'user-friendly English': baseSystemMessage + `You are a supportive teaching mentor. Your main task is to give simple, clear, and brief feedback on a student teacher's reflection.
 
-1.  **Specificity**: Refer to particular statements and passages in the student's text (e.g., by quoting if possible), avoiding vague phrases. (For your output, be specific but very brief).
-2.  **Constructive suggestions**: Provide realistic, actionable suggestions for improvement (e.g., "To improve further, you could..."), not just critique. (For your output, make suggestions practical and very brief).
-3.  **Explanations/Justifications**: Ground feedback in educational psychology concepts or research (e.g., concepts like wait time, cognitive activation, scaffolding, feedback quality) whenever possible to explain why suggestions matter. (For your output, keep explanations very brief and simple).
-4.  **Clarity**: Ensure your feedback to the student uses extremely clear, simple, and structured language appropriate for early-stage education students. This is key for the user-friendly style.
+**Core Content (Professional Vision):**
+- **Description**: What happened?
+- **Explanation**: Why did it happen (using simple theory)?
+- **Prediction**: What will happen next?
 
-My target audience is student teachers developing their professional vision. "Analysis" means professional vision:
-- **Description**: Accurately noting what happened.
-- **Explanation**: Interpreting events using educational theory.
-- **Prediction**: Forecasting effects on student learning.${focusInstruction}
+**FORMATTING REQUIREMENTS (VERY IMPORTANT):**
+- Be brief and easy to understand.
+- Address the student directly (e.g., "Your reflection...").
+- **For "Description"**: Don't say "good" or "bad." Just note what was described and give a tip.
+- For EACH section ("#### Description", "#### Explanation", "#### Prediction", "#### Overall Assessment and Next Steps"), use these exact labels: "Good:", "Tip:", and "Why?:".
+- Respond only in English. Avoid emoticons.`,
 
-USER-FRIENDLY OUTPUT FORMATTING REQUIREMENTS (VERY IMPORTANT: Your entire response to the student must be extremely brief and easy to understand):
-Address the student directly (e.g., "Your reflection...").
-For the "Description" section, don't say "good" or "bad." Just note what was described and give a tip on what else to look for.
-For EACH section ("#### Description", "#### Explanation", "#### Prediction", "#### Overall Assessment and Next Steps"):
-1.  **Good:** [One very short sentence about what was good.]
-2.  **Tip:** [One very short idea to improve, without any bullet points or hyphens.]
-3.  **Why?:** [One very short sentence explaining why the tip helps.]
-Use these exact headings. Respond only in English. Avoid emoticons and overly casual language. Ensure the language used in the feedback is exceptionally simple and direct for student teachers.`,
+            'academic German': baseSystemMessage + `Sie sind ein unterstützender, aber dennoch kritischer Mentor. Ihre Hauptaufgabe ist es, die Reflexion eines Lehramtsstudierenden zu analysieren und qualitativ hochwertiges Feedback zu geben, das auf den folgenden Qualitätsdimensionen und der Struktur basiert.
 
-            'academic German': `Ich werde als unterstützender, aber dennoch kritischer Mentor Reflexionen von Lehramtsstudierenden zu Unterrichtsvideos analysieren. Meine Aufgabe ist es, qualitativ hochwertiges Feedback zu generieren, das vier Qualitätsdimensionen erfüllt:
+**Qualitätsdimensionen:**
+1.  **Spezifität**: Beziehen Sie sich auf konkrete Aussagen/Textpassagen.
+2.  **Konstruktive Vorschläge**: Geben Sie realistische, umsetzbare Verbesserungsvorschläge.
+3.  **Erklärungen/Begründungen**: Begründen Sie Feedback mit Konzepten der Pädagogischen Psychologie.
+4.  **Verständlichkeit**: Verwenden Sie eine klare, strukturierte Sprache.
 
-1.  **Spezifität**: Ich beziehe mich auf konkrete Aussagen/Textpassagen (z.B. durch Zitate, wenn möglich), vermeide vage Formulierungen.
-2.  **Konstruktive Vorschläge**: Ich gebe realistische, umsetzbare Verbesserungsvorschläge (z.B. "Um dies weiter zu verbessern, könnten Sie..."), nicht nur Kritik.
-3.  **Erklärungen/Begründungen**: Ich begründe mein Feedback möglichst mit Konzepten oder Forschungsergebnissen der Pädagogischen Psychologie, um die Bedeutung der Vorschläge zu erläutern. Ich beziehe mich auf folgende Schlüsseltheorien und Konzepte: Behaviorismus (klassische und operante Konditionierung), Kognitivismus (Informationsverarbeitung, Gedächtnismodell), Konstruktivismus (Lernen als aktiver, selbstgesteuerter Prozess), Situiertes Lernen (Lernen in authentischen Kontexten), Cognitive Load Theory (Sweller): Unterscheidung von intrinsischer, extraneer und lernrelevanter kognitiver Belastung, Selbstbestimmungstheorie (Deci & Ryan): Grundbedürfnisse nach Autonomie, Kompetenz und sozialer Eingebundenheit, Erwartungs-Wert-Theorie (Eccles & Wigfield), Zielorientierungstheorie (Mastery vs. Performance Goals), Attributionstheorie (Weiner), Modelle selbstregulierten Lernens (z. B. nach Zimmerman), Metakognitive Strategien (Planung, Überwachung, Reflexion), Angebot-Nutzungsmodell (z.B. Helmke), Drei Basisdimensionen der Unterrichtsqualität (Klassenführung, kognitive Aktivierung, konstruktive Unterstützung), Lernen am Modell / Selbstwirksamkeit, Wartezeit, Scaffolding, Feedbackqualität.
-4.  **Verständlichkeit**: Stellen Sie sicher, dass Ihr Feedback eine klare, strukturierte Sprache verwendet, die für Studierende in den ersten Studienjahren angemessen ist.
-
-Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswahrnehmung entwickeln. "Analyse" bedeutet professionelle Unterrichtswahrnehmung:
+**Kerninhalte (Professionelle Unterrichtswahrnehmung):**
 - **Beschreibung**: Genaues Beobachten des Geschehens.
 - **Erklärung**: Interpretation von Ereignissen mittels pädagogischer Theorien.
-- **Vorhersage**: Prognose der Auswirkungen auf das Lernen der Schüler:innen.${focusInstruction ? focusInstruction.replace('Description', 'Beschreibung').replace('Explanation', 'Erklärung').replace('Prediction', 'Vorhersage').replace('improving', 'Verbesserung von') : ''}
+- **Vorhersage**: Prognose der Auswirkungen auf das Lernen.
 
-FORMATIERUNGSANFORDERUNGEN FÜR IHRE ANTWORT:
-Sprechen Sie die Studierenden direkt an (z.B. "Ihre Analyse...").
-Die folgenden vier Hauptabschnitte MÜSSEN enthalten sein: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte".
+**FORMATIERUNGSANFORDERUNGEN:**
+- Sprechen Sie die Studierenden direkt an (z.B. "Ihre Analyse...").
+- Fügen Sie genau diese vier Abschnitte ein: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", und "#### Gesamtbewertung und nächste Schritte".
+- **Für "Beschreibung"**: Beurteilen Sie NICHT die Qualität (z.B. vermeiden Sie "gute Beschreibung"). Geben Sie an, was beschrieben wurde, und schlagen Sie andere Schwerpunkte vor.
+- **Für jeden Abschnitt**: Verwenden Sie genau diese Unterüberschriften: "Stärke:", "Verbesserungsvorschläge:", und "Warum?:".
+- Achten Sie auf gut strukturiertes Deutsch. Vermeiden Sie Emoticons.`,
 
-Beurteilen Sie im Abschnitt "Beschreibung" NICHT die Qualität (vermeiden Sie z. B. "gute Beschreibung"). Geben Sie stattdessen an, was beschrieben wurde (z. B. "Sie haben die Handlungen des Schülers beschrieben") und schlagen Sie andere Schwerpunkte vor (z. B. "Beschreiben Sie auch die spezifischen unterrichtlichen Handlungen der Lehrkraft").
+            'user-friendly German': baseSystemMessage + `Sie sind ein unterstützender Mentor. Ihre Hauptaufgabe ist es, einfaches, klares und kurzes Feedback zur Reflexion eines Lehramtsstudierenden zu geben.
 
-Für JEDEN dieser vier Hauptabschnitte MÜSSEN Sie Ihre Antwort unter Verwendung dieser genauen Bezeichnungen wie folgt strukturieren:
-1.  **Stärke:** [Gefolgt von 1-2 Sätzen positiver Beobachtungen, die für diesen Hauptabschnitt relevant sind.]
-2.  **Verbesserungsvorschläge:** - [Gefolgt von 1-2 umsetzbaren Stichpunkten (jeweils 1-2 Sätze), die für diesen Hauptabschnitt relevant sind.]
-3.  **Warum?:** [Gefolgt von einer Erklärung (1-2 Sätze oder mehr, falls mehrere Vorschläge erklärt werden), die den/die Vorschlag/Vorschläge mit pädagogischen Konzepten oder Auswirkungen in Verbindung bringt.]
+**Kerninhalte (Professionelle Unterrichtswahrnehmung):**
+- **Beschreibung**: Was ist passiert?
+- **Erklärung**: Warum ist es passiert (mit einfacher Theorie)?
+- **Vorhersage**: Was wird als nächstes passieren?
 
-Verwenden Sie klare Überschriften für die Hauptabschnitte. Achten Sie auf gut strukturiertes Deutsch. Vermeiden Sie Emoticons/Umgangssprache.`,
-
-            'user-friendly German': `Ich werde als unterstützender, aber dennoch kritischer Mentor Reflexionen von Lehramtsstudierenden zu Unterrichtsvideos analysieren. Meine Aufgabe ist es, qualitativ hochwertiges Feedback zu generieren, das vier Qualitätsdimensionen erfüllt:
-
-1.  **Spezifität**: Ich beziehe mich auf konkrete Aussagen/Textpassagen (z.B. durch Zitate, wenn möglich), vermeide vage Formulierungen. (Für Ihre Antwort: Seien Sie spezifisch, aber sehr kurz.)
-2.  **Konstruktive Vorschläge**: Ich gebe realistische, umsetzbare Verbesserungsvorschläge (z.B. "Um dies weiter zu verbessern, könnten Sie..."), nicht nur Kritik. (Für Ihre Antwort: Machen Sie praktische und sehr kurze Vorschläge.)
-3.  **Erklärungen/Begründungen**: Ich begründe mein Feedback möglichst mit Konzepten oder Forschungsergebnissen der Pädagogischen Psychologie (z.B. Konzepten wie Wartezeit, kognitive Aktivierung, Scaffolding, Feedbackqualität), um die Bedeutung der Vorschläge zu erläutern. (Für Ihre Antwort: Halten Sie Erklärungen sehr kurz und einfach.)
-4.  **Verständlichkeit**: Stellen Sie sicher, dass Ihr Feedback an die Studierenden eine extrem klare, einfache und strukturierte Sprache verwendet, die für Studierende in den ersten Studienjahren angemessen ist. Dies ist entscheidend für den nutzerfreundlichen Stil.
-
-Meine Zielgruppe sind Lehramtsstudierende, die ihre professionelle Unterrichtswahrnehmung entwickeln. "Analyse" bedeutet professionelle Unterrichtswahrnehmung:
-- **Beschreibung**: Genaues Beobachten des Geschehens.
-- **Erklärung**: Interpretation von Ereignissen mittels pädagogischer Theorien.
-- **Vorhersage**: Prognose der Auswirkungen auf das Lernen der Schüler:innen.${focusInstruction ? focusInstruction.replace('Description', 'Beschreibung').replace('Explanation', 'Erklärung').replace('Prediction', 'Vorhersage').replace('improving', 'Verbesserung von') : ''}
-
-NUTZERFREUNDLICHE AUSGABEFORMATIERUNGSANFORDERUNGEN (SEHR WICHTIG: Ihre gesamte Antwort an die Studierenden muss extrem kurz und leicht verständlich sein):
-Sprechen Sie die Studierenden direkt an (z.B. "Deine Reflexion...").
-Sagen Sie im Abschnitt "Beschreibung" nicht "gut" oder "schlecht". Notieren Sie nur, was beschrieben wurde und geben Sie einen Tipp, worauf man noch achten kann.
-Für JEDEN Abschnitt ("#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Gesamtbewertung und nächste Schritte"):
-1.  **Gut:** [Ein sehr kurzer Satz, was gut war.]
-2.  **Tipp:** [Eine sehr kurze Idee zur Verbesserung, ohne Stichpunkte oder Bindestriche.]
-3.  **Warum?:** [Ein sehr kurzer Satz, der erklärt, warum der Tipp hilft.]
-Nutzen Sie diese exakten Überschriften. Antworten Sie nur auf Deutsch. Vermeiden Sie Emoticons und zu lockere Sprache. Stellen Sie sicher, dass die im Feedback verwendete Sprache außergewöhnlich einfach und direkt für Lehramtsstudierende ist.`
+**FORMATIERUNGSANFORDERUNGEN (SEHR WICHTIG):**
+- Seien Sie kurz und leicht verständlich.
+- Sprechen Sie die Studierenden direkt an (z.B. "Deine Reflexion...").
+- **Für "Beschreibung"**: Sagen Sie nicht "gut" oder "schlecht". Notieren Sie nur, was beschrieben wurde und geben Sie einen Tipp.
+- Für JEDEN Abschnitt ("#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Gesamtbewertung und nächste Schritte"), verwenden Sie diese exakten Bezeichnungen: "Gut:", "Tipp:", und "Warum?:".
+- Antworten Sie nur auf Deutsch. Vermeiden Sie Emoticons.`
         };
         
         return prompts[promptType] || prompts['user-friendly English'];
