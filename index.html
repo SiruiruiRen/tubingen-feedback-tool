@@ -239,5 +239,26 @@
         };
     </script>
     <script src="app.js?v=20250528-fix6"></script>
+    
+    <!-- Welcome Modal -->
+    <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="welcomeModalLabel" data-lang-key="popup_title">Two Feedback Versions Available</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" data-lang-key="popup_body">
+                    This tool provides two types of feedback for your reflection:<br><br>
+                    <strong>Extended Feedback:</strong> Detailed academic feedback with comprehensive analysis and educational theory references.<br><br>
+                    <strong>Short Feedback:</strong> Concise, easy-to-read feedback with key points and practical tips.<br><br>
+                    You can switch between them using the tabs after generating feedback.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-lang-key="popup_close_button">Got it!</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 

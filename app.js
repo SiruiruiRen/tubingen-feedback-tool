@@ -61,7 +61,10 @@ const translations = {
         workflow_tooltip: "1. Enter name and select video. 2. Write reflection. 3. Generate feedback (Extended/Short). 4. View definitions below. 5. Copy feedback or revise reflection. 6. Rate the system.",
         generate_tooltip: "Generate both Extended (detailed academic) and Short (concise) feedback versions. Requires name and video selection.",
         words: "words",
-        generate_description: "Generates both a detailed and a short feedback version."
+        generate_description: "Generates both a detailed and a short feedback version.",
+        popup_title: "Two Feedback Versions Available",
+        popup_body: "This tool provides two types of feedback for your reflection:<br><br><strong>Extended Feedback:</strong> Detailed academic feedback with comprehensive analysis and educational theory references.<br><br><strong>Short Feedback:</strong> Concise, easy-to-read feedback with key points and practical tips.<br><br>You can switch between them using the tabs after generating feedback.",
+        popup_close_button: "Got it!"
     },
     de: {
         title: "Lehrer Professional Vision Feedback",
@@ -111,7 +114,10 @@ const translations = {
         workflow_tooltip: "1. Name eingeben und Video auswählen. 2. Reflexion schreiben. 3. Feedback generieren (Erweitert/Kurz). 4. Definitionen unten ansehen. 5. Feedback kopieren oder Reflexion überarbeiten. 6. System bewerten.",
         generate_tooltip: "Generieren Sie sowohl erweiterte (detaillierte akademische) als auch kurze (prägnante) Feedback-Versionen. Erfordert Name und Video-Auswahl.",
         words: "Wörter",
-        generate_description: "Erzeugt sowohl eine detaillierte als auch eine kurze Feedback-Version."
+        generate_description: "Erzeugt sowohl eine detaillierte als auch eine kurze Feedback-Version.",
+        popup_title: "Zwei Feedback-Versionen verfügbar",
+        popup_body: "Dieses Tool bietet zwei Arten von Feedback für Ihre Reflexion:<br><br><strong>Erweitertes Feedback:</strong> Detailliertes akademisches Feedback mit umfassender Analyse und pädagogischen Theoriereferenzen.<br><br><strong>Kurzes Feedback:</strong> Prägnantes, leicht lesbares Feedback mit Kernpunkten und praktischen Tipps.<br><br>Sie können nach dem Generieren des Feedbacks über die Registerkarten zwischen ihnen wechseln.",
+        popup_close_button: "Verstanden!"
     }
 };
 
@@ -318,6 +324,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize language first to set up tooltips properly
     updateLanguage('en');
     
+    // Show welcome modal once per session
+    if (!sessionStorage.getItem('welcomeModalShown')) {
+        const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+        welcomeModal.show();
+        sessionStorage.setItem('welcomeModalShown', 'true');
+    }
+
     // Function to create rating buttons
     function createRatingButtons(container, count, groupName) {
         container.innerHTML = ''; // Clear existing buttons
