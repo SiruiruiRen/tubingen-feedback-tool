@@ -62,9 +62,14 @@ const translations = {
         generate_tooltip: "Generate both Extended (detailed academic) and Short (concise) feedback versions. Requires name and video selection.",
         words: "words",
         generate_description: "Generates both a detailed and a short feedback version.",
-        popup_title: "Two Feedback Versions Available",
-        popup_body: "This tool provides two types of feedback for your reflection:<br><br><strong>Extended Feedback:</strong> Detailed academic feedback with comprehensive analysis and educational theory references.<br><br><strong>Short Feedback:</strong> Concise, easy-to-read feedback with key points and practical tips.<br><br>You can switch between them using the tabs after generating feedback.",
-        popup_close_button: "Got it!"
+        popup_title: "Welcome!",
+        popup_body: 'Welcome to the Teacher Professional Vision Feedback tool! This application helps you analyze your teaching reflections based on the professional vision framework.<br><br>The tool generates two distinct versions of feedback:'
+        + '<ul class="list-unstyled mt-3">'
+        + '<li><strong class="text-primary">Extended Feedback:</strong><p class="mb-2">Detailed academic analysis with references to educational theories.</p></li>'
+        + '<li><strong class="text-primary">Short Feedback:</strong><p>Concise, scannable feedback with practical, actionable tips.</p></li>'
+        + '</ul>'
+        + 'You can switch between these versions using the tabs that appear after you generate feedback.',
+        popup_close_button: "Let's Start!"
     },
     de: {
         title: "Lehrer Professional Vision Feedback",
@@ -115,9 +120,14 @@ const translations = {
         generate_tooltip: "Generieren Sie sowohl erweiterte (detaillierte akademische) als auch kurze (prägnante) Feedback-Versionen. Erfordert Name und Video-Auswahl.",
         words: "Wörter",
         generate_description: "Erzeugt sowohl eine detaillierte als auch eine kurze Feedback-Version.",
-        popup_title: "Zwei Feedback-Versionen verfügbar",
-        popup_body: "Dieses Tool bietet zwei Arten von Feedback für Ihre Reflexion:<br><br><strong>Erweitertes Feedback:</strong> Detailliertes akademisches Feedback mit umfassender Analyse und pädagogischen Theoriereferenzen.<br><br><strong>Kurzes Feedback:</strong> Prägnantes, leicht lesbares Feedback mit Kernpunkten und praktischen Tipps.<br><br>Sie können nach dem Generieren des Feedbacks über die Registerkarten zwischen ihnen wechseln.",
-        popup_close_button: "Verstanden!"
+        popup_title: "Willkommen!",
+        popup_body: 'Willkommen beim Feedback-Tool für professionelle Unterrichtswahrnehmung! Diese Anwendung hilft Ihnen bei der Analyse Ihrer Unterrichtsreflexionen auf Basis des Frameworks der professionellen Unterrichtswahrnehmung.<br><br>Das Tool generiert zwei verschiedene Feedback-Versionen:'
+        + '<ul class="list-unstyled mt-3">'
+        + '<li><strong class="text-primary">Erweitertes Feedback:</strong><p class="mb-2">Detaillierte akademische Analyse mit Verweisen auf pädagogische Theorien.</p></li>'
+        + '<li><strong class="text-primary">Kurzes Feedback:</strong><p>Prägnantes, leicht lesbares Feedback mit praktischen, umsetzbaren Tipps.</p></li>'
+        + '</ul>'
+        + 'Sie können zwischen diesen Versionen über die Registerkarten wechseln, die nach der Feedback-Generierung erscheinen.',
+        popup_close_button: "Los geht's!"
     }
 };
 
@@ -212,7 +222,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('[data-lang-key]').forEach(element => {
             const key = element.getAttribute('data-lang-key');
             if (trans[key]) {
-                element.textContent = trans[key];
+                // Use innerHTML for keys that contain HTML, textContent for others for security
+                if (key === 'popup_body') {
+                    element.innerHTML = trans[key];
+                } else {
+                    element.textContent = trans[key];
+                }
             }
         });
         
