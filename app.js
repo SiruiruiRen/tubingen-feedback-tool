@@ -945,8 +945,8 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 1. **Identify Weakest Area**: Find the LOWEST percentage among Description, Explanation, Prediction.
 2. **Consistent Formatting**: Use the "Strength:", "Suggestions:", "Why?" format for ALL THREE sections (Description, Explanation, and Prediction).
 3. **Focused Detail**:
-    - For the **weakest area**, provide detailed feedback. The "Suggestions:" part should be comprehensive (4-6 sentences) with multiple, specific examples and references to the knowledge base.
-    - For the **two stronger areas**, provide concise feedback. The "Suggestions:" part should be brief (1-2 sentences).
+    - For the **weakest area**, provide detailed feedback. The "Suggestions:" part should be comprehensive (6-8 sentences) with multiple, specific examples and references to the knowledge base.
+    - For the **two stronger areas**, provide concise feedback, writing exactly one sentence for each part ("Strength:", "Suggestions:", and "Why?").
 4. **Focus Conclusion**: Target advice on improving the weakest area only.
 
 **Overall Assessment Template:**
@@ -985,8 +985,8 @@ Use research about good teaching: teaching-learning models (Seidel & Shavelson, 
 1. **Find Lowest**: Which one has the smallest percentage?
 2. **Same Format for All**: Use the "Good:", "Tip:", "Why?" format for ALL THREE sections (Description, Explanation, and Prediction).
 3. **Give Most Help**:
-    - For the **weakest area**, give lots of help. The "Tip:" part should be long (4-6 sentences) with many clear examples.
-    - For the **two better areas**, keep it short. The "Tip:" part should be just one or two sentences.
+    - For the **weakest area**, give lots of help. The "Tip:" part should be long (6-8 sentences) with many clear examples.
+    - For the **two better areas**, keep it short, writing exactly one sentence for each part ("Good:", "Tip:", and "Why?").
 4. **End Focused**: Tell them to work on their weakest area.
 
 **Simple Assessment Template:**
@@ -1025,8 +1025,8 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 1. **Schwächsten Bereich identifizieren**: Niedrigste Prozent unter Beschreibung, Erklärung, Vorhersage finden.
 2. **Einheitliche Formatierung**: Verwenden Sie das Format "Stärke:", "Verbesserungsvorschläge:", "Warum?" für ALLE DREI Bereiche (Beschreibung, Erklärung und Vorhersage).
 3. **Fokussierte Detaillierung**:
-    - Für den **schwächsten Bereich**, geben Sie detailliertes Feedback. Der Teil "Verbesserungsvorschläge:" sollte umfassend sein (4-6 Sätze) mit mehreren, spezifischen Beispielen und Verweisen auf die Wissensbasis.
-    - Für die **zwei stärkeren Bereiche**, geben Sie prägnantes Feedback. Der Teil "Verbesserungsvorschläge:" sollte kurz sein (1-2 Sätze).
+    - Für den **schwächsten Bereich**, geben Sie detailliertes Feedback. Der Teil "Verbesserungsvorschläge:" sollte umfassend sein (6-8 Sätze) mit mehreren, spezifischen Beispielen und Verweisen auf die Wissensbasis.
+    - Für die **zwei stärkeren Bereiche**, geben Sie prägnantes Feedback und schreiben Sie genau einen Satz für jeden Teil ("Stärke:", "Verbesserungsvorschläge:" und "Warum?").
 4. **Fazit fokussieren**: Ratschläge nur auf Verbesserung des schwächsten Bereichs.
 
 **Gesamtbewertungs-Template:**
@@ -1065,8 +1065,8 @@ Nutzen Sie Forschung über guten Unterricht: Lehr-Lern-Modelle (Seidel & Shavels
 1. **Niedrigste finden**: Welche hat die kleinste Prozentzahl?
 2. **Gleiches Format für alle**: Nutzen Sie das "Gut:", "Tipp:", "Warum?" Format für ALLE DREI Bereiche (Beschreibung, Erklärung und Vorhersage).
 3. **Meiste Hilfe geben**:
-    - Für den **schwächsten Bereich**, geben Sie viel Hilfe. Der "Tipp:" Teil sollte lang sein (4-6 Sätze) mit vielen klaren Beispielen.
-    - Für die **zwei besseren Bereiche**, halten Sie es kurz. Der "Tipp:" Teil sollte nur ein oder zwei Sätze lang sein.
+    - Für den **schwächsten Bereich**, geben Sie viel Hilfe. Der "Tipp:" Teil sollte lang sein (6-8 Sätze) mit vielen klaren Beispielen.
+    - Für die **zwei besseren Bereiche**, halten Sie es kurz und schreiben Sie genau einen Satz für jeden Teil ("Gut:", "Tipp:" und "Warum?").
 4. **Fokussiert enden**: Sagen Sie ihnen, an ihrem schwächsten Bereich zu arbeiten.
 
 **Einfaches Bewertungs-Template:**
