@@ -495,23 +495,18 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleLoading(true);
         
         try {
-            // First, analyze the reflection to get percentage distribution
-            const analysisResult = await analyzeReflection(reflectionText.value, language);
-            console.log('Analysis result:', analysisResult);
-            currentAnalysisResult = analysisResult; // Store for later use
-            
             // Generate both extended and short feedback
             const [extendedFeedback, shortFeedback] = await Promise.all([
-                callOpenAI(reflectionText.value, language, 'academic', analysisResult),
-                callOpenAI(reflectionText.value, language, 'user-friendly', analysisResult)
+                callOpenAI(reflectionText.value, language, 'academic'),
+                callOpenAI(reflectionText.value, language, 'user-friendly')
             ]);
             
             console.log('Generated extended feedback:', extendedFeedback);
             console.log('Generated short feedback:', shortFeedback);
             
             // Format and display both feedbacks
-            const formattedExtended = formatFeedback(extendedFeedback, analysisResult);
-            const formattedShort = formatFeedback(shortFeedback, analysisResult);
+            const formattedExtended = formatFeedback(extendedFeedback);
+            const formattedShort = formatFeedback(shortFeedback);
             
             feedbackExtended.innerHTML = formattedExtended;
             feedbackShort.innerHTML = formattedShort;
@@ -533,7 +528,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         reflection_text: reflectionText.value, 
                         feedback_text: extendedFeedback, // Save extended version as primary
                         feedback_text_short: shortFeedback, // Save short version
-                        analysis_percentages: analysisResult,
                         language: language,
                         style: 'both', // Since we generate both
                         session_id: currentSessionId, 
@@ -592,208 +586,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Analyze reflection to get percentage distribution
-    async function analyzeReflection(reflection, language) {
-        const analysisPrompt = language === 'en' 
-            ? `Analyze this teaching reflection and determine the percentage distribution of content across four categories:
-               1. Description (noting what happened)
-               2. Explanation (interpreting using theory)
-               3. Prediction (forecasting effects)
-               4. Other (content that does not fit the other three, i.e., content outside of professional vision)
-               
-               Return ONLY a JSON object with percentages that sum to 100, like: {"description": 40, "explanation": 35, "prediction": 20, "other": 5}`
-            : `Analysieren Sie diese Unterrichtsreflexion und bestimmen Sie die prozentuale Verteilung des Inhalts über vier Kategorien:
-               1. Beschreibung (Beobachtung des Geschehens)
-               2. Erklärung (Interpretation mit Theorie)
-               3. Vorhersage (Prognose der Auswirkungen)
-               4. Sonstiges (Inhalte, die nicht in die anderen drei Kategorien passen, d.h. Inhalte außerhalb der professionellen Unterrichtswahrnehmung)
-               
-               Geben Sie NUR ein JSON-Objekt mit Prozentsätzen zurück, die sich zu 100 addieren, wie: {"description": 40, "explanation": 35, "prediction": 20, "other": 5}`;
-
-        const requestData = {
-            model: model,
-            messages: [
-                {
-                    role: "system",
-                    content: "You are an expert in analyzing teaching reflections. Analyze the text and return ONLY a JSON object with percentage distribution."
-                },
-                {
-                    role: "user",
-                    content: analysisPrompt + "\n\nReflection:\n" + reflection
-                }
-            ],
-            temperature: 0.3,
-            max_tokens: 100
-        };
-
-        try {
-            const response = await fetch(OPENAI_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            });
-
-            if (!response.ok) {
-                throw new Error('Error analyzing reflection');
-            }
-
-            const result = await response.json();
-            const content = result.choices[0].message.content;
-            
-            // Parse JSON from response
-            const jsonMatch = content.match(/\{.*\}/);
-            if (jsonMatch) {
-                let percentages = JSON.parse(jsonMatch[0]);
-                
-                // Ensure all required keys are present and are numbers
-                const keys = ['description', 'explanation', 'prediction', 'other'];
-                keys.forEach(key => {
-                    if (typeof percentages[key] !== 'number' || isNaN(percentages[key])) {
-                        percentages[key] = 0;
-                    }
-                });
-
-                const rawTotal = Object.values(percentages).reduce((sum, value) => sum + value, 0);
-
-                if (rawTotal > 0) {
-                    const finalPercentages = {};
-                    
-                    // 1. Calculate 'other' percentage
-                    finalPercentages.other = Math.round((percentages.other / rawTotal) * 100);
-
-                    // 2. Calculate total for pro-vision components
-                    const proVisionTotalPercentage = 100 - finalPercentages.other;
-                    const rawProVisionTotal = percentages.description + percentages.explanation + percentages.prediction;
-
-                    if (rawProVisionTotal > 0) {
-                        // 3. Normalize pro-vision components
-                        finalPercentages.description = Math.round((percentages.description / rawProVisionTotal) * proVisionTotalPercentage);
-                        finalPercentages.explanation = Math.round((percentages.explanation / rawProVisionTotal) * proVisionTotalPercentage);
-                        finalPercentages.prediction = Math.round((percentages.prediction / rawProVisionTotal) * proVisionTotalPercentage);
-
-                        // 4. Adjust for rounding errors to ensure they sum to proVisionTotalPercentage
-                        const currentProVisionSum = finalPercentages.description + finalPercentages.explanation + finalPercentages.prediction;
-                        let diff = proVisionTotalPercentage - currentProVisionSum;
-                        
-                        if (diff !== 0) {
-                            // Find largest component to add/subtract the difference
-                            const proVisionKeys = ['description', 'explanation', 'prediction'];
-                            let maxKey = proVisionKeys[0];
-                            let maxVal = finalPercentages[maxKey];
-                            proVisionKeys.forEach(key => {
-                                if (finalPercentages[key] > maxVal) {
-                                    maxVal = finalPercentages[key];
-                                    maxKey = key;
-                                }
-                            });
-                             if(maxKey) {
-                                finalPercentages[maxKey] += diff;
-                            }
-                        }
-                    } else {
-                        // If only 'other' has value, pro-vision components are 0
-                        finalPercentages.description = 0;
-                        finalPercentages.explanation = 0;
-                        finalPercentages.prediction = 0;
-                    }
-                    
-                    return finalPercentages;
-                }
-                
-                return percentages; // return as is if total is 0
-            }
-            
-            // Default if parsing fails
-            return { description: 33, explanation: 33, prediction: 34, other: 0 };
-        } catch (error) {
-            console.error('Error in reflection analysis:', error);
-            // Return default distribution if analysis fails
-            return { description: 33, explanation: 33, prediction: 34, other: 0 };
-        }
-    }
-
-    // Format feedback text with proper HTML
-    function formatFeedback(text, analysisResult = null) {
-        if (!text) return '';
-        
-        let formattedText = '';
-        
-        // Process the feedback text
-        text = text.trim();
-        
-        // Consolidate heading processing
-        text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4>${p1.trim()}</h4>`);
-        
-        // Format bold text with proper color classes
-        text = text.replace(/\*\*(.+?)\*\*/g, (match, p1) => {
-            const content = p1.trim();
-            
-            // Check if it's one of our keywords - more flexible matching
-            if (content.match(/^(Strength|Stärke|Good|Gut|Suggestions?|Verbesserungsvorschläge?|Tip|Tipp|Why|Warum)\??:?\s*$/i)) {
-                return `<strong class="feedback-keyword">${content}</strong>`;
-            }
-            
-            // For other bold text, just return without special class
-            return `<strong>${content}</strong>`;
-        });
-        
-        // Also catch keywords that might not be in ** format
-        text = text.replace(/\b(Good|Gut|Tip|Tipp|Why|Warum|Strength|Stärke|Suggestions?|Verbesserungsvorschläge?)\s*:/gi, (match, keyword) => {
-            return `<strong class="feedback-keyword">${keyword}:</strong>`;
-        });
-        
-        // Specifically ensure "Why?" and "Warum?" are bolded even without colon
-        text = text.replace(/\b(Why\?|Warum\?)/gi, (match, keyword) => {
-            return `<strong class="feedback-keyword">${keyword}</strong>`;
-        });
-        
-        // Format list items
-        text = text.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
-        
-        // Wrap consecutive list items in ul tags
-        text = text.replace(/(<li>.*?<\/li>\s*)+/g, (match) => `<ul>${match.trim()}</ul>`);
-        
-        // Add structure for sections with new color-coded classes
-        let sections = text.split(/(?=<h4>)/);
-        text = sections.map(section => {
-            if (section.startsWith('<h4>')) {
-                const h4EndIndex = section.indexOf('</h4>') + 5;
-                const heading = section.substring(0, h4EndIndex);
-                const content = section.substring(h4EndIndex);
-                let sectionClass = 'feedback-section';
-                
-                if (heading.includes('Description') || heading.includes('Beschreibung')) {
-                    sectionClass += ' feedback-section-description';
-                } else if (heading.includes('Explanation') || heading.includes('Erklärung')) {
-                    sectionClass += ' feedback-section-explanation';
-                } else if (heading.includes('Prediction') || heading.includes('Vorhersage')) {
-                    sectionClass += ' feedback-section-prediction';
-                } else if (heading.includes('Other') || heading.includes('Sonstiges')) {
-                    sectionClass += ' feedback-section-other';
-                } else if (heading.includes('Overall') || heading.includes('Gesamtbewertung')) {
-                    sectionClass += ' feedback-section-overall';
-                }
-
-                return `<div class="${sectionClass}">${heading}<div class="section-content">${content.trim()}</div></div>`;
-            }
-            return section;
-        }).join('');
-        
-        // Replace newlines with <br>
-        text = text.replace(/\n/g, '<br>');
-        text = text.replace(/<br>\s*<br>/g, '<br>');
-        text = text.replace(/^<br>|<br>$/g, '');
-        
-        return formattedText + text;
-    }
-
     // Call OpenAI API
-    async function callOpenAI(reflection, language, style, analysisResult) {
+    async function callOpenAI(reflection, language, style) {
         console.log(`Using language: ${language}, style: ${style}`);
         const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
-        const systemPrompt = getSystemPrompt(promptType, analysisResult);
+        const systemPrompt = getSystemPrompt(promptType);
         
         console.log('Calling OpenAI API with system prompt:', promptType);
         
@@ -882,48 +679,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Get the appropriate system prompt based on style and language
-    function getSystemPrompt(promptType, analysisResult) {
-        let initialInstruction = '';
-        const lang = promptType.includes('English') ? 'en' : 'de';
-        const trans = translations[lang];
-
-        if (analysisResult) {
-            const { description, explanation, prediction, other } = analysisResult;
-
-            const components = {
-                [trans.description]: description,
-                [trans.explanation]: explanation,
-                [trans.prediction]: prediction
-            };
-
-            let lowestComponent = null;
-            let lowestValue = 101;
-
-            for (const [name, value] of Object.entries(components)) {
-                if (value < lowestValue) {
-                    lowestValue = value;
-                    lowestComponent = name;
-                }
-            }
-
-            if (lowestComponent) {
-                if (lang === 'de') {
-                    initialInstruction = `\nFokus-Anweisung: Der schwächste Bereich ist "${lowestComponent}". Geben Sie für diesen Bereich das detaillierteste Feedback. Halten Sie die anderen beiden Bereiche kurz (jeweils 3-4 Sätze).`;
-                } else {
-                    initialInstruction = `\nFocus Instruction: The weakest area is "${lowestComponent}". Provide the most detailed feedback for this section. Keep the other two sections brief (3-4 sentences each).`;
-                }
-            }
-    
-            if (other > 20) {
-                 const visionWarning = trans.vision_warning.replace('{other}', other);
-                 initialInstruction = visionWarning + '\n' + initialInstruction;
-            }
-        }
-        
-        const baseSystemMessage = initialInstruction ? `${initialInstruction}\n\n` : '';
-
+    function getSystemPrompt(promptType) {
         const prompts = {
-            'academic English': baseSystemMessage + `You are a supportive yet rigorous teaching mentor providing feedback on student teacher classroom video analysis using professional vision framework.
+            'academic English': `You are a supportive yet rigorous teaching mentor providing feedback on student teacher classroom video analysis using professional vision framework.
 
 **Professional Vision Framework (INFER Project):**
 Professional Vision = Description + Explanation + Prediction. Content outside these = Not Professional Vision.
@@ -933,13 +691,11 @@ Formula: Professional Vision% + Not Professional Vision% = 100%
 - **Explanation**: Relate observable teaching events to theories on teaching with an impact on learning. Connect what happened to educational theories.
 - **Prediction**: Estimate consequences of teaching events for students based on learning theories.
 
-**Examples from Manual:**
-- Description: "The teacher refers to the topic of the lesson: Binomial formulae" / "The teacher explains" / "The teacher gives feedback"
-- Explanation: "The teacher's open question should activate the students cognitively" / "Through this connection, today's learning objective can be linked to what is already known"
-- Prediction: "The teacher's feedback could have a negative effect on the pupils" / "Feedback from the teacher could increase their motivation to learn"
+**MANDATORY FIRST STEP: ANALYSIS & CALCULATION**
+Before writing feedback, you MUST first analyze the user's reflection to determine the percentage distribution of content across four categories: Description, Explanation, Prediction, and Other (content that does not fit the other three). The percentages must sum to 100. You will use these percentages to fill in the placeholders (e.g., [description]%) in the 'Overall Assessment Template'.
 
 **Knowledge Base Integration:**
-Base your feedback on the theoretical framework of empirical teaching quality research about effective teaching and learning components, for example according to the process-oriented teaching-learning model of Seidel & Shavelson, 2007 (document knowledge base 1) or the three basic dimensions of teaching quality according to Klieme 2006 (document knowledge base 2). Use references to effective teaching and learning components (document knowledge base 1 and 2) for feedback on description and explanation. To analyze possible consequences for student learning regarding prediction, effective teaching and learning components as superordinate theoretical category can be explained by the self-determination theory of motivation according to Deci & Ryan, 1993 (document knowledge base 3) or the theory of cognitive and constructive learning according to Atkinson & Shiffrin, Craik & Lockhart, Anderson (document knowledge base 4).
+Base your feedback on the theoretical framework of empirical teaching quality research about effective teaching and learning components, for example according to the process-oriented teaching-learning model of Seidel, T., & Shavelson, R. J., 2007 (document knowledge base 1) or the three basic dimensions of teaching quality according to Klieme 2006 (document knowledge base 2). Use references to effective teaching and learning components (document knowledge base 1 and 2) for feedback on description and explanation. To analyze possible consequences for student learning regarding prediction, effective teaching and learning components as superordinate theoretical category can be explained by the self-determination theory of motivation according to Deci & Ryan, 1993 (document knowledge base 3) or the theory of cognitive and constructive learning according to Atkinson & Shiffrin, Craik & Lockhart, Anderson (document knowledge base 4).
 
 **MANDATORY WEIGHTED FEEDBACK STRUCTURE:**
 1. **Identify Weakest Area**: Find the LOWEST percentage among Description, Explanation, Prediction.
@@ -963,7 +719,7 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 - Sub-headings: "Strength:", "Suggestions:", "Why?"
 - Conclusion template: "You show a strong sense of what effective teacher behavior involves and identify key problems in learning process design. To further improve your analysis: [focus on weakest component], refer explicitly to teaching quality components, use clearly named psychological concepts when predicting learning effects."`,
 
-    'user-friendly English': baseSystemMessage + `You are a supportive teaching mentor giving clear, simple feedback on student teacher video analysis using professional vision framework.
+    'user-friendly English': `You are a supportive teaching mentor giving clear, simple feedback on student teacher video analysis using professional vision framework.
 
 **Professional Vision (INFER Project):**
 Professional Vision = Description + Explanation + Prediction. Everything else = Not Professional Vision.
@@ -973,10 +729,8 @@ Simple math: Professional Vision% + Not Professional Vision% = 100%
 - **Explanation**: Why teaching works/doesn't work using education theories. Connect what happened to research.
 - **Prediction**: What effects teaching will have on student learning using learning theories.
 
-**Examples:**
-- Description: "The teacher explains the lesson topic" / "The teacher gives feedback" / "Students ask questions"
-- Explanation: "Open questions help students think actively" / "Connecting to prior knowledge helps learning"
-- Prediction: "Teacher feedback could motivate students" / "Unclear instructions might confuse students"
+**MANDATORY FIRST STEP: ANALYSIS & CALCULATION**
+Before writing feedback, you MUST first analyze the user's reflection to determine the percentage distribution of content across four categories: Description, Explanation, Prediction, and Other (content that does not fit the other three). The percentages must sum to 100. You will use these percentages to fill in the placeholders (e.g., [description]%) in the 'Simple Assessment Template'.
 
 **Knowledge Base:**
 Use research about good teaching: teaching-learning models (Seidel & Shavelson, 2007), teaching quality dimensions (Klieme, 2006) for description and explanation. For prediction, use motivation theory (Deci & Ryan, 1993) and learning theories (Atkinson & Shiffrin, others) to predict student outcomes.
@@ -1003,7 +757,7 @@ Use research about good teaching: teaching-learning models (Seidel & Shavelson, 
 - Sub-headings: "Good:", "Tip:", "Why?"
 - Simple conclusion: "You understand [what they do well]. To get better at analyzing teaching: [focus on weakest area], use teaching quality ideas, use psychology terms for predictions."`,
 
-    'academic German': baseSystemMessage + `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
+    'academic German': `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
 
 **Framework Professionelle Unterrichtswahrnehmung (INFER Projekt):**
 Professionelle Wahrnehmung = Beschreibung + Erklärung + Vorhersage. Inhalt außerhalb = Nicht-professionelle Wahrnehmung.
@@ -1013,13 +767,11 @@ Formel: Professionelle Wahrnehmung% + Nicht-professionelle Wahrnehmung% = 100%
 - **Erklärung**: Beobachtbare Unterrichtsereignisse mit Theorien über lernwirksames Lehren verknüpfen. Verbindung zwischen Geschehen und Bildungstheorien.
 - **Vorhersage**: Konsequenzen von Unterrichtsereignissen für Schüler basierend auf Lerntheorien abschätzen.
 
-**Beispiele aus Manual:**
-- Beschreibung: "Die Lehrer*in verweist auf das Thema der Stunde: Binomische Formeln" / "Die Lehrer*in erklärt" / "Die Lehrer*in gibt Rückmeldung"
-- Erklärung: "Die offene Frage der Lehrer*in soll die Schüler*innen kognitiv aktivieren" / "Durch diese Verbindung kann das heutige Lernziel mit bereits Bekanntem verknüpft werden"
-- Vorhersage: "Eine negative Wirkung auf die SuS könnte das Feedback haben" / "Feedback könnte ihre Lernmotivation steigern"
+**OBLIGATORISCHER ERSTER SCHRITT: ANALYSE & BERECHNUNG**
+Bevor Sie Feedback schreiben, MÜSSEN Sie zuerst die Reflexion des Benutzers analysieren, um die prozentuale Verteilung des Inhalts auf vier Kategorien zu bestimmen: Beschreibung, Erklärung, Vorhersage und Sonstiges (Inhalte, die nicht in die anderen drei passen). Die Prozentsätze müssen sich zu 100 addieren. Sie werden diese Prozentsätze verwenden, um die Platzhalter (z.B. [description]%) im 'Gesamtbewertungs-Template' auszufüllen.
 
-**Wissensbasis:**
-Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über wirksame Lehr- und Lernkomponenten, beispielsweise nach dem prozessorientierten Lehr-Lern-Modell von Seidel & Shavelson, 2007 (Dokument Wissensbasis 1) oder den drei Basisdimensionen der Unterrichtsqualität nach Klieme 2006 (Dokument Wissensbasis 2). Nutzen Sie Bezüge zu wirksamen Lehr- und Lernkomponenten (Dokument Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Schülerlernen bezüglich Vorhersage können wirksame Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Dokument Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Dokument Wissensbasis 4) erklärt werden.
+**Wissensbasis Integration:**
+Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über wirksame Lehr- und Lernkomponenten, beispielsweise nach dem prozessorientierten Lehr-Lern-Modell von Seidel, T., & Shavelson, R. J., 2007 (Dokument Wissensbasis 1) oder den drei Basisdimensionen der Unterrichtsqualität nach Klieme 2006 (Dokument Wissensbasis 2). Nutzen Sie Bezüge zu wirksamen Lehr- und Lernkomponenten (Dokument Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Schülerlernen bezüglich Vorhersage können wirksame Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Dokument Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Dokument Wissensbasis 4) erklärt werden.
 
 **OBLIGATORISCHE GEWICHTETE FEEDBACK-STRUKTUR:**
 1. **Schwächsten Bereich identifizieren**: Niedrigste Prozent unter Beschreibung, Erklärung, Vorhersage finden.
@@ -1043,7 +795,7 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 - Unterüberschriften: "Stärke:", "Verbesserungsvorschläge:", "Warum?"
 - Fazit-Template: "Sie zeigen ein starkes Gespür dafür, was effektives Lehrerverhalten beinhaltet und identifizieren Schlüsselprobleme im Lernprozessdesign. Zur weiteren Verbesserung Ihrer Analyse: [Fokus auf schwächste Komponente], beziehen Sie sich explizit auf Unterrichtsqualitätskomponenten, verwenden Sie klar benannte psychologische Konzepte bei der Vorhersage von Lerneffekten."`,
 
-    'user-friendly German': baseSystemMessage + `Sie sind ein unterstützender Mentor, der klares, einfaches Feedback zur Videoanalyse von Lehramtsstudierenden gibt.
+    'user-friendly German': `Sie sind ein unterstützender Mentor, der klares, einfaches Feedback zur Videoanalyse von Lehramtsstudierenden gibt.
 
 **Professionelle Unterrichtswahrnehmung (INFER Projekt):**
 Professionelle Wahrnehmung = Beschreibung + Erklärung + Vorhersage. Alles andere = Nicht-professionelle Wahrnehmung.
@@ -1053,10 +805,8 @@ Einfache Rechnung: Professionelle Wahrnehmung% + Nicht-professionelle Wahrnehmun
 - **Erklärung**: Warum Unterricht funktioniert/nicht funktioniert mit Bildungstheorien. Verbindung zwischen Geschehen und Forschung.
 - **Vorhersage**: Welche Auswirkungen Unterricht auf Schülerlernen hat mit Lerntheorien.
 
-**Beispiele:**
-- Beschreibung: "Der Lehrer erklärt das Stundenthema" / "Der Lehrer gibt Rückmeldung" / "Schüler stellen Fragen"
-- Erklärung: "Offene Fragen helfen Schülern aktiv zu denken" / "Verbindung zu Vorwissen hilft beim Lernen"
-- Vorhersehung: "Lehrerfeedback könnte Schüler motivieren" / "Unklare Anweisungen könnten verwirren"
+**OBLIGATORISCHER ERSTER SCHRITT: ANALYSE & BERECHNUNG**
+Bevor Sie Feedback schreiben, MÜSSEN Sie zuerst die Reflexion des Benutzers analysieren, um die prozentuale Verteilung des Inhalts auf vier Kategorien zu bestimmen: Beschreibung, Erklärung, Vorhersage und Sonstiges (Inhalte, die nicht in die anderen drei passen). Die Prozentsätze müssen sich zu 100 addieren. Sie werden diese Prozentsätze verwenden, um die Platzhalter (z.B. [description]%) im 'Einfaches Bewertungs-Template' auszufüllen.
 
 **Wissensbasis:**
 Nutzen Sie Forschung über guten Unterricht: Lehr-Lern-Modelle (Seidel & Shavelson, 2007), Unterrichtsqualitätsdimensionen (Klieme, 2006) für Beschreibung und Erklärung. Für Vorhersage nutzen Sie Motivationstheorie (Deci & Ryan, 1993) und Lerntheorien (Atkinson & Shiffrin, andere) für Schülerergebnisse.
