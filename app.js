@@ -586,6 +586,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Format feedback text with proper HTML
+    function formatFeedback(text) {
+        if (!text) return '';
+        
+        let formattedText = '';
+        
+        // Process the feedback text
+        text = text.trim();
+        
+        // Consolidate heading processing
+        text = text.replace(/####\s+([^\n]+)/g, (match, p1) => `<h4>${p1.trim()}</h4>`);
+        
+        // Format bold text with proper color classes
+        text = text.replace(/\*\*(.+?)\*\*/g, (match, p1) => {
+            const content = p1.trim();
+            
+            // Check if it's one of our keywords - more flexible matching
+            if (content.match(/^(Strength|Stärke|Good|Gut|Suggestions?|Verbesserungsvorschläge?|Tip|Tipp|Why|Warum)\??:?\s*$/i)) {
+                return `<strong class="feedback-keyword">${content}</strong>`;
+            }
+            
+            // For other bold text, just return without special class
+            return `<strong>${content}</strong>`;
+        });
+        
+        // Also catch keywords that might not be in ** format
+        text = text.replace(/\b(Good|Gut|Tip|Tipp|Why|Warum|Strength|Stärke|Suggestions?|Verbesserungsvorschläge?)\s*:/gi, (match, keyword) => {
+            return `<strong class="feedback-keyword">${keyword}:</strong>`;
+        });
+        
+        // Specifically ensure "Why?" and "Warum?" are bolded even without colon
+        text = text.replace(/\b(Why\?|Warum\?)/gi, (match, keyword) => {
+            return `<strong class="feedback-keyword">${keyword}</strong>`;
+        });
+        
+        // Format list items
+        text = text.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
+        
+        // Wrap consecutive list items in ul tags
+        text = text.replace(/(<li>.*?<\/li>\s*)+/g, (match) => `<ul>${match.trim()}</ul>`);
+        
+        // Add structure for sections with new color-coded classes
+        let sections = text.split(/(?=<h4>)/);
+        text = sections.map(section => {
+            if (section.startsWith('<h4>')) {
+                const h4EndIndex = section.indexOf('</h4>') + 5;
+                const heading = section.substring(0, h4EndIndex);
+                const content = section.substring(h4EndIndex);
+                let sectionClass = 'feedback-section';
+                
+                if (heading.includes('Description') || heading.includes('Beschreibung')) {
+                    sectionClass += ' feedback-section-description';
+                } else if (heading.includes('Explanation') || heading.includes('Erklärung')) {
+                    sectionClass += ' feedback-section-explanation';
+                } else if (heading.includes('Prediction') || heading.includes('Vorhersage')) {
+                    sectionClass += ' feedback-section-prediction';
+                } else if (heading.includes('Other') || heading.includes('Sonstiges')) {
+                    sectionClass += ' feedback-section-other';
+                } else if (heading.includes('Overall') || heading.includes('Gesamtbewertung')) {
+                    sectionClass += ' feedback-section-overall';
+                }
+
+                return `<div class="${sectionClass}">${heading}<div class="section-content">${content.trim()}</div></div>`;
+            }
+            return section;
+        }).join('');
+        
+        // Replace newlines with <br>
+        text = text.replace(/\n/g, '<br>');
+        text = text.replace(/<br>\s*<br>/g, '<br>');
+        text = text.replace(/^<br>|<br>$/g, '');
+        
+        return formattedText + text;
+    }
+
     // Call OpenAI API
     async function callOpenAI(reflection, language, style) {
         console.log(`Using language: ${language}, style: ${style}`);
