@@ -645,7 +645,47 @@ document.addEventListener('DOMContentLoaded', function() {
             // Parse JSON from response
             const jsonMatch = content.match(/\{.*\}/);
             if (jsonMatch) {
-                return JSON.parse(jsonMatch[0]);
+                let percentages = JSON.parse(jsonMatch[0]);
+                
+                // Ensure all required keys are present and are numbers
+                const keys = ['description', 'explanation', 'prediction', 'other'];
+                keys.forEach(key => {
+                    if (typeof percentages[key] !== 'number' || isNaN(percentages[key])) {
+                        percentages[key] = 0;
+                    }
+                });
+
+                const total = Object.values(percentages).reduce((sum, value) => sum + value, 0);
+
+                if (total > 0) {
+                    let normalizedTotal = 0;
+                    const normalizedPercentages = {};
+                    
+                    // Normalize and round, keeping track of total
+                    keys.forEach(key => {
+                        normalizedPercentages[key] = Math.round((percentages[key] / total) * 100);
+                        normalizedTotal += normalizedPercentages[key];
+                    });
+
+                    // Adjust for rounding errors to ensure sum is exactly 100
+                    let diff = 100 - normalizedTotal;
+                    if (diff !== 0) {
+                        // Add/remove difference from the largest component to minimize relative error
+                        let maxKey = null;
+                        let maxVal = -1;
+                        keys.forEach(key => {
+                            if (normalizedPercentages[key] > maxVal) {
+                                maxVal = normalizedPercentages[key];
+                                maxKey = key;
+                            }
+                        });
+                        if (maxKey) {
+                            normalizedPercentages[maxKey] += diff;
+                        }
+                    }
+                    return normalizedPercentages;
+                }
+                return percentages; // return as is if total is 0
             }
             
             // Default if parsing fails
@@ -996,7 +1036,7 @@ Einfache Rechnung: Professionelle Wahrnehmung% + Nicht-professionelle Wahrnehmun
 **Beispiele:**
 - Beschreibung: "Der Lehrer erklärt das Stundenthema" / "Der Lehrer gibt Rückmeldung" / "Schüler stellen Fragen"
 - Erklärung: "Offene Fragen helfen Schülern aktiv zu denken" / "Verbindung zu Vorwissen hilft beim Lernen"
-- Vorhersage: "Lehrerfeedback könnte Schüler motivieren" / "Unklare Anweisungen könnten verwirren"
+- Vorhersehung: "Lehrerfeedback könnte Schüler motivieren" / "Unklare Anweisungen könnten verwirren"
 
 **Wissensbasis:**
 Nutzen Sie Forschung über guten Unterricht: Lehr-Lern-Modelle (Seidel & Shavelson, 2007), Unterrichtsqualitätsdimensionen (Klieme, 2006) für Beschreibung und Erklärung. Für Vorhersage nutzen Sie Motivationstheorie (Deci & Ryan, 1993) und Lerntheorien (Atkinson & Shiffrin, andere) für Schülerergebnisse.
