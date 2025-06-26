@@ -655,36 +655,53 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                const total = Object.values(percentages).reduce((sum, value) => sum + value, 0);
+                const rawTotal = Object.values(percentages).reduce((sum, value) => sum + value, 0);
 
-                if (total > 0) {
-                    let normalizedTotal = 0;
-                    const normalizedPercentages = {};
+                if (rawTotal > 0) {
+                    const finalPercentages = {};
                     
-                    // Normalize and round, keeping track of total
-                    keys.forEach(key => {
-                        normalizedPercentages[key] = Math.round((percentages[key] / total) * 100);
-                        normalizedTotal += normalizedPercentages[key];
-                    });
+                    // 1. Calculate 'other' percentage
+                    finalPercentages.other = Math.round((percentages.other / rawTotal) * 100);
 
-                    // Adjust for rounding errors to ensure sum is exactly 100
-                    let diff = 100 - normalizedTotal;
-                    if (diff !== 0) {
-                        // Add/remove difference from the largest component to minimize relative error
-                        let maxKey = null;
-                        let maxVal = -1;
-                        keys.forEach(key => {
-                            if (normalizedPercentages[key] > maxVal) {
-                                maxVal = normalizedPercentages[key];
-                                maxKey = key;
+                    // 2. Calculate total for pro-vision components
+                    const proVisionTotalPercentage = 100 - finalPercentages.other;
+                    const rawProVisionTotal = percentages.description + percentages.explanation + percentages.prediction;
+
+                    if (rawProVisionTotal > 0) {
+                        // 3. Normalize pro-vision components
+                        finalPercentages.description = Math.round((percentages.description / rawProVisionTotal) * proVisionTotalPercentage);
+                        finalPercentages.explanation = Math.round((percentages.explanation / rawProVisionTotal) * proVisionTotalPercentage);
+                        finalPercentages.prediction = Math.round((percentages.prediction / rawProVisionTotal) * proVisionTotalPercentage);
+
+                        // 4. Adjust for rounding errors to ensure they sum to proVisionTotalPercentage
+                        const currentProVisionSum = finalPercentages.description + finalPercentages.explanation + finalPercentages.prediction;
+                        let diff = proVisionTotalPercentage - currentProVisionSum;
+                        
+                        if (diff !== 0) {
+                            // Find largest component to add/subtract the difference
+                            const proVisionKeys = ['description', 'explanation', 'prediction'];
+                            let maxKey = proVisionKeys[0];
+                            let maxVal = finalPercentages[maxKey];
+                            proVisionKeys.forEach(key => {
+                                if (finalPercentages[key] > maxVal) {
+                                    maxVal = finalPercentages[key];
+                                    maxKey = key;
+                                }
+                            });
+                             if(maxKey) {
+                                finalPercentages[maxKey] += diff;
                             }
-                        });
-                        if (maxKey) {
-                            normalizedPercentages[maxKey] += diff;
                         }
+                    } else {
+                        // If only 'other' has value, pro-vision components are 0
+                        finalPercentages.description = 0;
+                        finalPercentages.explanation = 0;
+                        finalPercentages.prediction = 0;
                     }
-                    return normalizedPercentages;
+                    
+                    return finalPercentages;
                 }
+                
                 return percentages; // return as is if total is 0
             }
             
@@ -925,11 +942,12 @@ Formula: Professional Vision% + Not Professional Vision% = 100%
 Base your feedback on the theoretical framework of empirical teaching quality research about effective teaching and learning components, for example according to the process-oriented teaching-learning model of Seidel & Shavelson, 2007 (document knowledge base 1) or the three basic dimensions of teaching quality according to Klieme 2006 (document knowledge base 2). Use references to effective teaching and learning components (document knowledge base 1 and 2) for feedback on description and explanation. To analyze possible consequences for student learning regarding prediction, effective teaching and learning components as superordinate theoretical category can be explained by the self-determination theory of motivation according to Deci & Ryan, 1993 (document knowledge base 3) or the theory of cognitive and constructive learning according to Atkinson & Shiffrin, Craik & Lockhart, Anderson (document knowledge base 4).
 
 **MANDATORY WEIGHTED FEEDBACK STRUCTURE:**
-1. **Calculate percentages**: Description% + Explanation% + Prediction% = Professional Vision%
-2. **IDENTIFY WEAKEST AREA**: Find the LOWEST percentage among Description, Explanation, Prediction
-3. **MAIN FOCUS**: Write 6-8 detailed sentences ONLY for the weakest area with multiple specific suggestions
-4. **BRIEF SECTIONS**: For the two stronger areas, write exactly 3 sentences each (1 Strength + 1 Suggestion + 1 Why)
-5. **Focus conclusion**: Target advice on improving the weakest area only
+1. **Identify Weakest Area**: Find the LOWEST percentage among Description, Explanation, Prediction.
+2. **Consistent Formatting**: Use the "Strength:", "Suggestions:", "Why?" format for ALL THREE sections (Description, Explanation, and Prediction).
+3. **Focused Detail**:
+    - For the **weakest area**, provide detailed feedback. The "Suggestions:" part should be comprehensive (4-6 sentences) with multiple, specific examples and references to the knowledge base.
+    - For the **two stronger areas**, provide concise feedback. The "Suggestions:" part should be brief (1-2 sentences).
+4. **Focus Conclusion**: Target advice on improving the weakest area only.
 
 **Overall Assessment Template:**
 "A large part of your analysis reflects professional analysis. Only about [other]% of your text does not follow the steps of a professional lesson analysis. Above all, you are well able to identify and differentiate different teaching events in the video based on professional knowledge about effective teaching and learning processes without making judgments ([description]% describing). In addition, you relate many of the observed events to the respective theories of effective teaching and learning (explaining: [explanation]%). However, you could try to relate the observed and explained events more to possible consequences for student learning ([prediction]% predicting)."
@@ -964,11 +982,12 @@ Simple math: Professional Vision% + Not Professional Vision% = 100%
 Use research about good teaching: teaching-learning models (Seidel & Shavelson, 2007), teaching quality dimensions (Klieme, 2006) for description and explanation. For prediction, use motivation theory (Deci & Ryan, 1993) and learning theories (Atkinson & Shiffrin, others) to predict student outcomes.
 
 **SIMPLE BUT STRONG WEIGHTING RULES:**
-1. **Add up**: Description% + Explanation% + Prediction% = Professional Vision%
-2. **FIND LOWEST**: Which one has the smallest percentage?
-3. **GIVE MOST HELP**: Write 6-8 sentences with lots of tips for the weakest area
-4. **KEEP OTHERS SHORT**: For the two better areas, write only 3 sentences each (what's good + tip + why)
-5. **End focused**: Tell them to work on their weakest area
+1. **Find Lowest**: Which one has the smallest percentage?
+2. **Same Format for All**: Use the "Good:", "Tip:", "Why?" format for ALL THREE sections (Description, Explanation, and Prediction).
+3. **Give Most Help**:
+    - For the **weakest area**, give lots of help. The "Tip:" part should be long (4-6 sentences) with many clear examples.
+    - For the **two better areas**, keep it short. The "Tip:" part should be just one or two sentences.
+4. **End Focused**: Tell them to work on their weakest area.
 
 **Simple Assessment Template:**
 "Most of your analysis shows professional thinking. Only about [other]% of your text doesn't follow professional analysis steps. You describe what the teacher does without making judgments ([description]%). You connect events to teaching research ([explanation]%). You could improve by making more predictions about student learning using psychology theories ([prediction]%)."
@@ -999,15 +1018,16 @@ Formel: Professionelle Wahrnehmung% + Nicht-professionelle Wahrnehmung% = 100%
 - Erklärung: "Die offene Frage der Lehrer*in soll die Schüler*innen kognitiv aktivieren" / "Durch diese Verbindung kann das heutige Lernziel mit bereits Bekanntem verknüpft werden"
 - Vorhersage: "Eine negative Wirkung auf die SuS könnte das Feedback haben" / "Feedback könnte ihre Lernmotivation steigern"
 
-**Wissensbasierung:**
+**Wissensbasis:**
 Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über wirksame Lehr- und Lernkomponenten, beispielsweise nach dem prozessorientierten Lehr-Lern-Modell von Seidel & Shavelson, 2007 (Dokument Wissensbasis 1) oder den drei Basisdimensionen der Unterrichtsqualität nach Klieme 2006 (Dokument Wissensbasis 2). Nutzen Sie Bezüge zu wirksamen Lehr- und Lernkomponenten (Dokument Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Schülerlernen bezüglich Vorhersage können wirksame Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Dokument Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Dokument Wissensbasis 4) erklärt werden.
 
 **OBLIGATORISCHE GEWICHTETE FEEDBACK-STRUKTUR:**
-1. **Prozente berechnen**: Beschreibung% + Erklärung% + Vorhersage% = Professionelle Wahrnehmung%
-2. **SCHWÄCHSTEN BEREICH IDENTIFIZIEREN**: Niedrigste Prozent unter Beschreibung, Erklärung, Vorhersage finden
-3. **HAUPTFOKUS**: 6-8 detaillierte Sätze NUR für schwächsten Bereich mit mehreren spezifischen Vorschlägen
-4. **KURZE ABSCHNITTE**: Für die zwei stärkeren Bereiche exakt 3 Sätze (1 Stärke + 1 Vorschlag + 1 Warum)
-5. **Fazit fokussieren**: Ratschläge nur auf Verbesserung des schwächsten Bereichs
+1. **Schwächsten Bereich identifizieren**: Niedrigste Prozent unter Beschreibung, Erklärung, Vorhersage finden.
+2. **Einheitliche Formatierung**: Verwenden Sie das Format "Stärke:", "Verbesserungsvorschläge:", "Warum?" für ALLE DREI Bereiche (Beschreibung, Erklärung und Vorhersage).
+3. **Fokussierte Detaillierung**:
+    - Für den **schwächsten Bereich**, geben Sie detailliertes Feedback. Der Teil "Verbesserungsvorschläge:" sollte umfassend sein (4-6 Sätze) mit mehreren, spezifischen Beispielen und Verweisen auf die Wissensbasis.
+    - Für die **zwei stärkeren Bereiche**, geben Sie prägnantes Feedback. Der Teil "Verbesserungsvorschläge:" sollte kurz sein (1-2 Sätze).
+4. **Fazit fokussieren**: Ratschläge nur auf Verbesserung des schwächsten Bereichs.
 
 **Gesamtbewertungs-Template:**
 "Ein großer Teil Ihrer Analyse spiegelt eine professionelle Analyse wider. Nur etwa [other]% Ihres Textes folgt nicht den Schritten einer professionellen Unterrichtsanalyse. Vor allem sind Sie gut in der Lage, verschiedene Unterrichtsereignisse im Video basierend auf professionellem Wissen über wirksame Lehr- und Lernprozesse zu identifizieren und zu differenzieren, ohne Bewertungen vorzunehmen ([description]% beschreibend). Zusätzlich verknüpfen Sie viele der beobachteten Ereignisse mit den jeweiligen Theorien wirksamen Lehrens und Lernens ([explanation]% erklärend). Sie könnten jedoch versuchen, die beobachteten und erklärten Ereignisse mehr mit möglichen Konsequenzen für das Schülerlernen zu verknüpfen ([prediction]% vorhersagend)."
@@ -1042,11 +1062,12 @@ Einfache Rechnung: Professionelle Wahrnehmung% + Nicht-professionelle Wahrnehmun
 Nutzen Sie Forschung über guten Unterricht: Lehr-Lern-Modelle (Seidel & Shavelson, 2007), Unterrichtsqualitätsdimensionen (Klieme, 2006) für Beschreibung und Erklärung. Für Vorhersage nutzen Sie Motivationstheorie (Deci & Ryan, 1993) und Lerntheorien (Atkinson & Shiffrin, andere) für Schülerergebnisse.
 
 **EINFACHE ABER STARKE GEWICHTUNGSREGELN:**
-1. **Zusammenrechnen**: Beschreibung% + Erklärung% + Vorhersage% = Professionelle Wahrnehmung%
-2. **NIEDRIGSTE FINDEN**: Welche hat die kleinste Prozentzahl?
-3. **MEISTE HILFE GEBEN**: 6-8 Sätze mit vielen Tipps für schwächsten Bereich
-4. **ANDERE KURZ HALTEN**: Für die zwei besseren Bereiche nur 3 Sätze (was gut ist + Tipp + warum)
-5. **Fokussiert enden**: Sagen Sie ihnen, an ihrem schwächsten Bereich zu arbeiten
+1. **Niedrigste finden**: Welche hat die kleinste Prozentzahl?
+2. **Gleiches Format für alle**: Nutzen Sie das "Gut:", "Tipp:", "Warum?" Format für ALLE DREI Bereiche (Beschreibung, Erklärung und Vorhersage).
+3. **Meiste Hilfe geben**:
+    - Für den **schwächsten Bereich**, geben Sie viel Hilfe. Der "Tipp:" Teil sollte lang sein (4-6 Sätze) mit vielen klaren Beispielen.
+    - Für die **zwei besseren Bereiche**, halten Sie es kurz. Der "Tipp:" Teil sollte nur ein oder zwei Sätze lang sein.
+4. **Fokussiert enden**: Sagen Sie ihnen, an ihrem schwächsten Bereich zu arbeiten.
 
 **Einfaches Bewertungs-Template:**
 "Der größte Teil Ihrer Analyse zeigt professionelles Denken. Nur etwa [other]% Ihres Textes folgt nicht den professionellen Analyseschritten. Sie beschreiben, was der Lehrer tut, ohne zu bewerten ([description]%). Sie verknüpfen Ereignisse mit Lehrforschung ([explanation]%). Sie können sich verbessern, indem Sie mehr Vorhersagen über Schülerlernen mit psychologischen Theorien machen ([prediction]%)."
@@ -1355,4 +1376,4 @@ Nutzen Sie Forschung über guten Unterricht: Lehr-Lern-Modelle (Seidel & Shavels
         }
     }
 
-}); /* Force rebuild - Wed May 28 01:35:00 CST 2025 - Removed theories from user-friendly versions */
+});
