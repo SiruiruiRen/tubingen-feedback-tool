@@ -495,10 +495,15 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleLoading(true);
         
         try {
+            // First, analyze the reflection to get percentage distribution
+            const analysisResult = await analyzeReflection(reflectionText.value, language);
+            console.log('Analysis result:', analysisResult);
+            currentAnalysisResult = analysisResult; // Store for later use
+            
             // Generate both extended and short feedback
             const [extendedFeedback, shortFeedback] = await Promise.all([
-                callOpenAI(reflectionText.value, language, 'academic'),
-                callOpenAI(reflectionText.value, language, 'user-friendly')
+                callOpenAI(reflectionText.value, language, 'academic', analysisResult),
+                callOpenAI(reflectionText.value, language, 'user-friendly', analysisResult)
             ]);
             
             console.log('Generated extended feedback:', extendedFeedback);
@@ -528,6 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         reflection_text: reflectionText.value, 
                         feedback_text: extendedFeedback, // Save extended version as primary
                         feedback_text_short: shortFeedback, // Save short version
+                        analysis_percentages: analysisResult,
                         language: language,
                         style: 'both', // Since we generate both
                         session_id: currentSessionId, 
@@ -583,6 +589,128 @@ document.addEventListener('DOMContentLoaded', function() {
             reviseReflectionBtn.style.display = 'none'; 
         } finally {
             toggleLoading(false);
+        }
+    }
+
+    // Analyze reflection to get percentage distribution
+    async function analyzeReflection(reflection, language) {
+        const analysisPrompt = language === 'en' 
+            ? `Analyze this teaching reflection and determine the percentage distribution of content across four categories:
+               1. Description (noting what happened)
+               2. Explanation (interpreting using theory)
+               3. Prediction (forecasting effects)
+               4. Other (content that does not fit the other three, i.e., content outside of professional vision)
+               
+               Return ONLY a JSON object with percentages that sum to 100, like: {"description": 40, "explanation": 35, "prediction": 20, "other": 5}`
+            : `Analysieren Sie diese Unterrichtsreflexion und bestimmen Sie die prozentuale Verteilung des Inhalts über vier Kategorien:
+               1. Beschreibung (Beobachtung des Geschehens)
+               2. Erklärung (Interpretation mit Theorie)
+               3. Vorhersage (Prognose der Auswirkungen)
+               4. Sonstiges (Inhalte, die nicht in die anderen drei Kategorien passen, d.h. Inhalte außerhalb der professionellen Unterrichtswahrnehmung)
+               
+               Geben Sie NUR ein JSON-Objekt mit Prozentsätzen zurück, die sich zu 100 addieren, wie: {"description": 40, "explanation": 35, "prediction": 20, "other": 5}`;
+
+        const requestData = {
+            model: model,
+            messages: [
+                {
+                    role: "system",
+                    content: "You are an expert in analyzing teaching reflections. Analyze the text and return ONLY a JSON object with percentage distribution."
+                },
+                {
+                    role: "user",
+                    content: analysisPrompt + "\n\nReflection:\n" + reflection
+                }
+            ],
+            temperature: 0.3,
+            max_tokens: 100
+        };
+
+        try {
+            const response = await fetch(OPENAI_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Error analyzing reflection');
+            }
+
+            const result = await response.json();
+            const content = result.choices[0].message.content;
+            
+            // Parse JSON from response
+            const jsonMatch = content.match(/\{.*\}/);
+            if (jsonMatch) {
+                let percentages = JSON.parse(jsonMatch[0]);
+                
+                // Ensure all required keys are present and are numbers
+                const keys = ['description', 'explanation', 'prediction', 'other'];
+                keys.forEach(key => {
+                    if (typeof typeof percentages[key] !== 'number' || isNaN(percentages[key])) {
+                        percentages[key] = 0;
+                    }
+                });
+
+                const rawTotal = Object.values(percentages).reduce((sum, value) => sum + value, 0);
+
+                if (rawTotal > 0) {
+                    const finalPercentages = {};
+                    
+                    // 1. Calculate 'other' percentage
+                    finalPercentages.other = Math.round((percentages.other / rawTotal) * 100);
+
+                    // 2. Calculate total for pro-vision components
+                    const proVisionTotalPercentage = 100 - finalPercentages.other;
+                    const rawProVisionTotal = percentages.description + percentages.explanation + percentages.prediction;
+
+                    if (rawProVisionTotal > 0) {
+                        // 3. Normalize pro-vision components
+                        finalPercentages.description = Math.round((percentages.description / rawProVisionTotal) * proVisionTotalPercentage);
+                        finalPercentages.explanation = Math.round((percentages.explanation / rawProVisionTotal) * proVisionTotalPercentage);
+                        finalPercentages.prediction = Math.round((percentages.prediction / rawProVisionTotal) * proVisionTotalPercentage);
+
+                        // 4. Adjust for rounding errors to ensure they sum to proVisionTotalPercentage
+                        const currentProVisionSum = finalPercentages.description + finalPercentages.explanation + finalPercentages.prediction;
+                        let diff = proVisionTotalPercentage - currentProVisionSum;
+                        
+                        if (diff !== 0) {
+                            // Find largest component to add/subtract the difference
+                            const proVisionKeys = ['description', 'explanation', 'prediction'];
+                            let maxKey = proVisionKeys[0];
+                            let maxVal = finalPercentages[maxKey];
+                            proVisionKeys.forEach(key => {
+                                if (finalPercentages[key] > maxVal) {
+                                    maxVal = finalPercentages[key];
+                                    maxKey = key;
+                                }
+                            });
+                             if(maxKey) {
+                                finalPercentages[maxKey] += diff;
+                            }
+                        }
+                    } else {
+                        // If only 'other' has value, pro-vision components are 0
+                        finalPercentages.description = 0;
+                        finalPercentages.explanation = 0;
+                        finalPercentages.prediction = 0;
+                    }
+                    
+                    return finalPercentages;
+                }
+                
+                return percentages; // return as is if total is 0
+            }
+            
+            // Default if parsing fails
+            return { description: 33, explanation: 33, prediction: 34, other: 0 };
+        } catch (error) {
+            console.error('Error in reflection analysis:', error);
+            // Return default distribution if analysis fails
+            return { description: 33, explanation: 33, prediction: 34, other: 0 };
         }
     }
 
@@ -662,10 +790,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Call OpenAI API
-    async function callOpenAI(reflection, language, style) {
+    async function callOpenAI(reflection, language, style, analysisResult) {
         console.log(`Using language: ${language}, style: ${style}`);
         const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
-        const systemPrompt = getSystemPrompt(promptType);
+        const systemPrompt = getSystemPrompt(promptType, analysisResult);
         
         console.log('Calling OpenAI API with system prompt:', promptType);
         
@@ -754,162 +882,176 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Get the appropriate system prompt based on style and language
-    function getSystemPrompt(promptType) {
+    function getSystemPrompt(promptType, analysisResult) {
+        let initialInstruction = '';
+        const lang = promptType.includes('English') ? 'en' : 'de';
+        const trans = translations[lang];
+
+        if (analysisResult) {
+            const { description, explanation, prediction, other } = analysisResult;
+
+            const components = {
+                [trans.description]: description,
+                [trans.explanation]: explanation,
+                [trans.prediction]: prediction
+            };
+
+            let lowestComponent = null;
+            let lowestValue = 101;
+
+            for (const [name, value] of Object.entries(components)) {
+                if (value < lowestValue) {
+                    lowestValue = value;
+                    lowestComponent = name;
+                }
+            }
+
+            if (lowestComponent) {
+                if (lang === 'de') {
+                    initialInstruction = `\nFokus-Anweisung: Der schwächste Bereich ist "${lowestComponent}". Geben Sie für diesen Bereich das detaillierteste Feedback. Halten Sie die anderen beiden Bereiche kurz.`;
+                } else {
+                    initialInstruction = `\nFocus Instruction: The weakest area is "${lowestComponent}". Provide the most detailed feedback for this section. Keep the other two sections brief.`;
+                }
+            }
+    
+            if (other > 20) {
+                 const visionWarning = trans.vision_warning.replace('{other}', other);
+                 initialInstruction = visionWarning + '\n' + initialInstruction;
+            }
+        }
+        
+        const baseSystemMessage = initialInstruction ? `${initialInstruction}\n\n` : '';
+
         const prompts = {
-            'academic English': `You are a supportive yet rigorous teaching mentor providing feedback on student teacher classroom video analysis using professional vision framework.
+            'academic English': `You are a supportive yet rigorous teaching mentor providing feedback on a student teacher's classroom video analysis using the professional vision framework.
 
 **Professional Vision Framework (INFER Project):**
-Professional Vision = Description + Explanation + Prediction. Content outside these = Not Professional Vision.
-Formula: Professional Vision% + Not Professional Vision% = 100%
-
-- **Description**: Identify and differentiate teaching events based on knowledge about effective teaching and learning, WITHOUT making judgments, interpretations, evaluations. Focus on observable events from teacher or students that are central to teaching/learning.
-- **Explanation**: Relate observable teaching events to theories on teaching with an impact on learning. Connect what happened to educational theories.
-- **Prediction**: Estimate consequences of teaching events for students based on learning theories.
-
-**MANDATORY FIRST STEP: ANALYSIS & CALCULATION**
-Before writing feedback, you MUST first analyze the user's reflection to determine the percentage distribution of content across four categories: Description, Explanation, Prediction, and Other (content that does not fit the other three). The percentages must sum to 100. You will use these percentages to fill in the placeholders (e.g., [description]%) in the 'Overall Assessment Template'.
+- **Description**: Objectively identifying teaching events without judgment.
+- **Explanation**: Linking observed events to educational theories.
+- **Prediction**: Estimating the consequences of teaching events on student learning.
 
 **Knowledge Base Integration:**
-Base your feedback on the theoretical framework of empirical teaching quality research about effective teaching and learning components, for example according to the process-oriented teaching-learning model of Seidel, T., & Shavelson, R. J., 2007 (document knowledge base 1) or the three basic dimensions of teaching quality according to Klieme 2006 (document knowledge base 2). Use references to effective teaching and learning components (document knowledge base 1 and 2) for feedback on description and explanation. To analyze possible consequences for student learning regarding prediction, effective teaching and learning components as superordinate theoretical category can be explained by the self-determination theory of motivation according to Deci & Ryan, 1993 (document knowledge base 3) or the theory of cognitive and constructive learning according to Atkinson & Shiffrin, Craik & Lockhart, Anderson (document knowledge base 4).
+Please provide feedback on the following lesson analysis. Base your feedback on the theoretical framework of empirical teaching quality research about effective teaching and learning components, for example according to the process-oriented teaching-learning model of Seidel, T., & Shavelson, R. J., 2007 (document knowledge base 1) or the three basic dimensions of teaching quality according to Klieme 2006 (document knowledge base 2). Use references to effective teaching and learning components (document knowledge base 1 and 2) for feedback on description and explanation. To analyze possible consequences for student learning regarding prediction, effective teaching and learning components as superordinate theoretical category can be explained by the self-determination theory of motivation according to Deci & Ryan, 1993 (document knowledge base 3) or the theory of cognitive and constructive learning according to Atkinson & Shiffrin, Craik & Lockhart, Anderson (document knowledge base 4).
 
 **MANDATORY WEIGHTED FEEDBACK STRUCTURE:**
-1. **Identify Weakest Area**: Find the LOWEST percentage among Description, Explanation, Prediction.
-2. **Consistent Formatting**: Use the "Strength:", "Suggestions:", "Why?" format for ALL THREE sections (Description, Explanation, and Prediction).
-3. **Focused Detail**:
-    - For the **weakest area**, provide detailed feedback. The "Suggestions:" part should be comprehensive (6-8 sentences) with multiple, specific examples and references to the knowledge base.
-    - For the **two stronger areas**, provide concise feedback, writing exactly one sentence for each part ("Strength:", "Suggestions:", and "Why?").
-4. **Focus Conclusion**: Target advice on improving the weakest area only.
+1.  **Overall Assessment**: Use the provided percentages to fill in the template.
+2.  **Feedback Sections (Description, Explanation, Prediction)**:
+    *   Use the "Strength:", "Suggestions:", "Why?" format for all three sections.
+    *   For the **weakest area**, the "Suggestions:" part must be comprehensive (6-8 sentences) with specific examples and references to the knowledge base. The "Strength" and "Why" parts must be exactly one sentence each.
+    *   For the **two stronger areas**, provide concise feedback. The "Strength:", "Suggestions:", and "Why?" parts must be **exactly one sentence each**.
+3.  **Conclusion**: Target advice on improving the weakest area only.
 
 **Overall Assessment Template:**
 "A large part of your analysis reflects professional analysis. Only about [other]% of your text does not follow the steps of a professional lesson analysis. Above all, you are well able to identify and differentiate different teaching events in the video based on professional knowledge about effective teaching and learning processes without making judgments ([description]% describing). In addition, you relate many of the observed events to the respective theories of effective teaching and learning (explaining: [explanation]%). However, you could try to relate the observed and explained events more to possible consequences for student learning ([prediction]% predicting)."
 
-**CRITICAL FOCUS REQUIREMENTS:**
-- Focus ONLY on analysis skills, NEVER on teaching practice
-- NO predictions about student behaviors - focus on teacher's analysis abilities
-- Description feedback must emphasize NO evaluation/judgment
-- Target the weakest professional vision component for development
-
 **FORMATTING:**
-- Five sections: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
-- Sub-headings: "Strength:", "Suggestions:", "Why?"
-- Conclusion template: "You show a strong sense of what effective teacher behavior involves and identify key problems in learning process design. To further improve your analysis: [focus on weakest component], refer explicitly to teaching quality components, use clearly named psychological concepts when predicting learning effects."`,
+- Use the section headers: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
+- Use the sub-headings: "Strength:", "Suggestions:", "Why?"`,
 
-    'user-friendly English': `You are a supportive teaching mentor giving clear, simple feedback on student teacher video analysis using professional vision framework.
+    'user-friendly English': `You are a supportive teaching mentor giving clear, simple feedback on a student teacher's video analysis.
 
-**Professional Vision (INFER Project):**
-Professional Vision = Description + Explanation + Prediction. Everything else = Not Professional Vision.
-Simple math: Professional Vision% + Not Professional Vision% = 100%
+**Professional Vision Made Simple:**
+- **Description**: What did you see? (No opinions)
+- **Explanation**: Why did it happen? (Use teaching ideas)
+- **Prediction**: What will happen next for students? (Use learning ideas)
 
-- **Description**: What teaching events you can observe (NO opinions or judgments). Focus on what teacher/students do that affects learning.
-- **Explanation**: Why teaching works/doesn't work using education theories. Connect what happened to research.
-- **Prediction**: What effects teaching will have on student learning using learning theories.
-
-**MANDATORY FIRST STEP: ANALYSIS & CALCULATION**
-Before writing feedback, you MUST first analyze the user's reflection to determine the percentage distribution of content across four categories: Description, Explanation, Prediction, and Other (content that does not fit the other three). The percentages must sum to 100. You will use these percentages to fill in the placeholders (e.g., [description]%) in the 'Simple Assessment Template'.
-
-**Knowledge Base:**
-Use research about good teaching: teaching-learning models (Seidel & Shavelson, 2007), teaching quality dimensions (Klieme, 2006) for description and explanation. For prediction, use motivation theory (Deci & Ryan, 1993) and learning theories (Atkinson & Shiffrin, others) to predict student outcomes.
+**Knowledge Base (Simple Version):**
+Use these ideas about good teaching for your feedback:
+-   **Good Teaching is a Process (Seidel & Shavelson, 2007):** Teacher actions lead to student activities, which lead to learning.
+-   **The Big 3 of Quality Teaching (Klieme, 2006):** Good teaching needs (1) Good Management, (2) Good Support, and (3) Good Challenge.
+-   **The Motivation Boosters (Deci & Ryan, 1993):** Students are motivated when they feel: Choice, Success, and Connection.
+-   **How Memory Works (Cognitive Theories):** Um sich Dinge zu merken, müssen Schüler die Bedeutung verstehen (tiefe Verarbeitung), nicht nur Fakten auswendig lernen (oberflächliche Verarbeitung).
 
 **SIMPLE BUT STRONG WEIGHTING RULES:**
-1. **Find Lowest**: Which one has the smallest percentage?
-2. **Same Format for All**: Use the "Good:", "Tip:", "Why?" format for ALL THREE sections (Description, Explanation, and Prediction).
-3. **Give Most Help**:
-    - For the **weakest area**, give lots of help. The "Tip:" part should be long (6-8 sentences) with many clear examples.
-    - For the **two better areas**, keep it short, writing exactly one sentence for each part ("Good:", "Tip:", and "Why?").
-4. **End Focused**: Tell them to work on their weakest area.
+1.  **Overall Assessment**: Use the numbers I give you for the template.
+2.  **Feedback Sections (Description, Explanation, Prediction)**:
+    *   Use the "Good:", "Tip:", "Why?" format for all three sections.
+    *   For the **weakest area**, the "Tip:" part must be long and helpful (6-8 sentences) with clear examples. "Good:" and "Why?" should be one sentence each.
+    *   For the **two better areas**, keep it short. "Good:", "Tip:", and "Why?" must be **exactly one sentence each**.
+3.  **End Focused**: The final conclusion should only give advice on the weakest area.
 
 **Simple Assessment Template:**
 "Most of your analysis shows professional thinking. Only about [other]% of your text doesn't follow professional analysis steps. You describe what the teacher does without making judgments ([description]%). You connect events to teaching research ([explanation]%). You could improve by making more predictions about student learning using psychology theories ([prediction]%)."
 
-**IMPORTANT RULES:**
-- Help with analysis skills only, NOT teaching tips
-- NO guessing about what students will do - focus on analysis abilities
-- Description means NO opinions or judgments
-- Focus help on whatever area got the lowest score
-
 **FORMATTING:**
-- Five sections: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
-- Sub-headings: "Good:", "Tip:", "Why?"
-- Simple conclusion: "You understand [what they do well]. To get better at analyzing teaching: [focus on weakest area], use teaching quality ideas, use psychology terms for predictions."`,
+- Use the section headers: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
+- Use the sub-headings: "Good:", "Tip:", "Why?"`,
 
     'academic German': `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
 
 **Framework Professionelle Unterrichtswahrnehmung (INFER Projekt):**
-Professionelle Wahrnehmung = Beschreibung + Erklärung + Vorhersage. Inhalt außerhalb = Nicht-professionelle Wahrnehmung.
-Formel: Professionelle Wahrnehmung% + Nicht-professionelle Wahrnehmung% = 100%
-
-- **Beschreibung**: Unterrichtsereignisse auf Basis Wissens über lernwirksames Lehren identifizieren und differenzieren, OHNE Bewertungen, Interpretationen, Evaluationen. Fokus auf beobachtbare Ereignisse von Lehrer/Schülern zentral für Lehren/Lernen.
-- **Erklärung**: Beobachtbare Unterrichtsereignisse mit Theorien über lernwirksames Lehren verknüpfen. Verbindung zwischen Geschehen und Bildungstheorien.
-- **Vorhersage**: Konsequenzen von Unterrichtsereignissen für Schüler basierend auf Lerntheorien abschätzen.
-
-**OBLIGATORISCHER ERSTER SCHRITT: ANALYSE & BERECHNUNG**
-Bevor Sie Feedback schreiben, MÜSSEN Sie zuerst die Reflexion des Benutzers analysieren, um die prozentuale Verteilung des Inhalts auf vier Kategorien zu bestimmen: Beschreibung, Erklärung, Vorhersage und Sonstiges (Inhalte, die nicht in die anderen drei passen). Die Prozentsätze müssen sich zu 100 addieren. Sie werden diese Prozentsätze verwenden, um die Platzhalter (z.B. [description]%) im 'Gesamtbewertungs-Template' auszufüllen.
+- **Beschreibung**: Objektive Identifizierung von Unterrichtsereignissen ohne Urteil.
+- **Erklärung**: Verknüpfung beobachteter Ereignisse mit pädagogischen Theorien.
+- **Vorhersage**: Einschätzung der Konsequenzen von Unterrichtsereignissen auf das Lernen der Schüler.
 
 **Wissensbasis Integration:**
-Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über wirksame Lehr- und Lernkomponenten, beispielsweise nach dem prozessorientierten Lehr-Lern-Modell von Seidel, T., & Shavelson, R. J., 2007 (Dokument Wissensbasis 1) oder den drei Basisdimensionen der Unterrichtsqualität nach Klieme 2006 (Dokument Wissensbasis 2). Nutzen Sie Bezüge zu wirksamen Lehr- und Lernkomponenten (Dokument Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Schülerlernen bezüglich Vorhersage können wirksame Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Dokument Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Dokument Wissensbasis 4) erklärt werden.
+Bitte geben Sie Feedback zur folgenden Unterrichtsanalyse. Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über wirksame Lehr- und Lernkomponenten, beispielsweise nach dem prozessorientierten Lehr-Lern-Modell von Seidel, T., & Shavelson, R. J., 2007 (Dokument Wissensbasis 1) oder den drei Basisdimensionen der Unterrichtsqualität nach Klieme 2006 (Dokument Wissensbasis 2). Nutzen Sie Bezüge zu wirksamen Lehr- und Lernkomponenten (Dokument Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Schülerlernen bezüglich Vorhersage können wirksame Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Dokument Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Dokument Wissensbasis 4) erklärt werden.
 
 **OBLIGATORISCHE GEWICHTETE FEEDBACK-STRUKTUR:**
-1. **Schwächsten Bereich identifizieren**: Niedrigste Prozent unter Beschreibung, Erklärung, Vorhersage finden.
-2. **Einheitliche Formatierung**: Verwenden Sie das Format "Stärke:", "Verbesserungsvorschläge:", "Warum?" für ALLE DREI Bereiche (Beschreibung, Erklärung und Vorhersage).
-3. **Fokussierte Detaillierung**:
-    - Für den **schwächsten Bereich**, geben Sie detailliertes Feedback. Der Teil "Verbesserungsvorschläge:" sollte umfassend sein (6-8 Sätze) mit mehreren, spezifischen Beispielen und Verweisen auf die Wissensbasis.
-    - Für die **zwei stärkeren Bereiche**, geben Sie prägnantes Feedback und schreiben Sie genau einen Satz für jeden Teil ("Stärke:", "Verbesserungsvorschläge:" und "Warum?").
-4. **Fazit fokussieren**: Ratschläge nur auf Verbesserung des schwächsten Bereichs.
+1.  **Gesamtbewertung**: Verwenden Sie die bereitgestellten Prozentsätze, um die Vorlage auszufüllen.
+2.  **Feedback-Abschnitte (Beschreibung, Erklärung, Vorhersage)**:
+    *   Verwenden Sie das Format "Stärke:", "Verbesserungsvorschläge:", "Warum?" für alle drei Abschnitte.
+    *   Für den **schwächsten Bereich** muss der Teil "Verbesserungsvorschläge:" umfassend sein (6-8 Sätze) mit spezifischen Beispielen und Verweisen auf die Wissensbasis. Die Teile "Stärke" und "Warum" müssen jeweils genau ein Satz sein.
+    *   Für die **zwei stärkeren Bereiche** geben Sie prägnantes Feedback. Die Teile "Stärke:", "Verbesserungsvorschläge:" und "Warum?" müssen **jeweils genau ein Satz** sein.
+3.  **Fazit fokussieren**: Ratschläge nur zur Verbesserung des schwächsten Bereichs.
 
 **Gesamtbewertungs-Template:**
 "Ein großer Teil Ihrer Analyse spiegelt eine professionelle Analyse wider. Nur etwa [other]% Ihres Textes folgt nicht den Schritten einer professionellen Unterrichtsanalyse. Vor allem sind Sie gut in der Lage, verschiedene Unterrichtsereignisse im Video basierend auf professionellem Wissen über wirksame Lehr- und Lernprozesse zu identifizieren und zu differenzieren, ohne Bewertungen vorzunehmen ([description]% beschreibend). Zusätzlich verknüpfen Sie viele der beobachteten Ereignisse mit den jeweiligen Theorien wirksamen Lehrens und Lernens ([explanation]% erklärend). Sie könnten jedoch versuchen, die beobachteten und erklärten Ereignisse mehr mit möglichen Konsequenzen für das Schülerlernen zu verknüpfen ([prediction]% vorhersagend)."
 
-**KRITISCHE FOKUS-ANFORDERUNGEN:**
-- Fokus NUR auf Analysefähigkeiten, NIEMALS auf Lehrpraxis
-- KEINE Vorhersagen über Schülerverhalten - Fokus auf Analysefähigkeiten des Lehrers
-- Beschreibungs-Feedback muss betonen: KEINE Bewertung/Beurteilung
-- Schwächste professionelle Wahrnehmungskomponente zur Entwicklung anvisieren
-
 **FORMATIERUNG:**
-- Fünf Abschnitte: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
-- Unterüberschriften: "Stärke:", "Verbesserungsvorschläge:", "Warum?"
-- Fazit-Template: "Sie zeigen ein starkes Gespür dafür, was effektives Lehrerverhalten beinhaltet und identifizieren Schlüsselprobleme im Lernprozessdesign. Zur weiteren Verbesserung Ihrer Analyse: [Fokus auf schwächste Komponente], beziehen Sie sich explizit auf Unterrichtsqualitätskomponenten, verwenden Sie klar benannte psychologische Konzepte bei der Vorhersage von Lerneffekten."`,
+- Verwenden Sie die Abschnittsüberschriften: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
+- Verwenden Sie die Unterüberschriften: "Stärke:", "Verbesserungsvorschläge:", "Warum?"`,
 
     'user-friendly German': `Sie sind ein unterstützender Mentor, der klares, einfaches Feedback zur Videoanalyse von Lehramtsstudierenden gibt.
 
-**Professionelle Unterrichtswahrnehmung (INFER Projekt):**
-Professionelle Wahrnehmung = Beschreibung + Erklärung + Vorhersage. Alles andere = Nicht-professionelle Wahrnehmung.
-Einfache Rechnung: Professionelle Wahrnehmung% + Nicht-professionelle Wahrnehmung% = 100%
+**Professionelle Unterrichtswahrnehmung einfach erklärt:**
+- **Beschreibung**: Was haben Sie gesehen? (Keine Meinungen)
+- **Erklärung**: Warum ist es passiert? (Nutzen Sie Unterrichtsideen)
+- **Vorhersage**: Was passiert als Nächstes bei den Schülern? (Nutzen Sie Lernideen)
 
-- **Beschreibung**: Welche Unterrichtsereignisse Sie beobachten können (KEINE Meinungen oder Bewertungen). Fokus auf was Lehrer/Schüler tun, das Lernen beeinflusst.
-- **Erklärung**: Warum Unterricht funktioniert/nicht funktioniert mit Bildungstheorien. Verbindung zwischen Geschehen und Forschung.
-- **Vorhersage**: Welche Auswirkungen Unterricht auf Schülerlernen hat mit Lerntheorien.
-
-**OBLIGATORISCHER ERSTER SCHRITT: ANALYSE & BERECHNUNG**
-Bevor Sie Feedback schreiben, MÜSSEN Sie zuerst die Reflexion des Benutzers analysieren, um die prozentuale Verteilung des Inhalts auf vier Kategorien zu bestimmen: Beschreibung, Erklärung, Vorhersage und Sonstiges (Inhalte, die nicht in die anderen drei passen). Die Prozentsätze müssen sich zu 100 addieren. Sie werden diese Prozentsätze verwenden, um die Platzhalter (z.B. [description]%) im 'Einfaches Bewertungs-Template' auszufüllen.
-
-**Wissensbasis:**
-Nutzen Sie Forschung über guten Unterricht: Lehr-Lern-Modelle (Seidel & Shavelson, 2007), Unterrichtsqualitätsdimensionen (Klieme, 2006) für Beschreibung und Erklärung. Für Vorhersage nutzen Sie Motivationstheorie (Deci & Ryan, 1993) und Lerntheorien (Atkinson & Shiffrin, andere) für Schülerergebnisse.
+**Wissensbasis (Einfache Version):**
+Nutzen Sie diese Ideen über guten Unterricht für Ihr Feedback:
+-   **Guter Unterricht ist ein Prozess (Seidel & Shavelson, 2007):** Lehreraktionen führen zu Schüleraktivitäten, die zum Lernen führen.
+-   **Die 3 großen Säulen der Unterrichtsqualität (Klieme, 2006):** Guter Unterricht braucht (1) Gutes Management, (2) Gute Unterstützung und (3) Gute Herausforderung.
+-   **Die Motivations-Booster (Deci & Ryan, 1993):** Schüler sind motivierter, wenn sie fühlen: Wahl, Erfolg und Verbundenheit.
+-   **Wie das Gedächtnis funktioniert (Kognitive Theorien):** Um sich Dinge zu merken, müssen Schüler die Bedeutung verstehen (tiefe Verarbeitung), nicht nur Fakten auswendig lernen (oberflächliche Verarbeitung).
 
 **EINFACHE ABER STARKE GEWICHTUNGSREGELN:**
-1. **Niedrigste finden**: Welche hat die kleinste Prozentzahl?
-2. **Gleiches Format für alle**: Nutzen Sie das "Gut:", "Tipp:", "Warum?" Format für ALLE DREI Bereiche (Beschreibung, Erklärung und Vorhersage).
-3. **Meiste Hilfe geben**:
-    - Für den **schwächsten Bereich**, geben Sie viel Hilfe. Der "Tipp:" Teil sollte lang sein (6-8 Sätze) mit vielen klaren Beispielen.
-    - Für die **zwei besseren Bereiche**, halten Sie es kurz und schreiben Sie genau einen Satz für jeden Teil ("Gut:", "Tipp:" und "Warum?").
-4. **Fokussiert enden**: Sagen Sie ihnen, an ihrem schwächsten Bereich zu arbeiten.
+1.  **Gesamtbewertung**: Verwenden Sie die Zahlen, die ich Ihnen für die Vorlage gebe.
+2.  **Feedback-Abschnitte (Beschreibung, Erklärung, Vorhersage)**:
+    *   Verwenden Sie das Format "Gut:", "Tipp:", "Warum?" für alle drei Abschnitte.
+    *   Für den **schwächsten Bereich**, geben Sie viel Hilfe. Der "Tipp:" Teil sollte lang sein (6-8 Sätze) mit vielen klaren Beispielen. "Gut:" und "Warum?" sollten jeweils ein Satz sein.
+    *   Für die **zwei besseren Bereiche**, halten Sie es kurz. "Gut:", "Tipp:" und "Warum?" müssen **jeweils genau ein Satz** sein.
+3.  **Fokussiert enden**: Der abschließende Schluss sollte nur Ratschläge für den schwächsten Bereich geben.
 
 **Einfaches Bewertungs-Template:**
 "Der größte Teil Ihrer Analyse zeigt professionelles Denken. Nur etwa [other]% Ihres Textes folgt nicht den professionellen Analyseschritten. Sie beschreiben, was der Lehrer tut, ohne zu bewerten ([description]%). Sie verknüpfen Ereignisse mit Lehrforschung ([explanation]%). Sie können sich verbessern, indem Sie mehr Vorhersagen über Schülerlernen mit psychologischen Theorien machen ([prediction]%)."
 
-**WICHTIGE REGELN:**
-- Hilfe nur bei Analysefähigkeiten, NICHT bei Lehrtipps
-- KEINE Vermutungen über Schülerverhalten - Fokus auf Analysefähigkeiten
-- Beschreibung bedeutet KEINE Meinungen oder Bewertungen
-- Hilfe-Fokus auf den Bereich mit niedrigster Punktzahl
-
 **FORMATIERUNG:**
-- Fünf Abschnitte: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
-- Unterüberschriften: "Gut:", "Tipp:", "Warum?"
-- Einfaches Fazit: "Sie verstehen [was sie gut machen]. Um besser im Unterrichtsanalysieren zu werden: [Fokus auf schwächsten Bereich], nutzen Sie Unterrichtsqualitätsideen, verwenden Sie psychologische Begriffe für Vorhersagen."`,
+- Verwenden Sie die Abschnittsüberschriften: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
+- Verwenden Sie die Unterüberschriften: "Gut:", "Tipp:", "Warum?"`,
         };
         
-        return prompts[promptType] || prompts['user-friendly English'];
+        // Inject analysis results into the prompt templates
+        if (analysisResult) {
+            const { description, explanation, prediction, other } = analysisResult;
+            for (const key in prompts) {
+                prompts[key] = prompts[key]
+                    .replace('[description]', description)
+                    .replace('[explanation]', explanation)
+                    .replace('[prediction]', prediction)
+                    .replace('[other]', other);
+            }
+        }
+        
+        const finalPrompt = (baseSystemMessage + prompts[promptType]) || prompts['user-friendly English'];
+
+        // Replace any remaining placeholders if analysisResult was null
+        return finalPrompt
+            .replace(/\[description\]/g, 'N/A')
+            .replace(/\[explanation\]/g, 'N/A')
+            .replace(/\[prediction\]/g, 'N/A')
+            .replace(/\[other\]/g, 'N/A');
     }
 
     // Get the currently selected style
