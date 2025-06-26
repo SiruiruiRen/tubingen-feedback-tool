@@ -960,21 +960,17 @@ Use these ideas about good teaching for your feedback:
 -   **Good Teaching is a Process (Seidel & Shavelson, 2007):** Teacher actions lead to student activities, which lead to learning.
 -   **The Big 3 of Quality Teaching (Klieme, 2006):** Good teaching needs (1) Good Management, (2) Good Support, and (3) Good Challenge.
 -   **The Motivation Boosters (Deci & Ryan, 1993):** Students are motivated when they feel: Choice, Success, and Connection.
--   **How Memory Works (Cognitive Theories):** Um sich Dinge zu merken, müssen Schüler die Bedeutung verstehen (tiefe Verarbeitung), nicht nur Fakten auswendig lernen (oberflächliche Verarbeitung).
+-   **How Memory Works (Cognitive Theories):** To remember things, students need to understand meaning (deep processing), not just memorize facts (shallow processing).
 
 **SIMPLE BUT STRONG WEIGHTING RULES:**
-1.  **Overall Assessment**: Use the numbers I give you for the template.
-2.  **Feedback Sections (Description, Explanation, Prediction)**:
+1.  **Feedback Sections (Description, Explanation, Prediction)**:
     *   Use the "Good:", "Tip:", "Why?" format for all three sections.
     *   For the **weakest area**, the "Tip:" part must be long and helpful (6-8 sentences) with clear examples. "Good:" and "Why?" should be one sentence each.
     *   For the **two better areas**, keep it short. "Good:", "Tip:", and "Why?" must be **exactly one sentence each**.
-3.  **End Focused**: The final conclusion should only give advice on the weakest area.
-
-**Simple Assessment Template:**
-"Most of your analysis shows professional thinking. Only about [other]% of your text doesn't follow professional analysis steps. You describe what the teacher does without making judgments ([description]%). You connect events to teaching research ([explanation]%). You could improve by making more predictions about student learning using psychology theories ([prediction]%)."
+2.  **End Focused**: The final conclusion should only give advice on the weakest area.
 
 **FORMATTING:**
-- Use the section headers: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
+- Use the section headers: "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
 - Use the sub-headings: "Good:", "Tip:", "Why?"`,
 
     'academic German': `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
@@ -1017,18 +1013,14 @@ Nutzen Sie diese Ideen über guten Unterricht für Ihr Feedback:
 -   **Wie das Gedächtnis funktioniert (Kognitive Theorien):** Um sich Dinge zu merken, müssen Schüler die Bedeutung verstehen (tiefe Verarbeitung), nicht nur Fakten auswendig lernen (oberflächliche Verarbeitung).
 
 **EINFACHE ABER STARKE GEWICHTUNGSREGELN:**
-1.  **Gesamtbewertung**: Verwenden Sie die Zahlen, die ich Ihnen für die Vorlage gebe.
-2.  **Feedback-Abschnitte (Beschreibung, Erklärung, Vorhersage)**:
+1.  **Feedback-Abschnitte (Beschreibung, Erklärung, Vorhersage)**:
     *   Verwenden Sie das Format "Gut:", "Tipp:", "Warum?" für alle drei Abschnitte.
-    *   Für den **schwächsten Bereich**, geben Sie viel Hilfe. Der "Tipp:" Teil sollte lang sein (6-8 Sätze) mit vielen klaren Beispielen. "Gut:" und "Warum?" sollten jeweils ein Satz sein.
-    *   Für die **zwei besseren Bereiche**, halten Sie es kurz. "Gut:", "Tipp:" und "Warum?" müssen **jeweils genau ein Satz** sein.
-3.  **Fokussiert enden**: Der abschließende Schluss sollte nur Ratschläge für den schwächsten Bereich geben.
-
-**Einfaches Bewertungs-Template:**
-"Der größte Teil Ihrer Analyse zeigt professionelles Denken. Nur etwa [other]% Ihres Textes folgt nicht den professionellen Analyseschritten. Sie beschreiben, was der Lehrer tut, ohne zu bewerten ([description]%). Sie verknüpfen Ereignisse mit Lehrforschung ([explanation]%). Sie können sich verbessern, indem Sie mehr Vorhersagen über Schülerlernen mit psychologischen Theorien machen ([prediction]%)."
+    *   Für den **schwächsten Bereich** muss der "Tipp:"-Teil lang und hilfreich sein (6-8 Sätze) mit klaren Beispielen. "Gut:" und "Warum?" sollten jeweils ein Satz sein.
+    *   Für die **zwei besseren Bereiche** halten Sie es kurz. "Gut:", "Tipp:" und "Warum?" müssen **jeweils genau ein Satz** sein.
+2.  **Fokussiert enden**: Der abschließende Schluss sollte nur Ratschläge für den schwächsten Bereich geben.
 
 **FORMATIERUNG:**
-- Verwenden Sie die Abschnittsüberschriften: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
+- Verwenden Sie die Abschnittsüberschriften: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
 - Verwenden Sie die Unterüberschriften: "Gut:", "Tipp:", "Warum?"`,
         };
         
