@@ -640,7 +640,7 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
                     content: analysisPrompt + "\n\nReflection to analyze:\n" + reflection
                 }
             ],
-            temperature: 0.1, // Lower temperature for more consistency
+            temperature: 0.5, // Balanced temperature for consistency and quality
             max_tokens: 200,
             response_format: { type: "json_object" },
             seed: 42 // Add seed for more deterministic results
@@ -785,9 +785,9 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
             return `<strong class="feedback-keyword">${keyword}:</strong>`;
         });
         
-        // Specifically ensure "Why?" and "Warum?" are bolded even without colon
-        text = text.replace(/\b(Why\?|Warum\?)/gi, (match, keyword) => {
-            return `<strong class="feedback-keyword">${keyword}</strong>`;
+        // Specifically ensure "Why?" and "Warum?" are bolded (with or without colon)
+        text = text.replace(/\b(Why\?|Warum\?)(\s*:?)/gi, (match, keyword, colon) => {
+            return `<strong class="feedback-keyword">${keyword}</strong>${colon}`;
         });
         
         // Format list items
@@ -984,8 +984,8 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 **MANDATORY WEIGHTED FEEDBACK STRUCTURE:**
 1.  **Overall Assessment**: Use the provided percentages to fill in the template.
 2.  **STRICT SENTENCE COUNT RULES**: You MUST follow these sentence counts exactly.
-    *   For the **weakest area** (identified as ${weakestComponent}), the "Suggestions:" part MUST be comprehensive and detailed, consisting of **exactly 6 to 8 sentences**. The "Strength" and "Why" parts for this area must be exactly one sentence each.
-    *   For the **two stronger areas**, the "Strength:", "Suggestions:", and "Why?:" parts MUST be **exactly one sentence each**. This means each of the stronger areas will have a total of 3 sentences.
+    *   For the **weakest area** (identified as ${weakestComponent}): Write **2-3 sentences** for "Strength:", **2-3 sentences** for "Suggestions:", and **2-3 sentences** for "Why?"
+    *   For the **two stronger areas**: Write **exactly 1 sentence** for "Strength:", **exactly 1 sentence** for "Suggestions:", and **exactly 1 sentence** for "Why?"
 3.  **Conclusion**: The conclusion must ONLY give advice on improving the weakest area.
 
 **Overall Assessment Template:**
@@ -1000,7 +1000,7 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 
 **FORMATTING:**
 - Your response MUST include these five sections: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
-- Each feedback section MUST use the sub-headings: "Strength:", "Suggestions:", "Why?:"
+- Each feedback section MUST use the sub-headings: "Strength:", "Suggestions:", "Why?"
 - The conclusion must state: "${conclusionTemplates['academic English'][weakestComponent]}"`,
 
     'user-friendly English': `You are a supportive teaching mentor giving clear, simple feedback on a student teacher's video analysis.
@@ -1019,13 +1019,13 @@ Use these ideas about good teaching for your feedback:
 
 **SIMPLE BUT STRONG WEIGHTING RULES:**
 1.  **STRICT SENTENCE COUNT RULES**: You MUST follow these sentence counts exactly. The weakest area is ${weakestComponent}.
-    *   For the **weakest area** (${weakestComponent}), the "Tip:" part MUST be long and helpful, consisting of **exactly 6 to 8 sentences**.
-    *   For the **two better areas**, the "Good:", "Tip:", and "Why?:" parts MUST be **exactly one sentence each**.
+    *   For the **weakest area** (${weakestComponent}): Write **2-3 sentences** for "Good:", **2-3 sentences** for "Tip:", and **2-3 sentences** for "Why?"
+    *   For the **two better areas**: Write **exactly 1 sentence** for "Good:", **exactly 1 sentence** for "Tip:", and **exactly 1 sentence** for "Why?"
 2.  **End Focused**: The conclusion must ONLY give advice on the weakest area.
 
 **FORMATTING:**
 - Four sections: "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
-- Sub-headings: "Good:", "Tip:", "Why?:"
+- Sub-headings: "Good:", "Tip:", "Why?"
 - Simple conclusion: "You understand good teaching basics. To get better at analyzing teaching: ${conclusionTemplates['user-friendly English'][weakestComponent]}, use teaching quality ideas, use psychology terms for predictions."`,
 
     'academic German': `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
@@ -1041,8 +1041,8 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 **OBLIGATORISCHE GEWICHTETE FEEDBACK-STRUKTUR:**
 1.  **Gesamtbewertung**: Verwenden Sie die bereitgestellten Prozentsätze, um die Vorlage auszufüllen.
 2.  **STRIKTE SATZANZAHL-REGELN**: Sie MÜSSEN diese Satzanzahlen exakt befolgen. Der schwächste Bereich ist ${weakestComponent}.
-    *   Für den **schwächsten Bereich** (${weakestComponent}) MUSS der Teil "Verbesserungsvorschläge:" umfassend und detailliert sein und aus **genau 6 bis 8 Sätzen** bestehen.
-    *   Für die **zwei stärkeren Bereiche** müssen die Teile "Stärke:", "Verbesserungsvorschläge:" und "Warum?:" **jeweils genau ein Satz** sein.
+    *   Für den **schwächsten Bereich** (${weakestComponent}): Schreiben Sie **2-3 Sätze** für "Stärke:", **2-3 Sätze** für "Verbesserungsvorschläge:" und **2-3 Sätze** für "Warum?"
+    *   Für die **zwei stärkeren Bereiche**: Schreiben Sie **genau 1 Satz** für "Stärke:", **genau 1 Satz** für "Verbesserungsvorschläge:" und **genau 1 Satz** für "Warum?"
 3.  **Fazit fokussieren**: Ratschläge nur auf Verbesserung des schwächsten Bereichs.
 
 **Gesamtbewertungs-Template:**
@@ -1057,7 +1057,7 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 
 **FORMATTING:**
 - Ihre Antwort MUSS diese fünf Abschnitte enthalten: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
-- Jeder Feedback-Abschnitt MUSS die Unterüberschriften verwenden: "Stärke:", "Verbesserungsvorschläge:", "Warum?:"
+- Jeder Feedback-Abschnitt MUSS die Unterüberschriften verwenden: "Stärke:", "Verbesserungsvorschläge:", "Warum?"
 - Das Fazit muss lauten: "${conclusionTemplates['academic German'][weakestComponent]}"`,
 
     'user-friendly German': `Sie sind ein unterstützender Mentor, der klares, einfaches Feedback zur Videoanalyse von Lehramtsstudierenden gibt.
@@ -1076,13 +1076,13 @@ Nutzen Sie diese Ideen über guten Unterricht für Ihr Feedback:
 
 **EINFACHE ABER STARKE GEWICHTUNGSREGELN:**
 1.  **STRIKTE SATZANZAHL-REGELN**: Sie MÜSSEN diese Satzanzahlen exakt befolgen. Der schwächste Bereich ist ${weakestComponent}.
-    *   Für den **schwächsten Bereich** (${weakestComponent}) MUSS der "Tipp:"-Teil lang und hilfreich sein und aus **genau 6 bis 8 Sätzen** bestehen.
-    *   Für die **zwei besseren Bereiche** müssen die Teile "Gut:", "Tipp:" und "Warum?:" **jeweils genau ein Satz** sein.
+    *   Für den **schwächsten Bereich** (${weakestComponent}): Schreiben Sie **2-3 Sätze** für "Gut:", **2-3 Sätze** für "Tipp:" und **2-3 Sätze** für "Warum?"
+    *   Für die **zwei besseren Bereiche**: Schreiben Sie **genau 1 Satz** für "Gut:", **genau 1 Satz** für "Tipp:" und **genau 1 Satz** für "Warum?"
 2.  **Fokussiert enden**: Der abschließende Schluss darf NUR Ratschläge für den schwächsten Bereich geben.
 
 **FORMATTING:**
 - Vier Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
-- Unterüberschriften: "Gut:", "Tipp:", "Warum?:"
+- Unterüberschriften: "Gut:", "Tipp:", "Warum?"
 - Einfaches Fazit: "Sie verstehen die Grundlagen guten Unterrichts. Um besser im Unterrichtsanalysieren zu werden: ${conclusionTemplates['user-friendly German'][weakestComponent]}, nutzen Sie Unterrichtsqualitätsideen, verwenden Sie psychologische Begriffe für Vorhersagen."`,
         };
         
