@@ -45,12 +45,13 @@ The Tübingen Teacher Feedback Tool now uses a clean, event-driven logging syste
 | **session_end** | User leaves/closes the application | `{session_duration, language}` |
 | **submit_reflection** | First-time reflection submission | `{reflection_id, language, video_id, reflection_length, analysis_result}` |
 | **resubmit_reflection** | Revised reflection submission | `{reflection_id, language, video_id, reflection_length, revision_number, parent_reflection_id, analysis_result}` |
+| **resubmit_same_text** | User clicked revise but submitted identical text | `{reflection_id, language, video_id, reflection_length, revision_number, parent_reflection_id, analysis_result, is_revision_attempt_with_same_text, revise_clicked_but_no_change}` |
 | **select_feedback_style** | User switches between Extended/Short tabs | `{from_style, to_style, language, reflection_id}` |
 | **view_feedback_start** | User begins viewing feedback | `{style, language, reflection_id}` |
 | **view_feedback_end** | User stops viewing feedback | `{style, language, duration_seconds, reflection_id}` |
-| **click_revise** | User clicks "Revise Reflection" button | `{from_style, language, reflection_id}` |
+| **click_revise** | User clicks "Revise Reflection" button | `{from_style, language, reflection_id, current_reflection_length, timestamp}` |
 | **submit_rating** | User submits UMUX ratings | `{reflection_id, capabilities_rating, ease_rating, umux_score, current_feedback_style, language}` |
-| **expand_definitions** | User expands definition accordion | `{reflection_id, language}` |
+| **learn_concepts_interaction** | User clicks "Learn the Key Concepts" | `{reflection_id, language, action, has_reflection_text, reflection_length, has_generated_feedback, timestamp}` |
 | **copy_feedback** | User copies feedback to clipboard | `{style, language, reflection_id, text_length}` |
 
 ## Analysis Views
@@ -185,6 +186,68 @@ SELECT
 FROM user_events 
 WHERE session_id = 'specific_session_id'
 ORDER BY timestamp_utc;
+```
+
+#### Q6: Users who clicked revise but submitted the same text
+```sql
+SELECT 
+    session_id,
+    reflection_id,
+    event_data->>'from_style' as clicked_from_style,
+    timestamp_utc as resubmit_time
+FROM user_events 
+WHERE event_type = 'resubmit_same_text'
+ORDER BY timestamp_utc;
+```
+
+#### Q7: Learning concepts interaction patterns
+```sql
+SELECT 
+    session_id,
+    event_data->>'action' as action,
+    event_data->>'has_reflection_text' as had_text_when_clicked,
+    event_data->>'has_generated_feedback' as had_feedback_when_clicked,
+    (event_data->>'reflection_length')::int as reflection_length,
+    timestamp_utc
+FROM user_events 
+WHERE event_type = 'learn_concepts_interaction'
+ORDER BY session_id, timestamp_utc;
+```
+
+#### Q8: Complete user journey analysis
+```sql
+WITH user_journey AS (
+    SELECT 
+        session_id,
+        event_type,
+        timestamp_utc,
+        event_data,
+        ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY timestamp_utc) as step_number
+    FROM user_events 
+    WHERE session_id = 'specific_session_id'
+),
+revision_attempts AS (
+    SELECT 
+        session_id,
+        COUNT(*) as total_revise_clicks,
+        COUNT(CASE WHEN event_type = 'resubmit_same_text' THEN 1 END) as same_text_resubmissions,
+        COUNT(CASE WHEN event_type = 'resubmit_reflection' THEN 1 END) as actual_revisions
+    FROM user_events 
+    WHERE event_type IN ('click_revise', 'resubmit_reflection', 'resubmit_same_text')
+    GROUP BY session_id
+)
+SELECT 
+    uj.session_id,
+    uj.step_number,
+    uj.event_type,
+    uj.timestamp_utc,
+    uj.event_data,
+    ra.total_revise_clicks,
+    ra.same_text_resubmissions,
+    ra.actual_revisions
+FROM user_journey uj
+LEFT JOIN revision_attempts ra ON uj.session_id = ra.session_id
+ORDER BY uj.session_id, uj.step_number;
 ```
 
 ## Usage Instructions

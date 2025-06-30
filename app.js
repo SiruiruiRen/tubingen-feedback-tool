@@ -187,14 +187,23 @@ document.addEventListener('DOMContentLoaded', function() {
         wordCount.textContent = words;
     });
 
-    // Track definitions expansion
+    // Track definitions expansion ("Learn the Key Concepts for Better Reflection")
     const definitionsHeader = document.querySelector('.definitions-header');
+    if (definitionsHeader) {
     definitionsHeader.addEventListener('click', () => {
-        logEvent('expand_definitions', {
-            reflection_id: currentReflectionId,
-            language: currentLanguage
+            const isExpanded = definitionsHeader.getAttribute('aria-expanded') === 'true';
+            
+            logEvent('learn_concepts_interaction', {
+                reflection_id: currentReflectionId,
+                language: currentLanguage,
+                action: isExpanded ? 'collapse' : 'expand',
+                has_reflection_text: reflectionText.value.trim().length > 0,
+                reflection_length: reflectionText.value.trim().length,
+                has_generated_feedback: currentReflectionId !== null,
+                timestamp: new Date().toISOString()
+            });
         });
-    });
+    }
 
     // Initialize Supabase client
     const supabase = initSupabase();
@@ -501,15 +510,25 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        if (!reflectionText.value.trim()) {
+                if (!reflectionText.value.trim()) {
             showAlert(currentLanguage === 'en' ? 'Please enter a reflection text first.' : 'Bitte geben Sie zuerst einen Reflexionstext ein.', 'warning');
             reflectionText.focus();
             return;
         }
 
-        // Check if this is a revision by comparing with stored reflection
+        // Check if user clicked revise but didn't actually change the reflection - BEFORE any processing
         const storedReflection = sessionStorage.getItem('reflection');
+        const reviseClicked = sessionStorage.getItem('reviseClicked') === 'true';
+        
+        if (reviseClicked && storedReflection && storedReflection.trim() === reflectionText.value.trim()) {
+            showAlert(translations[currentLanguage].no_changes_warning, 'warning');
+            reflectionText.focus();
+            return;
+        }
+
+        // Check if this is a revision by comparing with stored reflection
         const isRevision = storedReflection && storedReflection.trim() !== reflectionText.value.trim();
+        const isRevisionAttemptWithSameText = storedReflection && storedReflection.trim() === reflectionText.value.trim() && reviseClicked;
 
         // Reset tracking for new feedback generation
         resetTracking();
@@ -553,29 +572,30 @@ document.addEventListener('DOMContentLoaded', function() {
             let revisionNumber = 1;
             let parentReflectionId = null;
             
-            if (isRevision) {
+            // Handle revision logic for both actual revisions and same-text resubmissions
+            if (isRevision || sessionStorage.getItem('reviseClicked') === 'true') {
                 try {
-                    // Get the current highest revision number for this session
+                    // Get all existing reflections for this session
                     const { data: existingReflections } = await supabase
                         .from('reflections')
                         .select('id, revision_number')
                         .eq('session_id', currentSessionId)
-                        .order('revision_number', { ascending: false })
-                        .limit(1);
+                        .order('revision_number', { ascending: false });
                     
                     if (existingReflections && existingReflections.length > 0) {
+                        // Set revision number as the next increment
                         revisionNumber = existingReflections[0].revision_number + 1;
-                        // Find the original reflection (revision_number = 1) to set as parent
-                        const { data: originalReflection } = await supabase
-                            .from('reflections')
-                            .select('id')
-                            .eq('session_id', currentSessionId)
-                            .eq('revision_number', 1)
-                            .single();
                         
+                        // Find the original reflection (revision_number = 1) to set as parent
+                        const originalReflection = existingReflections.find(r => r.revision_number === 1);
                         if (originalReflection) {
                             parentReflectionId = originalReflection.id;
+                        } else {
+                            // If no revision_number = 1 found, use the first reflection as parent
+                            parentReflectionId = existingReflections[existingReflections.length - 1].id;
                         }
+                        
+                        console.log(`Setting up revision ${revisionNumber} with parent ID ${parentReflectionId}`);
                     }
                 } catch (revisionError) {
                     console.warn('Error handling revision logic:', revisionError);
@@ -616,16 +636,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 sessionStorage.setItem('lastGeneratedReflectionIdForRating', currentReflectionId);
                 console.log('New reflection saved. ID for rating purposes:', currentReflectionId);
                 
-                // Log submission event
-                logEvent(isRevision ? 'resubmit_reflection' : 'submit_reflection', {
+                // Log submission event with detailed context
+                let eventType = 'submit_reflection';
+                if (isRevision) {
+                    eventType = 'resubmit_reflection';
+                } else if (isRevisionAttemptWithSameText) {
+                    eventType = 'resubmit_same_text';
+                }
+                
+                logEvent(eventType, {
                     reflection_id: currentReflectionId,
                     language: language,
                     video_id: videoSelected,
                     reflection_length: reflectionText.value.length,
                     revision_number: revisionNumber,
                     parent_reflection_id: parentReflectionId,
-                    analysis_result: analysisResult
+                    analysis_result: analysisResult,
+                    is_revision_attempt_with_same_text: isRevisionAttemptWithSameText,
+                    revise_clicked_but_no_change: isRevisionAttemptWithSameText
                 });
+                
+                // Clear the revise clicked flag after submission
+                sessionStorage.removeItem('reviseClicked');
             }
             
             const alertMessage = currentLanguage === 'en' 
@@ -668,7 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Step 1: Analyze reflection distribution using professional vision framework
     async function analyzeReflectionDistribution(reflection, language) {
-        const analysisPrompt = language === 'en'
+        const analysisPrompt = language === 'en' 
             ? `You are an expert in analyzing teaching reflections using the professional vision framework. Your task is to carefully analyze this reflection and determine the distribution of content across the three main components.
 
 **PROFESSIONAL VISION FRAMEWORK DEFINITIONS:**
@@ -759,19 +791,19 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
             
             // Validate and normalize percentages
             const { percentages } = analysis;
-            const keys = ['description', 'explanation', 'prediction', 'other'];
+                const keys = ['description', 'explanation', 'prediction', 'other'];
             
             // Ensure all keys exist and are numbers
-            keys.forEach(key => {
+                keys.forEach(key => {
                 if (typeof percentages[key] !== 'number' || isNaN(percentages[key]) || percentages[key] < 0) {
-                    percentages[key] = 0;
-                }
-            });
+                        percentages[key] = 0;
+                    }
+                });
 
             // Ensure percentages sum to 100
-            const rawTotal = Object.values(percentages).reduce((sum, value) => sum + value, 0);
+                const rawTotal = Object.values(percentages).reduce((sum, value) => sum + value, 0);
 
-            if (rawTotal > 0) {
+                if (rawTotal > 0) {
                 // Normalize to sum to 100
                 const scaleFactor = 100 / rawTotal;
                 let normalizedDescription = Math.round(percentages.description * scaleFactor);
@@ -1327,11 +1359,17 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
 
     // Handle click for the Revise Reflection button
     function handleReviseReflectionClick() {
-        // Log revise click event
+        // Set flag to track that revise was clicked
+        sessionStorage.setItem('reviseClicked', 'true');
+        sessionStorage.setItem('reviseClickedAt', new Date().toISOString());
+        
+        // Log revise click event with current context
         logEvent('click_revise', {
             from_style: currentFeedbackType,
             language: currentLanguage,
-            reflection_id: currentReflectionId
+            reflection_id: currentReflectionId,
+            current_reflection_length: reflectionText.value.length,
+            timestamp: new Date().toISOString()
         });
         
         const previousReflection = sessionStorage.getItem('reflection');
@@ -1438,7 +1476,7 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
             loadingSpinner.style.display = 'none';
             generateBtn.disabled = false;
         }
-        }
+    }
 
     // Log session end when page is about to unload
     window.addEventListener('beforeunload', () => {

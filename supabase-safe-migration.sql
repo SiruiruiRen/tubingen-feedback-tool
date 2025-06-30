@@ -86,13 +86,14 @@ CREATE TABLE user_events (
     CONSTRAINT valid_event_types CHECK (
         event_type IN (
             'submit_reflection',
-            'resubmit_reflection', 
+            'resubmit_reflection',
+            'resubmit_same_text',
             'select_feedback_style',
             'view_feedback_start',
             'view_feedback_end',
             'click_revise',
             'submit_rating',
-            'expand_definitions',
+            'learn_concepts_interaction',
             'copy_feedback',
             'session_start',
             'session_end'
