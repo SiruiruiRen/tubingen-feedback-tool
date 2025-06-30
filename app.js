@@ -164,17 +164,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentLanguage = 'en';
     let currentFeedbackType = 'extended'; // Track which feedback is currently shown
     
-    // Tracking variables for user interaction
-    let tabSwitchCount = 0;
-    let timeTracking = {
-        extended: { totalTime: 0, lastStarted: null },
-        short: { totalTime: 0, lastStarted: null }
-    };
+    // Event-driven tracking variables
     let currentReflectionId = null;
-    let currentAnalysisResult = null; // Store analysis result for display
-    let definitionsExpanded = false; // Track if definitions were expanded
-    let revisionInitiated = false; // Track if user clicked revise
-    let originalReflectionForRevision = null; // Store original text when revise is clicked
+    let currentAnalysisResult = null;
+    let currentFeedbackStartTime = null;
+    let currentSessionId = null;
 
     // Event listeners
     generateBtn.addEventListener('click', generateFeedback);
@@ -196,21 +190,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Track definitions expansion
     const definitionsHeader = document.querySelector('.definitions-header');
     definitionsHeader.addEventListener('click', () => {
-        definitionsExpanded = !definitionsExpanded;
-        console.log('Definitions expanded:', definitionsExpanded);
-        
-        // Update interaction data if we have a current reflection
-        if (currentReflectionId) {
-            updateDefinitionsInteraction();
-        }
+        logEvent('expand_definitions', {
+            reflection_id: currentReflectionId,
+            language: currentLanguage
+        });
     });
 
     // Initialize Supabase client
     const supabase = initSupabase();
     
-    // Verify Supabase connection
+    // Verify Supabase connection and start session
     if (supabase) {
         verifySupabaseConnection(supabase);
+        currentSessionId = getOrCreateSessionId();
+        logEvent('session_start', {
+            user_agent: navigator.userAgent,
+            language: currentLanguage,
+            timestamp: new Date().toISOString()
+        });
     }
 
     // Function to update language
@@ -336,6 +333,56 @@ document.addEventListener('DOMContentLoaded', function() {
         return sessionId;
     }
 
+    // Event logging system
+    async function logEvent(eventType, eventData = {}) {
+        if (!supabase || !currentSessionId) return;
+        
+        try {
+            const { error } = await supabase
+                .from('user_events')
+                .insert([{
+                    session_id: currentSessionId,
+                    reflection_id: currentReflectionId,
+                    event_type: eventType,
+                    event_data: eventData,
+                    user_agent: navigator.userAgent,
+                    language: currentLanguage,
+                    timestamp_utc: new Date().toISOString()
+                }]);
+            
+            if (error) {
+                console.error('Error logging event:', error);
+            } else {
+                console.log(`Event logged: ${eventType}`, eventData);
+            }
+        } catch (error) {
+            console.error('Error in logEvent:', error);
+        }
+    }
+
+    // Track feedback viewing
+    function startFeedbackViewing(style, language) {
+        currentFeedbackStartTime = Date.now();
+        logEvent('view_feedback_start', {
+            style: style,
+            language: language,
+            reflection_id: currentReflectionId
+        });
+    }
+
+    function endFeedbackViewing(style, language) {
+        if (currentFeedbackStartTime) {
+            const duration = (Date.now() - currentFeedbackStartTime) / 1000;
+            logEvent('view_feedback_end', {
+                style: style,
+                language: language,
+                duration_seconds: duration,
+                reflection_id: currentReflectionId
+            });
+            currentFeedbackStartTime = null;
+        }
+    }
+
     // Initialize language first to set up tooltips properly
     updateLanguage('en');
     
@@ -404,55 +451,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to switch tabs and track the interaction
     function switchToTab(tabType) {
-        // Stop tracking time for the previous tab
-        if (currentFeedbackType && timeTracking[currentFeedbackType].lastStarted) {
-            const elapsed = Date.now() - timeTracking[currentFeedbackType].lastStarted;
-            timeTracking[currentFeedbackType].totalTime += elapsed;
-            timeTracking[currentFeedbackType].lastStarted = null;
+        // End viewing for previous tab
+        if (currentFeedbackType && currentFeedbackStartTime) {
+            endFeedbackViewing(currentFeedbackType, currentLanguage);
         }
+        
+        // Log tab switch event
+        logEvent('select_feedback_style', {
+            from_style: currentFeedbackType,
+            to_style: tabType,
+            language: currentLanguage,
+            reflection_id: currentReflectionId
+        });
         
         // Update current tab
         currentFeedbackType = tabType;
         
         // Start tracking time for the new tab
-        timeTracking[tabType].lastStarted = Date.now();
-        
-        // Increment switch count if feedback has been generated
         if (feedbackTabs.classList.contains('d-none') === false) {
-            tabSwitchCount++;
-            console.log(`Tab switched to ${tabType}. Total switches: ${tabSwitchCount}`);
+            startFeedbackViewing(tabType, currentLanguage);
         }
-    }
-
-    // Function to get time tracking summary
-    function getTimeTrackingSummary() {
-        // Ensure we capture the time for the currently active tab
-        if (currentFeedbackType && timeTracking[currentFeedbackType].lastStarted) {
-            const elapsed = Date.now() - timeTracking[currentFeedbackType].lastStarted;
-            timeTracking[currentFeedbackType].totalTime += elapsed;
-            timeTracking[currentFeedbackType].lastStarted = Date.now(); // Reset the timer
-        }
-        
-        return {
-            extendedTime: Math.round(timeTracking.extended.totalTime / 1000), // Convert to seconds
-            shortTime: Math.round(timeTracking.short.totalTime / 1000),
-            switchCount: tabSwitchCount,
-            lastViewedVersion: currentFeedbackType,
-            definitionsExpanded: definitionsExpanded
-        };
     }
 
     // Reset tracking when new feedback is generated
     function resetTracking() {
-        tabSwitchCount = 0;
-        timeTracking = {
-            extended: { totalTime: 0, lastStarted: null },
-            short: { totalTime: 0, lastStarted: null }
-        };
+        // End current feedback viewing if active
+        if (currentFeedbackType && currentFeedbackStartTime) {
+            endFeedbackViewing(currentFeedbackType, currentLanguage);
+        }
+        
         currentReflectionId = null;
-        definitionsExpanded = false;
-        revisionInitiated = false;
-        originalReflectionForRevision = null;
+        currentAnalysisResult = null;
+        currentFeedbackStartTime = null;
     }
 
     // Feedback generation
@@ -477,12 +507,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Check if user clicked revise but didn't actually change the reflection
-        if (revisionInitiated && originalReflectionForRevision && reflectionText.value.trim() === originalReflectionForRevision.trim()) {
-            showAlert(translations[currentLanguage].no_changes_warning, 'warning');
-            reflectionText.focus();
-            return;
-        }
+        // Check if this is a revision by comparing with stored reflection
+        const storedReflection = sessionStorage.getItem('reflection');
+        const isRevision = storedReflection && storedReflection.trim() !== reflectionText.value.trim();
 
         // Reset tracking for new feedback generation
         resetTracking();
@@ -520,24 +547,60 @@ document.addEventListener('DOMContentLoaded', function() {
             feedbackTabs.classList.remove('d-none');
             
             // Start tracking time for the default tab (extended)
-            timeTracking.extended.lastStarted = Date.now();
+            startFeedbackViewing('extended', language);
 
-            // Save to database
-            console.log('Saving new reflection and feedback to database...');
+            // Determine revision details
+            let revisionNumber = 1;
+            let parentReflectionId = null;
+            
+            if (isRevision) {
+                try {
+                    // Get the current highest revision number for this session
+                    const { data: existingReflections } = await supabase
+                        .from('reflections')
+                        .select('id, revision_number')
+                        .eq('session_id', currentSessionId)
+                        .order('revision_number', { ascending: false })
+                        .limit(1);
+                    
+                    if (existingReflections && existingReflections.length > 0) {
+                        revisionNumber = existingReflections[0].revision_number + 1;
+                        // Find the original reflection (revision_number = 1) to set as parent
+                        const { data: originalReflection } = await supabase
+                            .from('reflections')
+                            .select('id')
+                            .eq('session_id', currentSessionId)
+                            .eq('revision_number', 1)
+                            .single();
+                        
+                        if (originalReflection) {
+                            parentReflectionId = originalReflection.id;
+                        }
+                    }
+                } catch (revisionError) {
+                    console.warn('Error handling revision logic:', revisionError);
+                    // Continue with default values if revision logic fails
+                }
+            }
+
+            // Save to database with new schema
+            console.log(`Saving ${isRevision ? 'revised' : 'new'} reflection and feedback to database...`);
             const { data, error } = await supabase
                 .from('reflections')
                 .insert([
                     { 
-                        student_name: studentName,
+                        session_id: currentSessionId,
+                        participant_name: studentName,
                         video_id: videoSelected,
-                        reflection_text: reflectionText.value, 
-                        feedback_text: extendedFeedback, // Save extended version as primary
-                        feedback_text_short: shortFeedback, // Save short version
-                        analysis_percentages: analysisResult.percentages,
                         language: language,
-                        style: 'both', // Since we generate both
-                        session_id: currentSessionId, 
-                        created_at: new Date().toISOString(),
+                        reflection_text: reflectionText.value, 
+                        analysis_percentages: analysisResult.percentages,
+                        weakest_component: analysisResult.weakest_component,
+                        feedback_extended: extendedFeedback,
+                        feedback_short: shortFeedback,
+                        revision_number: revisionNumber,
+                        parent_reflection_id: parentReflectionId,
+                        created_at: new Date().toISOString()
                     }
                 ])
                 .select();
@@ -552,11 +615,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentReflectionId = data[0].id.toString();
                 sessionStorage.setItem('lastGeneratedReflectionIdForRating', currentReflectionId);
                 console.log('New reflection saved. ID for rating purposes:', currentReflectionId);
+                
+                // Log submission event
+                logEvent(isRevision ? 'resubmit_reflection' : 'submit_reflection', {
+                    reflection_id: currentReflectionId,
+                    language: language,
+                    video_id: videoSelected,
+                    reflection_length: reflectionText.value.length,
+                    revision_number: revisionNumber,
+                    parent_reflection_id: parentReflectionId,
+                    analysis_result: analysisResult
+                });
             }
             
             const alertMessage = currentLanguage === 'en' 
-                ? 'Feedback generated and saved as a new entry!' 
-                : 'Feedback generiert und als neuer Eintrag gespeichert!';
+                ? (isRevision ? `Revised feedback generated and saved (Revision ${revisionNumber})!` : 'Feedback generated and saved as a new entry!') 
+                : (isRevision ? `Überarbeitetes Feedback generiert und gespeichert (Überarbeitung ${revisionNumber})!` : 'Feedback generiert und als neuer Eintrag gespeichert!');
             
             sessionStorage.setItem('reflection', reflectionText.value);
             sessionStorage.setItem('feedbackExtended', extendedFeedback);
@@ -1139,8 +1213,6 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
         currentCapabilitiesRating = null;
         currentEaseRating = null;
         currentAnalysisResult = null;
-        revisionInitiated = false;
-        originalReflectionForRevision = null;
         createRatingButtons(capabilitiesRatingButtonsContainer, 5, 'capabilities');
         createRatingButtons(easeRatingButtonsContainer, 5, 'ease');
         capabilitiesRatingHoverLabel.textContent = '';
@@ -1152,6 +1224,15 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
     function copyFeedback() {
         const currentFeedback = currentFeedbackType === 'extended' ? feedbackExtended : feedbackShort;
         const textToCopy = currentFeedback.innerText || currentFeedback.textContent;
+        
+        // Log copy event
+        logEvent('copy_feedback', {
+            style: currentFeedbackType,
+            language: currentLanguage,
+            reflection_id: currentReflectionId,
+            text_length: textToCopy.length
+        });
+        
         navigator.clipboard.writeText(textToCopy)
             .then(() => showAlert(currentLanguage === 'en' ? 'Feedback copied to clipboard!' : 'Feedback in Zwischenablage kopiert!', 'success'))
             .catch(err => {
@@ -1182,15 +1263,21 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
             return;
         }
         
-        // Get interaction tracking data
-        const trackingData = getTimeTrackingSummary();
-        
         // Calculate UMUX-Lite score
         const umuxScore = ((capabilitiesRatingValue - 1) + (easeRatingValue - 1)) * 100 / 8;
         
         try {
             console.log('Submitting ratings:', { capabilitiesRatingValue, easeRatingValue, umuxScore });
-            console.log('Interaction tracking:', trackingData);
+            
+            // Log rating submission event
+            logEvent('submit_rating', {
+                reflection_id: reflectionId,
+                capabilities_rating: capabilitiesRatingValue,
+                ease_rating: easeRatingValue,
+                umux_score: umuxScore,
+                current_feedback_style: currentFeedbackType,
+                language: currentLanguage
+            });
             
             const { data, error } = await supabase
                 .from('reflections')
@@ -1198,8 +1285,7 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
                     capabilities_rating: capabilitiesRatingValue,
                     ease_rating: easeRatingValue,
                     umux_score: umuxScore,
-                    rated_at: new Date().toISOString(),
-                    interaction_data: trackingData // Store interaction tracking
+                    rated_at: new Date().toISOString()
                 })
                 .eq('id', reflectionId)
                 .select();
@@ -1241,36 +1327,16 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
 
     // Handle click for the Revise Reflection button
     function handleReviseReflectionClick() {
-        // Capture which version was being viewed when revise was clicked
-        const trackingData = getTimeTrackingSummary();
-        console.log('Revise clicked while viewing:', trackingData.lastViewedVersion);
-        console.log('Full tracking data at revise:', trackingData);
-        
-        // Store tracking data for this revision action
-        if (currentReflectionId) {
-            // Update the database with revision tracking data
-            supabase
-                .from('reflections')
-                .update({ 
-                    revision_initiated_from: trackingData.lastViewedVersion,
-                    pre_revision_interaction: trackingData
-                })
-                .eq('id', currentReflectionId)
-                .then(({ data, error }) => {
-                    if (error) {
-                        console.error('Error updating revision tracking:', error);
-                    } else {
-                        console.log('Revision tracking updated:', data);
-                    }
-                });
-        }
+        // Log revise click event
+        logEvent('click_revise', {
+            from_style: currentFeedbackType,
+            language: currentLanguage,
+            reflection_id: currentReflectionId
+        });
         
         const previousReflection = sessionStorage.getItem('reflection');
         if (previousReflection) {
             reflectionText.value = previousReflection;
-            // Set revision tracking variables
-            revisionInitiated = true;
-            originalReflectionForRevision = previousReflection;
             
             const message = currentLanguage === 'en' 
                 ? 'Your previous reflection has been loaded. Edit it here and click "Generate Feedback" for new feedback. This will be saved as a new entry.'
@@ -1372,39 +1438,18 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
             loadingSpinner.style.display = 'none';
             generateBtn.disabled = false;
         }
-    }
-
-    // Function to update definitions interaction in database
-    async function updateDefinitionsInteraction() {
-        if (!currentReflectionId || !supabase) return;
-        
-        try {
-            const { data: currentData, error: fetchError } = await supabase
-                .from('reflections')
-                .select('interaction_data')
-                .eq('id', currentReflectionId)
-                .single();
-            
-            if (fetchError) {
-                console.error('Error fetching current interaction data:', fetchError);
-                return;
-            }
-            
-            const interactionData = currentData.interaction_data || {};
-            interactionData.definitionsExpanded = true;
-            interactionData.definitionsExpandedAt = new Date().toISOString();
-            
-            const { error: updateError } = await supabase
-                .from('reflections')
-                .update({ interaction_data: interactionData })
-                .eq('id', currentReflectionId);
-            
-            if (updateError) {
-                console.error('Error updating definitions interaction:', updateError);
-            }
-        } catch (error) {
-            console.error('Error in updateDefinitionsInteraction:', error);
         }
-    }
+
+    // Log session end when page is about to unload
+    window.addEventListener('beforeunload', () => {
+        if (currentFeedbackType && currentFeedbackStartTime) {
+            endFeedbackViewing(currentFeedbackType, currentLanguage);
+        }
+        
+        logEvent('session_end', {
+            session_duration: Date.now() - performance.timing.navigationStart,
+            language: currentLanguage
+        });
+    });
 
 });

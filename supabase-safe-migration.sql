@@ -1,10 +1,39 @@
--- Clean Database Schema for Tübingen Teacher Feedback Tool
--- Event-driven logging system for user behavior analysis
+-- Safe Migration Script for Tübingen Teacher Feedback Tool
+-- This script safely migrates existing data to the new schema
 
 -- ===========================
--- 1. MAIN REFLECTIONS TABLE (Clean)
+-- 1. BACKUP EXISTING DATA (if any)
 -- ===========================
+
+-- Create temporary backup of existing reflections data
+CREATE TABLE IF NOT EXISTS reflections_backup AS 
+SELECT * FROM reflections WHERE 1=0; -- Create empty backup table with same structure
+
+-- Only backup if reflections table exists and has data
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'reflections') THEN
+        INSERT INTO reflections_backup SELECT * FROM reflections;
+        RAISE NOTICE 'Backed up % rows from reflections table', (SELECT COUNT(*) FROM reflections_backup);
+    END IF;
+END $$;
+
+-- ===========================
+-- 2. DROP EXISTING TABLES SAFELY
+-- ===========================
+
+-- Drop views first (they depend on tables)
+DROP VIEW IF EXISTS reading_patterns CASCADE;
+DROP VIEW IF EXISTS revision_patterns CASCADE;
+DROP VIEW IF EXISTS participant_summary CASCADE;
+
+-- Drop tables in correct order (handle foreign key dependencies)
+DROP TABLE IF EXISTS user_events CASCADE;
 DROP TABLE IF EXISTS reflections CASCADE;
+
+-- ===========================
+-- 3. CREATE NEW REFLECTIONS TABLE
+-- ===========================
 CREATE TABLE reflections (
     id SERIAL PRIMARY KEY,
     session_id VARCHAR(50) NOT NULL,
@@ -36,9 +65,9 @@ CREATE TABLE reflections (
 );
 
 -- ===========================
--- 2. USER INTERACTION EVENTS TABLE
+-- 4. CREATE USER EVENTS TABLE
 -- ===========================
-CREATE TABLE IF NOT EXISTS user_events (
+CREATE TABLE user_events (
     id SERIAL PRIMARY KEY,
     session_id VARCHAR(50) NOT NULL,
     reflection_id INTEGER REFERENCES reflections(id),
@@ -72,8 +101,65 @@ CREATE TABLE IF NOT EXISTS user_events (
 );
 
 -- ===========================
--- 3. READING PATTERNS VIEW
+-- 5. MIGRATE EXISTING DATA (if any)
 -- ===========================
+
+-- Migrate data from backup if it exists
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'reflections_backup') 
+       AND (SELECT COUNT(*) FROM reflections_backup) > 0 THEN
+        
+        -- Insert migrated data with new schema
+        INSERT INTO reflections (
+            session_id,
+            participant_name,
+            video_id,
+            language,
+            reflection_text,
+            analysis_percentages,
+            weakest_component,
+            feedback_extended,
+            feedback_short,
+            created_at,
+            revision_number,
+            parent_reflection_id,
+            capabilities_rating,
+            ease_rating,
+            umux_score,
+            rated_at
+        )
+        SELECT 
+            COALESCE(session_id, 'migrated_' || id::text) as session_id,
+            COALESCE(student_name, participant_name, 'Unknown') as participant_name,
+            COALESCE(video_id, 'unknown') as video_id,
+            CASE 
+                WHEN language = 'en' OR language = 'de' THEN language::varchar(2)
+                ELSE 'en'
+            END as language,
+            reflection_text,
+            COALESCE(analysis_percentages, '{"description": 33, "explanation": 33, "prediction": 34, "other": 0}'::jsonb) as analysis_percentages,
+            'Prediction' as weakest_component, -- Default value
+            COALESCE(feedback_text, 'Migrated feedback') as feedback_extended,
+            COALESCE(feedback_text_short, 'Migrated short feedback') as feedback_short,
+            COALESCE(created_at, NOW()) as created_at,
+            1 as revision_number, -- All existing are original submissions
+            NULL as parent_reflection_id,
+            capabilities_rating,
+            ease_rating,
+            umux_score,
+            rated_at
+        FROM reflections_backup;
+        
+        RAISE NOTICE 'Migrated % rows to new reflections table', (SELECT COUNT(*) FROM reflections);
+    END IF;
+END $$;
+
+-- ===========================
+-- 6. CREATE ANALYSIS VIEWS
+-- ===========================
+
+-- Reading patterns view
 CREATE OR REPLACE VIEW reading_patterns AS
 WITH feedback_sessions AS (
     SELECT 
@@ -113,9 +199,7 @@ SELECT
 FROM reading_durations rd
 JOIN reflections r ON rd.reflection_id = r.id;
 
--- ===========================
--- 4. REVISION PATTERNS VIEW  
--- ===========================
+-- Revision patterns view
 CREATE OR REPLACE VIEW revision_patterns AS
 WITH revision_events AS (
     SELECT 
@@ -126,15 +210,6 @@ WITH revision_events AS (
         ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY timestamp_utc) as revision_attempt
     FROM user_events 
     WHERE event_type = 'click_revise'
-),
-revision_submissions AS (
-    SELECT 
-        session_id,
-        reflection_id,
-        timestamp_utc as resubmitted_at,
-        ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY timestamp_utc) as resubmission_number
-    FROM user_events 
-    WHERE event_type = 'resubmit_reflection'
 ),
 revision_analysis AS (
     SELECT 
@@ -178,9 +253,7 @@ FROM revision_analysis ra
 LEFT JOIN revision_events re ON ra.session_id = re.session_id 
     AND re.revision_attempt = ra.revision_number;
 
--- ===========================
--- 5. PARTICIPANT SUMMARY VIEW
--- ===========================
+-- Participant summary view
 CREATE OR REPLACE VIEW participant_summary AS
 SELECT 
     r.session_id,
@@ -203,25 +276,23 @@ SELECT
     COUNT(CASE WHEN ue.event_type = 'expand_definitions' THEN 1 END) as definitions_expanded,
     COUNT(CASE WHEN ue.event_type = 'copy_feedback' THEN 1 END) as feedback_copied,
     
-    -- Rating data
-    r.capabilities_rating,
-    r.ease_rating,
-    r.umux_score,
+    -- Rating data (from the latest submission)
+    (SELECT capabilities_rating FROM reflections r2 WHERE r2.session_id = r.session_id ORDER BY revision_number DESC LIMIT 1) as capabilities_rating,
+    (SELECT ease_rating FROM reflections r2 WHERE r2.session_id = r.session_id ORDER BY revision_number DESC LIMIT 1) as ease_rating,
+    (SELECT umux_score FROM reflections r2 WHERE r2.session_id = r.session_id ORDER BY revision_number DESC LIMIT 1) as umux_score,
     
     -- Timestamps
     MIN(r.created_at) as first_submission,
     MAX(r.created_at) as last_submission,
-    MAX(r.rated_at) as rated_at
+    (SELECT rated_at FROM reflections r2 WHERE r2.session_id = r.session_id AND rated_at IS NOT NULL ORDER BY rated_at DESC LIMIT 1) as rated_at
     
 FROM reflections r
 LEFT JOIN reading_patterns rp ON r.session_id = rp.session_id
 LEFT JOIN user_events ue ON r.session_id = ue.session_id
-WHERE r.revision_number = (SELECT MAX(revision_number) FROM reflections r2 WHERE r2.session_id = r.session_id)
-GROUP BY r.session_id, r.participant_name, r.language, r.video_id, 
-         r.capabilities_rating, r.ease_rating, r.umux_score;
+GROUP BY r.session_id, r.participant_name, r.language, r.video_id;
 
 -- ===========================
--- 6. INDEXES FOR PERFORMANCE
+-- 7. CREATE INDEXES FOR PERFORMANCE
 -- ===========================
 CREATE INDEX idx_reflections_session_id ON reflections(session_id);
 CREATE INDEX idx_reflections_revision ON reflections(revision_number);
@@ -232,60 +303,23 @@ CREATE INDEX idx_user_events_timestamp ON user_events(timestamp_utc);
 CREATE INDEX idx_user_events_reflection ON user_events(reflection_id);
 
 -- ===========================
--- 7. SAMPLE EVENT TRACKING QUERIES
+-- 8. CLEANUP
 -- ===========================
 
--- Query 1: How long do users spend reading different feedback styles?
-/*
-SELECT 
-    feedback_style,
-    feedback_language,
-    AVG(reading_duration_seconds) as avg_duration,
-    COUNT(*) as total_views
-FROM reading_patterns 
-GROUP BY feedback_style, feedback_language
-ORDER BY avg_duration DESC;
-*/
+-- Drop backup table (comment out if you want to keep it)
+-- DROP TABLE IF EXISTS reflections_backup;
 
--- Query 2: What triggers users to revise their reflections?
-/*
-SELECT 
-    clicked_from_style,
-    COUNT(*) as revision_count,
-    AVG(length_change) as avg_text_change
-FROM revision_patterns 
-GROUP BY clicked_from_style;
-*/
+-- ===========================
+-- 9. VERIFICATION
+-- ===========================
 
--- Query 3: How do reading patterns change after revision?
-/*
-WITH pre_revision AS (
-    SELECT session_id, AVG(reading_duration_seconds) as pre_duration
-    FROM reading_patterns 
-    WHERE revision_number = 1
-    GROUP BY session_id
-),
-post_revision AS (
-    SELECT session_id, AVG(reading_duration_seconds) as post_duration
-    FROM reading_patterns 
-    WHERE revision_number > 1
-    GROUP BY session_id
-)
-SELECT 
-    AVG(post_duration - pre_duration) as avg_duration_change
-FROM pre_revision pr
-JOIN post_revision po ON pr.session_id = po.session_id;
-*/
-
--- Query 4: User engagement patterns
-/*
-SELECT 
-    participant_name,
-    total_submissions,
-    revisions,
-    styles_viewed,
-    avg_reading_duration,
-    umux_score
-FROM participant_summary
-ORDER BY umux_score DESC NULLS LAST;
-*/ 
+-- Show migration results
+DO $$
+BEGIN
+    RAISE NOTICE '=== MIGRATION COMPLETE ===';
+    RAISE NOTICE 'Reflections table: % rows', (SELECT COUNT(*) FROM reflections);
+    RAISE NOTICE 'User events table: % rows', (SELECT COUNT(*) FROM user_events);
+    RAISE NOTICE 'Views created: reading_patterns, revision_patterns, participant_summary';
+    RAISE NOTICE 'Indexes created: 7 performance indexes';
+    RAISE NOTICE '=== READY FOR USE ===';
+END $$; 
