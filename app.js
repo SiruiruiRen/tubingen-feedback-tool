@@ -495,19 +495,19 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleLoading(true);
         
         try {
-            // Step 1: Analyze the reflection to get percentages and weakest area
-            const analysisResult = await getAnalysisAndWeakestArea(reflectionText.value, language);
-            console.log('Analysis result:', analysisResult);
+            // Step 1: Analyze the reflection distribution using professional vision framework
+            const analysisResult = await analyzeReflectionDistribution(reflectionText.value, language);
+            console.log('Step 1 completed - Analysis result:', analysisResult);
             currentAnalysisResult = analysisResult; // Store for later use
-
-            // Step 2: Generate both feedback versions using the analysis result
+            
+            // Step 2: Generate both feedback versions using prompt chaining
             const [extendedFeedback, shortFeedback] = await Promise.all([
-                callOpenAI(reflectionText.value, language, 'academic', analysisResult),
-                callOpenAI(reflectionText.value, language, 'user-friendly', analysisResult)
+                generateWeightedFeedback(reflectionText.value, language, 'academic', analysisResult),
+                generateWeightedFeedback(reflectionText.value, language, 'user-friendly', analysisResult)
             ]);
             
-            console.log('Generated extended feedback:', extendedFeedback);
-            console.log('Generated short feedback:', shortFeedback);
+            console.log('Step 2 completed - Generated extended feedback');
+            console.log('Step 2 completed - Generated short feedback');
             
             // Format and display both feedbacks
             const formattedExtended = formatFeedback(extendedFeedback);
@@ -592,10 +592,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // New function to get analysis and weakest area in one call
-    async function getAnalysisAndWeakestArea(reflection, language) {
+        // Step 1: Analyze reflection distribution using professional vision framework
+    async function analyzeReflectionDistribution(reflection, language) {
         const analysisPrompt = language === 'en'
-            ? `You are an expert in analyzing teaching reflections using the professional vision framework. Analyze this reflection and categorize each sentence/paragraph based on its primary purpose:
+            ? `You are an expert in analyzing teaching reflections using the professional vision framework. Your task is to carefully analyze this reflection and determine the distribution of content across the three main components.
+
+**PROFESSIONAL VISION FRAMEWORK DEFINITIONS:**
 
 **DESCRIPTION**: Identify and differentiate teaching events based on knowledge about effective teaching and learning, WITHOUT making judgments, interpretations, evaluations. Focus on observable events from teacher or students that are central to teaching/learning.
 - Examples: "The teacher refers to the topic of the lesson: Binomial formulae", "The teacher explains", "The teacher gives feedback"
@@ -608,10 +610,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 **OTHER**: Content not related to professional vision (personal opinions, general comments, off-topic content)
 
-Analyze the reflection systematically. For each major idea/sentence, determine its category. Then calculate percentages that sum to exactly 100%.
+**ANALYSIS INSTRUCTIONS:**
+1. Read through the entire reflection carefully
+2. For each sentence/idea, determine which category it belongs to
+3. Calculate the percentage distribution across all four categories
+4. Identify which of the three main components (Description, Explanation, Prediction) has the lowest percentage
+5. Ensure percentages sum to exactly 100%
 
-Return ONLY a JSON object with this structure: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Prediction"}`
-            : `Sie sind ein Experte für die Analyse von Unterrichtsreflexionen mit dem Framework professioneller Unterrichtswahrnehmung. Analysieren Sie diese Reflexion und kategorisieren Sie jeden Satz/Absatz basierend auf seinem Hauptzweck:
+Return ONLY a JSON object with this structure: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Prediction", "analysis_summary": "Brief explanation of the distribution"}`
+            : `Sie sind ein Experte für die Analyse von Unterrichtsreflexionen mit dem Framework professioneller Unterrichtswahrnehmung. Ihre Aufgabe ist es, diese Reflexion sorgfältig zu analysieren und die Verteilung des Inhalts auf die drei Hauptkomponenten zu bestimmen.
+
+**FRAMEWORK PROFESSIONELLER UNTERRICHTSWAHRNEHMUNG DEFINITIONEN:**
 
 **BESCHREIBUNG**: Identifizieren und differenzieren Sie Unterrichtsereignisse basierend auf Wissen über effektives Lehren und Lernen, OHNE Urteile, Interpretationen oder Bewertungen zu treffen. Konzentrieren Sie sich auf beobachtbare Ereignisse von Lehrern oder Schülern, die zentral für das Lehren/Lernen sind.
 - Beispiele: "Die Lehrkraft bezieht sich auf das Thema der Stunde: Binomische Formeln", "Die Lehrkraft erklärt", "Die Lehrkraft gibt Feedback"
@@ -624,26 +633,31 @@ Return ONLY a JSON object with this structure: {"percentages": {"description": 4
 
 **SONSTIGES**: Inhalt, der nicht mit professioneller Vision zusammenhängt (persönliche Meinungen, allgemeine Kommentare, themenfremder Inhalt)
 
-Analysieren Sie die Reflexion systematisch. Bestimmen Sie für jede Hauptidee/jeden Satz die Kategorie. Berechnen Sie dann Prozentsätze, die sich zu genau 100% addieren.
+**ANALYSE-ANWEISUNGEN:**
+1. Lesen Sie die gesamte Reflexion sorgfältig durch
+2. Bestimmen Sie für jeden Satz/jede Idee, zu welcher Kategorie sie gehört
+3. Berechnen Sie die prozentuale Verteilung auf alle vier Kategorien
+4. Identifizieren Sie, welche der drei Hauptkomponenten (Beschreibung, Erklärung, Vorhersage) den niedrigsten Prozentsatz aufweist
+5. Stellen Sie sicher, dass die Prozentsätze sich zu genau 100% addieren
 
-Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Vorhersage"}`;
+Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Vorhersage", "analysis_summary": "Kurze Erklärung der Verteilung"}`;
 
         const requestData = {
             model: model,
             messages: [
                 {
                     role: "system",
-                    content: "You are an expert in analyzing teaching reflections using professional vision framework. Be consistent and systematic in your analysis. Return ONLY a valid JSON object with the exact structure requested."
+                    content: "You are an expert in analyzing teaching reflections using professional vision framework. Provide accurate, systematic analysis. Return ONLY a valid JSON object."
                 },
                 {
                     role: "user",
                     content: analysisPrompt + "\n\nReflection to analyze:\n" + reflection
                 }
             ],
-            temperature: 0.5, // Balanced temperature for consistency and quality
-            max_tokens: 200,
+            temperature: 0.3, // Lower temperature for more consistent analysis
+            max_tokens: 300,
             response_format: { type: "json_object" },
-            seed: 42 // Add seed for more deterministic results
+            seed: 123 // Consistent seed for analysis
         };
 
         try {
@@ -656,7 +670,7 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
             });
 
             if (!response.ok) {
-                throw new Error('Error analyzing reflection');
+                throw new Error('Error in step 1: analyzing reflection distribution');
             }
 
             const result = await response.json();
@@ -742,16 +756,85 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
                 );
             }
             
-            console.log('Analysis result:', analysis);
+            console.log('Step 1 - Analysis result:', analysis);
             return analysis;
 
         } catch (error) {
-            console.error('Error in reflection analysis:', error);
+            console.error('Error in step 1 analysis:', error);
             // Return a more balanced default object if analysis fails
             return {
                 percentages: { description: 30, explanation: 35, prediction: 25, other: 10 },
-                weakest_component: "Prediction"
+                weakest_component: "Prediction",
+                analysis_summary: "Default distribution due to analysis error"
             };
+        }
+    }
+
+    // Step 2: Generate weighted feedback based on analysis
+    async function generateWeightedFeedback(reflection, language, style, analysisResult) {
+        console.log(`Step 2: Generating ${style} feedback in ${language} based on analysis:`, analysisResult);
+        
+        const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
+        const systemPrompt = getFeedbackPrompt(promptType, analysisResult);
+        
+        // Add explicit instruction about output language at beginning of prompt
+        const languageInstruction = language === 'en' 
+            ? "IMPORTANT: Regardless of the input language, you MUST respond in English. The entire feedback MUST be in English only."
+            : "WICHTIG: Unabhängig von der Eingabesprache MUSS deine Antwort auf Deutsch sein. Das gesamte Feedback MUSS ausschließlich auf Deutsch sein.";
+        
+        const enhancedPrompt = languageInstruction + "\n\n" + systemPrompt;
+        
+        const requestData = {
+            model: model,
+            messages: [
+                {
+                    role: "system",
+                    content: enhancedPrompt
+                },
+                {
+                    role: "user",
+                    content: `Based on the analysis showing ${analysisResult.percentages.description}% description, ${analysisResult.percentages.explanation}% explanation, ${analysisResult.percentages.prediction}% prediction, and ${analysisResult.percentages.other}% other content, with "${analysisResult.weakest_component}" being the weakest area, provide weighted feedback for this reflection:\n\n${reflection}`
+                }
+            ],
+            temperature: 0.7, // Higher temperature for more natural feedback generation
+            max_tokens: 2000,
+            seed: 456 // Different seed for feedback generation
+        };
+        
+        try {
+            const response = await fetch(OPENAI_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Step 2 - OpenAI API error:', errorData);
+                throw new Error(errorData.error?.message || 'Error in step 2: generating weighted feedback');
+            }
+            
+            const result = await response.json();
+            console.log('Step 2 - Feedback generation response received');
+            
+            // Verify language of response
+            const responseContent = result.choices[0].message.content;
+            const hasCorrectLanguage = verifyLanguage(responseContent, language);
+            
+            if (!hasCorrectLanguage) {
+                console.warn('Language mismatch detected in step 2 response');
+                const fixMessage = language === 'en'
+                    ? "The AI generated response in the wrong language. Please try again."
+                    : "Die KI hat eine Antwort in der falschen Sprache generiert. Bitte versuchen Sie es erneut.";
+                showAlert(fixMessage, 'warning');
+            }
+            
+            return responseContent;
+        } catch (error) {
+            console.error('Error in step 2 feedback generation:', error);
+            throw error;
         }
     }
 
@@ -830,75 +913,7 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
         return formattedText + text;
     }
 
-    // Call OpenAI API
-    async function callOpenAI(reflection, language, style, analysisResult) {
-        console.log(`Using language: ${language}, style: ${style}`);
-        const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
-        const systemPrompt = getSystemPrompt(promptType, analysisResult);
-        
-        console.log('Calling OpenAI API with system prompt:', promptType);
-        
-        // Add explicit instruction about output language at beginning of prompt
-        const languageInstruction = language === 'en' 
-            ? "IMPORTANT: Regardless of the input language, you MUST respond in English. The entire feedback MUST be in English only."
-            : "WICHTIG: Unabhängig von der Eingabesprache MUSS deine Antwort auf Deutsch sein. Das gesamte Feedback MUSS ausschließlich auf Deutsch sein.";
-        
-        const enhancedPrompt = languageInstruction + "\n\n" + systemPrompt;
-        
-        const requestData = {
-            model: model,
-            messages: [
-                {
-                    role: "system",
-                    content: enhancedPrompt
-                },
-                {
-                    role: "user",
-                    content: reflection
-                }
-            ],
-            temperature: 0.7,
-            max_tokens: 2000
-        };
-        
-        try {
-            const response = await fetch(OPENAI_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('OpenAI API error:', errorData);
-                throw new Error(errorData.error?.message || 'Error calling OpenAI API');
-            }
-            
-            const result = await response.json();
-            console.log('OpenAI API response:', result);
-            
-            // Verify language of response
-            const responseContent = result.choices[0].message.content;
-            const hasCorrectLanguage = verifyLanguage(responseContent, language);
-            
-            if (!hasCorrectLanguage) {
-                console.warn('Language mismatch detected in response');
-                const fixMessage = language === 'en'
-                    ? "The AI generated response in the wrong language. Please try again."
-                    : "Die KI hat eine Antwort in der falschen Sprache generiert. Bitte versuchen Sie es erneut.";
-                showAlert(fixMessage, 'warning');
-            }
-            
-            return responseContent;
-        } catch (error) {
-            console.error('Error in OpenAI API call:', error);
-            throw error;
-        }
-    }
-    
-    // Helper function to verify language of response
+    // Helper function to verify language of response (used in Step 2)
     function verifyLanguage(text, expectedLanguage) {
         if (!text) return true;
         
@@ -922,8 +937,9 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
         return (expectedLanguage === 'en' && seemsEnglish) || (expectedLanguage === 'de' && !seemsEnglish);
     }
 
-    // Get the appropriate system prompt based on style and language
-    function getSystemPrompt(promptType, analysisResult) {
+
+    // Get the appropriate feedback prompt based on style and language (Step 2 of prompt chaining)
+    function getFeedbackPrompt(promptType, analysisResult) {
         const lang = promptType.includes('English') ? 'en' : 'de';
         const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
         
