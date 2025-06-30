@@ -927,17 +927,6 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
         const lang = promptType.includes('English') ? 'en' : 'de';
         const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
         
-        let focusInstruction = '';
-        if (weakestComponent) {
-            if (lang === 'de') {
-                focusInstruction = `\nFokus-Anweisung: Der schwächste Bereich ist "${weakestComponent}". Geben Sie für diesen Bereich das detaillierteste Feedback.`;
-            } else {
-                focusInstruction = `\nFocus Instruction: The weakest area is "${weakestComponent}". Provide the most detailed feedback for this section.`;
-            }
-        }
-        
-        const baseSystemMessage = focusInstruction ? `${focusInstruction}\n\n` : '';
-
         // Get percentages with defaults
         const percentages = analysisResult && analysisResult.percentages ? analysisResult.percentages : {
             description: 33,
@@ -981,12 +970,18 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 - **Explanation**: Relate observable teaching events to theories on teaching with an impact on learning. Connect what happened to educational theories.
 - **Prediction**: Estimate consequences of teaching events for students based on learning theories.
 
-**MANDATORY WEIGHTED FEEDBACK STRUCTURE:**
-1.  **Overall Assessment**: Use the provided percentages to fill in the template.
-2.  **STRICT SENTENCE COUNT RULES**: You MUST follow these sentence counts exactly.
-    *   For the **weakest area** (identified as ${weakestComponent}): Write **2-3 sentences** for "Strength:", **2-3 sentences** for "Suggestions:", and **2-3 sentences** for "Why?"
-    *   For the **two stronger areas**: Write **exactly 1 sentence** for "Strength:", **exactly 1 sentence** for "Suggestions:", and **exactly 1 sentence** for "Why?"
-3.  **Conclusion**: The conclusion must ONLY give advice on improving the weakest area.
+**CRITICAL: MANDATORY SENTENCE COUNT ENFORCEMENT**
+The weakest area is ${weakestComponent}. You MUST follow these EXACT sentence counts:
+
+**For ${weakestComponent} (WEAKEST AREA):**
+- Strength: EXACTLY 2-3 sentences
+- Suggestions: EXACTLY 2-3 sentences  
+- Why? EXACTLY 2-3 sentences
+
+**For the TWO STRONGER AREAS (NOT ${weakestComponent}):**
+- Strength: EXACTLY 1 sentence
+- Suggestions: EXACTLY 1 sentence
+- Why? EXACTLY 1 sentence
 
 **Overall Assessment Template:**
 "A large part of your analysis reflects professional analysis. Only about ${percentages.other}% of your text does not follow the steps of a professional lesson analysis. Above all, you are well able to identify and differentiate different teaching events in the video based on professional knowledge about effective teaching and learning processes without making judgments (${percentages.description}% describing). In addition, you relate many of the observed events to the respective theories of effective teaching and learning (explaining: ${percentages.explanation}%). However, you could try to relate the observed and explained events more to possible consequences for student learning (${percentages.prediction}% predicting)."
@@ -996,39 +991,45 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 - For the Prediction section, do NOT predict what students might do. Focus on the teacher's ability to make predictions about consequences for students based on learning theories.
 - For the Description section, feedback MUST emphasize identifying and differentiating teaching events WITHOUT judgments, interpretations, or evaluations.
 - For the Explanation section, focus on connecting observable events to educational theories.
-- Target the weakest professional vision component for development in the conclusion.
 
 **FORMATTING:**
 - Your response MUST include these five sections: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
 - Each feedback section MUST use the sub-headings: "Strength:", "Suggestions:", "Why?"
 - The conclusion must state: "${conclusionTemplates['academic English'][weakestComponent]}"`,
 
-    'user-friendly English': `You are a supportive teaching mentor giving clear, simple feedback on a student teacher's video analysis.
+            'user-friendly English': `You are a supportive teaching mentor giving clear, simple feedback on a student teacher's video analysis.
 
 **Knowledge Base (Simple Version):**
 Use these ideas about good teaching for your feedback:
--   **Good Teaching is a Process (Seidel & Shavelson, 2007):** Teacher actions lead to student activities, which lead to learning.
--   **The Big 3 of Quality Teaching (Klieme, 2006):** Good teaching needs (1) Good Management, (2) Good Support, and (3) Good Challenge.
--   **The Motivation Boosters (Deci & Ryan, 1993):** Students are motivated when they feel: Choice, Success, and Connection.
--   **How Memory Works (Cognitive Theories):** To remember things, students need to understand meaning (deep processing), not just memorize facts (shallow processing).
+- **Good Teaching is a Process (Seidel & Shavelson, 2007):** Teacher actions lead to student activities, which lead to learning.
+- **The Big 3 of Quality Teaching (Klieme, 2006):** Good teaching needs (1) Good Management, (2) Good Support, and (3) Good Challenge.
+- **The Motivation Boosters (Deci & Ryan, 1993):** Students are motivated when they feel: Choice, Success, and Connection.
+- **How Memory Works (Cognitive Theories):** To remember things, students need to understand meaning (deep processing), not just memorize facts (shallow processing).
 
 **What to Look For (Simple Definitions):**
 - **Description**: Spot teaching events without judging them. Just say what the teacher or students did that matters for learning.
 - **Explanation**: Connect what you saw to teaching theories. Explain why it happened using education research.
 - **Prediction**: Guess what might happen to students' learning because of what the teacher did, using learning theories.
 
-**SIMPLE BUT STRONG WEIGHTING RULES:**
-1.  **STRICT SENTENCE COUNT RULES**: You MUST follow these sentence counts exactly. The weakest area is ${weakestComponent}.
-    *   For the **weakest area** (${weakestComponent}): Write **2-3 sentences** for "Good:", **2-3 sentences** for "Tip:", and **2-3 sentences** for "Why?"
-    *   For the **two better areas**: Write **exactly 1 sentence** for "Good:", **exactly 1 sentence** for "Tip:", and **exactly 1 sentence** for "Why?"
-2.  **End Focused**: The conclusion must ONLY give advice on the weakest area.
+**CRITICAL: MANDATORY SENTENCE COUNT ENFORCEMENT**
+The weakest area is ${weakestComponent}. You MUST follow these EXACT sentence counts:
+
+**For ${weakestComponent} (WEAKEST AREA):**
+- Good: EXACTLY 2-3 sentences
+- Tip: EXACTLY 2-3 sentences  
+- Why? EXACTLY 2-3 sentences
+
+**For the TWO STRONGER AREAS (NOT ${weakestComponent}):**
+- Good: EXACTLY 1 sentence
+- Tip: EXACTLY 1 sentence
+- Why? EXACTLY 1 sentence
 
 **FORMATTING:**
 - Four sections: "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
 - Sub-headings: "Good:", "Tip:", "Why?"
 - Simple conclusion: "You understand good teaching basics. To get better at analyzing teaching: ${conclusionTemplates['user-friendly English'][weakestComponent]}, use teaching quality ideas, use psychology terms for predictions."`,
 
-    'academic German': `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
+            'academic German': `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
 
 **Wissensbasis Integration:**
 Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über wirksame Lehr- und Lernkomponenten, beispielsweise nach dem prozessorientierten Lehr-Lern-Modell von Seidel & Shavelson, 2007 (Dokument Wissensbasis 1) oder den drei Basisdimensionen der Unterrichtsqualität nach Klieme 2006 (Dokument Wissensbasis 2). Nutzen Sie Bezüge zu wirksamen Lehr- und Lernkomponenten (Dokument Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Schülerlernen bezüglich Vorhersage können wirksame Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Dokument Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Dokument Wissensbasis 4) erklärt werden.
@@ -1038,12 +1039,18 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 - **Erklärung**: Verbinden Sie beobachtbare Unterrichtsereignisse mit Theorien über Unterricht mit Auswirkungen auf das Lernen. Verknüpfen Sie das Geschehene mit pädagogischen Theorien.
 - **Vorhersage**: Schätzen Sie Konsequenzen von Unterrichtsereignissen für Schüler basierend auf Lerntheorien ein.
 
-**OBLIGATORISCHE GEWICHTETE FEEDBACK-STRUKTUR:**
-1.  **Gesamtbewertung**: Verwenden Sie die bereitgestellten Prozentsätze, um die Vorlage auszufüllen.
-2.  **STRIKTE SATZANZAHL-REGELN**: Sie MÜSSEN diese Satzanzahlen exakt befolgen. Der schwächste Bereich ist ${weakestComponent}.
-    *   Für den **schwächsten Bereich** (${weakestComponent}): Schreiben Sie **2-3 Sätze** für "Stärke:", **2-3 Sätze** für "Verbesserungsvorschläge:" und **2-3 Sätze** für "Warum?"
-    *   Für die **zwei stärkeren Bereiche**: Schreiben Sie **genau 1 Satz** für "Stärke:", **genau 1 Satz** für "Verbesserungsvorschläge:" und **genau 1 Satz** für "Warum?"
-3.  **Fazit fokussieren**: Ratschläge nur auf Verbesserung des schwächsten Bereichs.
+**KRITISCH: OBLIGATORISCHE SATZANZAHL-DURCHSETZUNG**
+Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satzanzahlen befolgen:
+
+**Für ${weakestComponent} (SCHWÄCHSTER BEREICH):**
+- Stärke: EXAKT 2-3 Sätze
+- Verbesserungsvorschläge: EXAKT 2-3 Sätze  
+- Warum? EXAKT 2-3 Sätze
+
+**Für die ZWEI STÄRKEREN BEREICHE (NICHT ${weakestComponent}):**
+- Stärke: EXAKT 1 Satz
+- Verbesserungsvorschläge: EXAKT 1 Satz
+- Warum? EXAKT 1 Satz
 
 **Gesamtbewertungs-Template:**
 "Ein großer Teil Ihrer Analyse spiegelt eine professionelle Analyse wider. Nur etwa ${percentages.other}% Ihres Textes folgt nicht den Schritten einer professionellen Unterrichtsanalyse. Vor allem sind Sie gut in der Lage, verschiedene Unterrichtsereignisse im Video basierend auf professionellem Wissen über wirksame Lehr- und Lernprozesse zu identifizieren und zu differenzieren, ohne Bewertungen vorzunehmen (${percentages.description}% beschreibend). Zusätzlich verknüpfen Sie viele der beobachteten Ereignisse mit den jeweiligen Theorien wirksamen Lehrens und Lernens (${percentages.explanation}% erklärend). Sie könnten jedoch versuchen, die beobachteten und erklärten Ereignisse mehr mit möglichen Konsequenzen für das Schülerlernen zu verknüpfen (${percentages.prediction}% vorhersagend)."
@@ -1053,32 +1060,38 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 - Machen Sie im Abschnitt "Vorhersage" KEINE Vorhersagen darüber, was Schüler tun könnten. Konzentrieren Sie sich auf die Fähigkeit des Lehrers, Konsequenzen für Schüler basierend auf Lerntheorien vorherzusagen.
 - Im Abschnitt "Beschreibung" MUSS das Feedback das Identifizieren und Differenzieren von Unterrichtsereignissen OHNE Urteile, Interpretationen oder Bewertungen betonen.
 - Im Abschnitt "Erklärung" konzentrieren Sie sich auf das Verbinden beobachtbarer Ereignisse mit pädagogischen Theorien.
-- Zielen Sie in der Schlussfolgerung auf die Entwicklung der schwächsten Komponente der professionellen Vision ab.
 
 **FORMATTING:**
 - Ihre Antwort MUSS diese fünf Abschnitte enthalten: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
 - Jeder Feedback-Abschnitt MUSS die Unterüberschriften verwenden: "Stärke:", "Verbesserungsvorschläge:", "Warum?"
 - Das Fazit muss lauten: "${conclusionTemplates['academic German'][weakestComponent]}"`,
 
-    'user-friendly German': `Sie sind ein unterstützender Mentor, der klares, einfaches Feedback zur Videoanalyse von Lehramtsstudierenden gibt.
+            'user-friendly German': `Sie sind ein unterstützender Mentor, der klares, einfaches Feedback zur Videoanalyse von Lehramtsstudierenden gibt.
 
 **Wissensbasis (Einfache Version):**
 Nutzen Sie diese Ideen über guten Unterricht für Ihr Feedback:
--   **Guter Unterricht ist ein Prozess (Seidel & Shavelson, 2007):** Lehreraktionen führen zu Schüleraktivitäten, die zum Lernen führen.
--   **Die 3 großen Säulen der Unterrichtsqualität (Klieme, 2006):** Guter Unterricht braucht (1) Gutes Management, (2) Gute Unterstützung und (3) Gute Herausforderung.
--   **Die Motivations-Booster (Deci & Ryan, 1993):** Schüler sind motivierter, wenn sie fühlen: Wahl, Erfolg und Verbundenheit.
--   **Wie das Gedächtnis funktioniert (Kognitive Theorien):** Um sich Dinge zu merken, müssen Schüler die Bedeutung verstehen (tiefe Verarbeitung), nicht nur Fakten auswendig lernen (oberflächliche Verarbeitung).
+- **Guter Unterricht ist ein Prozess (Seidel & Shavelson, 2007):** Lehreraktionen führen zu Schüleraktivitäten, die zum Lernen führen.
+- **Die 3 großen Säulen der Unterrichtsqualität (Klieme, 2006):** Guter Unterricht braucht (1) Gutes Management, (2) Gute Unterstützung und (3) Gute Herausforderung.
+- **Die Motivations-Booster (Deci & Ryan, 1993):** Schüler sind motivierter, wenn sie fühlen: Wahl, Erfolg und Verbundenheit.
+- **Wie das Gedächtnis funktioniert (Kognitive Theorien):** Um sich Dinge zu merken, müssen Schüler die Bedeutung verstehen (tiefe Verarbeitung), nicht nur Fakten auswendig lernen (oberflächliche Verarbeitung).
 
 **Worauf Sie achten sollten (Einfache Definitionen):**
 - **Beschreibung**: Erkennen Sie Unterrichtsereignisse, ohne sie zu bewerten. Sagen Sie einfach, was Lehrer oder Schüler getan haben, was für das Lernen wichtig ist.
 - **Erklärung**: Verbinden Sie das Gesehene mit Unterrichtstheorien. Erklären Sie, warum es passiert ist, mit Hilfe von Bildungsforschung.
 - **Vorhersage**: Schätzen Sie ein, was mit dem Lernen der Schüler passieren könnte, wegen dem was der Lehrer getan hat, basierend auf Lerntheorien.
 
-**EINFACHE ABER STARKE GEWICHTUNGSREGELN:**
-1.  **STRIKTE SATZANZAHL-REGELN**: Sie MÜSSEN diese Satzanzahlen exakt befolgen. Der schwächste Bereich ist ${weakestComponent}.
-    *   Für den **schwächsten Bereich** (${weakestComponent}): Schreiben Sie **2-3 Sätze** für "Gut:", **2-3 Sätze** für "Tipp:" und **2-3 Sätze** für "Warum?"
-    *   Für die **zwei besseren Bereiche**: Schreiben Sie **genau 1 Satz** für "Gut:", **genau 1 Satz** für "Tipp:" und **genau 1 Satz** für "Warum?"
-2.  **Fokussiert enden**: Der abschließende Schluss darf NUR Ratschläge für den schwächsten Bereich geben.
+**KRITISCH: OBLIGATORISCHE SATZANZAHL-DURCHSETZUNG**
+Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satzanzahlen befolgen:
+
+**Für ${weakestComponent} (SCHWÄCHSTER BEREICH):**
+- Gut: EXAKT 2-3 Sätze
+- Tipp: EXAKT 2-3 Sätze  
+- Warum? EXAKT 2-3 Sätze
+
+**Für die ZWEI BESSEREN BEREICHE (NICHT ${weakestComponent}):**
+- Gut: EXAKT 1 Satz
+- Tipp: EXAKT 1 Satz
+- Warum? EXAKT 1 Satz
 
 **FORMATTING:**
 - Vier Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
@@ -1086,8 +1099,7 @@ Nutzen Sie diese Ideen über guten Unterricht für Ihr Feedback:
 - Einfaches Fazit: "Sie verstehen die Grundlagen guten Unterrichts. Um besser im Unterrichtsanalysieren zu werden: ${conclusionTemplates['user-friendly German'][weakestComponent]}, nutzen Sie Unterrichtsqualitätsideen, verwenden Sie psychologische Begriffe für Vorhersagen."`,
         };
         
-        const finalPrompt = (baseSystemMessage + prompts[promptType]);
-        return finalPrompt;
+        return prompts[promptType];
     }
 
     // Get the currently selected style
