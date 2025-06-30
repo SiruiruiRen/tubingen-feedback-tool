@@ -595,28 +595,55 @@ document.addEventListener('DOMContentLoaded', function() {
     // New function to get analysis and weakest area in one call
     async function getAnalysisAndWeakestArea(reflection, language) {
         const analysisPrompt = language === 'en'
-            ? `Analyze this teaching reflection. Determine the percentage distribution of content across four categories: Description, Explanation, Prediction, and Other. The percentages must sum to 100. Also, identify which of the three main components (Description, Explanation, Prediction) has the lowest percentage.
-               
-               Return ONLY a JSON object with this structure: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Prediction"}`
-            : `Analysieren Sie diese Unterrichtsreflexion. Bestimmen Sie die prozentuale Verteilung des Inhalts auf vier Kategorien: Beschreibung, Erklärung, Vorhersage und Sonstiges. Die Prozentsätze müssen sich zu 100 addieren. Identifizieren Sie außerdem, welche der drei Hauptkomponenten (Beschreibung, Erklärung, Vorhersage) den niedrigsten Prozentsatz aufweist.
+            ? `You are an expert in analyzing teaching reflections using the professional vision framework. Analyze this reflection and categorize each sentence/paragraph based on its primary purpose:
 
-               Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Vorhersage"}`;
+**DESCRIPTION (D)**: Objective observations of classroom events without interpretation or judgment
+- Examples: "The teacher asked a question", "Students raised their hands", "The lesson lasted 45 minutes"
+
+**EXPLANATION (E)**: Interpretations connecting observations to educational theories, research, or pedagogical knowledge
+- Examples: "This wait time allowed for processing", "The group work promoted collaboration", "This approach aligns with constructivist theory"
+
+**PREDICTION (P)**: Anticipating future outcomes, consequences, or effects on student learning
+- Examples: "This will likely improve engagement", "Students may struggle with this concept", "This approach should enhance retention"
+
+**OTHER (O)**: Content not related to professional vision (personal opinions, general comments, off-topic content)
+
+Analyze the reflection systematically. For each major idea/sentence, determine its category. Then calculate percentages that sum to exactly 100%.
+
+Return ONLY a JSON object with this structure: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Prediction"}`
+            : `Sie sind ein Experte für die Analyse von Unterrichtsreflexionen mit dem Framework professioneller Unterrichtswahrnehmung. Analysieren Sie diese Reflexion und kategorisieren Sie jeden Satz/Absatz basierend auf seinem Hauptzweck:
+
+**BESCHREIBUNG (B)**: Objektive Beobachtungen von Unterrichtsereignissen ohne Interpretation oder Bewertung
+- Beispiele: "Die Lehrkraft stellte eine Frage", "Schüler hoben ihre Hände", "Die Stunde dauerte 45 Minuten"
+
+**ERKLÄRUNG (E)**: Interpretationen, die Beobachtungen mit pädagogischen Theorien, Forschung oder pädagogischem Wissen verknüpfen
+- Beispiele: "Diese Wartezeit ermöglichte die Verarbeitung", "Die Gruppenarbeit förderte die Zusammenarbeit", "Dieser Ansatz entspricht der konstruktivistischen Theorie"
+
+**VORHERSAGE (V)**: Antizipation zukünftiger Ergebnisse, Konsequenzen oder Auswirkungen auf das Schülerlernen
+- Beispiele: "Dies wird wahrscheinlich das Engagement verbessern", "Schüler könnten mit diesem Konzept Schwierigkeiten haben", "Dieser Ansatz sollte die Retention verbessern"
+
+**SONSTIGES (S)**: Inhalt, der nicht mit professioneller Vision zusammenhängt (persönliche Meinungen, allgemeine Kommentare, themenfremder Inhalt)
+
+Analysieren Sie die Reflexion systematisch. Bestimmen Sie für jede Hauptidee/jeden Satz die Kategorie. Berechnen Sie dann Prozentsätze, die sich zu genau 100% addieren.
+
+Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Vorhersage"}`;
 
         const requestData = {
             model: model,
             messages: [
                 {
                     role: "system",
-                    content: "You are an expert in analyzing teaching reflections. Analyze the text and return ONLY a valid JSON object with the specified structure."
+                    content: "You are an expert in analyzing teaching reflections using professional vision framework. Be consistent and systematic in your analysis. Return ONLY a valid JSON object with the exact structure requested."
                 },
                 {
                     role: "user",
-                    content: analysisPrompt + "\n\nReflection:\n" + reflection
+                    content: analysisPrompt + "\n\nReflection to analyze:\n" + reflection
                 }
             ],
-            temperature: 0.2,
-            max_tokens: 150,
-            response_format: { type: "json_object" }
+            temperature: 0.1, // Lower temperature for more consistency
+            max_tokens: 200,
+            response_format: { type: "json_object" },
+            seed: 42 // Add seed for more deterministic results
         };
 
         try {
@@ -637,62 +664,92 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const analysis = JSON.parse(content);
 
-            // Basic validation
+            // Enhanced validation
             if (!analysis.percentages || !analysis.weakest_component) {
                 throw new Error("Invalid analysis format from API.");
             }
             
-            // Normalize percentages to ensure they sum to 100
+            // Validate and normalize percentages
             const { percentages } = analysis;
             const keys = ['description', 'explanation', 'prediction', 'other'];
+            
+            // Ensure all keys exist and are numbers
             keys.forEach(key => {
-                if (typeof percentages[key] !== 'number' || isNaN(percentages[key])) {
+                if (typeof percentages[key] !== 'number' || isNaN(percentages[key]) || percentages[key] < 0) {
                     percentages[key] = 0;
                 }
             });
 
+            // Ensure percentages sum to 100
             const rawTotal = Object.values(percentages).reduce((sum, value) => sum + value, 0);
 
             if (rawTotal > 0) {
-                const finalPercentages = {};
-                const proVisionKeys = ['description', 'explanation', 'prediction'];
-                
-                let total = proVisionKeys.reduce((sum, key) => sum + percentages[key], 0) + percentages.other;
+                // Normalize to sum to 100
+                const scaleFactor = 100 / rawTotal;
+                let normalizedDescription = Math.round(percentages.description * scaleFactor);
+                let normalizedExplanation = Math.round(percentages.explanation * scaleFactor);
+                let normalizedPrediction = Math.round(percentages.prediction * scaleFactor);
+                let normalizedOther = Math.round(percentages.other * scaleFactor);
 
-                if (total > 0) {
-                    let normalizedDescription = Math.round((percentages.description / total) * 100);
-                    let normalizedExplanation = Math.round((percentages.explanation / total) * 100);
-                    let normalizedPrediction = Math.round((percentages.prediction / total) * 100);
-                    let normalizedOther = Math.round((percentages.other / total) * 100);
+                // Adjust for rounding errors to ensure sum is exactly 100
+                let currentSum = normalizedDescription + normalizedExplanation + normalizedPrediction + normalizedOther;
+                let diff = 100 - currentSum;
 
-                    let normalizedTotal = normalizedDescription + normalizedExplanation + normalizedPrediction + normalizedOther;
-                    let diff = 100 - normalizedTotal;
-
-                    if (diff !== 0) {
-                        const allKeys = ['description', 'explanation', 'prediction', 'other'];
-                        let maxKey = allKeys.reduce((a, b) => percentages[a] > percentages[b] ? a : b);
-                        if(maxKey === 'description') normalizedDescription += diff;
-                        else if(maxKey === 'explanation') normalizedExplanation += diff;
-                        else if(maxKey === 'prediction') normalizedPrediction += diff;
-                        else normalizedOther += diff;
-                    }
-
-                    analysis.percentages = {
-                        description: normalizedDescription,
-                        explanation: normalizedExplanation,
-                        prediction: normalizedPrediction,
-                        other: normalizedOther
-                    };
+                if (diff !== 0) {
+                    // Add/subtract the difference to the largest component
+                    const values = [
+                        { key: 'description', value: normalizedDescription },
+                        { key: 'explanation', value: normalizedExplanation },
+                        { key: 'prediction', value: normalizedPrediction },
+                        { key: 'other', value: normalizedOther }
+                    ];
+                    
+                    values.sort((a, b) => b.value - a.value);
+                    const largestKey = values[0].key;
+                    
+                    if (largestKey === 'description') normalizedDescription += diff;
+                    else if (largestKey === 'explanation') normalizedExplanation += diff;
+                    else if (largestKey === 'prediction') normalizedPrediction += diff;
+                    else normalizedOther += diff;
                 }
+
+                analysis.percentages = {
+                    description: Math.max(0, normalizedDescription),
+                    explanation: Math.max(0, normalizedExplanation),
+                    prediction: Math.max(0, normalizedPrediction),
+                    other: Math.max(0, normalizedOther)
+                };
+            } else {
+                // If all percentages are 0, use defaults
+                analysis.percentages = { description: 33, explanation: 33, prediction: 34, other: 0 };
+            }
+
+            // Validate weakest component
+            const professionalVisionComponents = ['Description', 'Explanation', 'Prediction'];
+            const germanComponents = ['Beschreibung', 'Erklärung', 'Vorhersage'];
+            const validComponents = [...professionalVisionComponents, ...germanComponents];
+            
+            if (!validComponents.includes(analysis.weakest_component)) {
+                // Find the actual weakest component
+                const pvPercentages = {
+                    'Description': analysis.percentages.description,
+                    'Explanation': analysis.percentages.explanation,
+                    'Prediction': analysis.percentages.prediction
+                };
+                
+                analysis.weakest_component = Object.keys(pvPercentages).reduce((a, b) => 
+                    pvPercentages[a] < pvPercentages[b] ? a : b
+                );
             }
             
+            console.log('Analysis result:', analysis);
             return analysis;
 
         } catch (error) {
             console.error('Error in reflection analysis:', error);
-            // Return a default object if analysis fails
+            // Return a more balanced default object if analysis fails
             return {
-                percentages: { description: 33, explanation: 33, prediction: 34, other: 0 },
+                percentages: { description: 30, explanation: 35, prediction: 25, other: 10 },
                 weakest_component: "Prediction"
             };
         }
@@ -868,7 +925,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get the appropriate system prompt based on style and language
     function getSystemPrompt(promptType, analysisResult) {
         const lang = promptType.includes('English') ? 'en' : 'de';
-        const weakestComponent = analysisResult.weakest_component;
+        const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
         
         let focusInstruction = '';
         if (weakestComponent) {
@@ -880,6 +937,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const baseSystemMessage = focusInstruction ? `${focusInstruction}\n\n` : '';
+
+        // Get percentages with defaults
+        const percentages = analysisResult && analysisResult.percentages ? analysisResult.percentages : {
+            description: 33,
+            explanation: 33,
+            prediction: 34,
+            other: 0
+        };
+
+        // Create conclusion templates based on weakest component
+        const conclusionTemplates = {
+            'academic English': {
+                'Description': 'To improve your analysis, focus more on detailed, objective description of classroom events without making evaluative judgments.',
+                'Explanation': 'To enhance your reflection, work on connecting observed events more systematically to educational theories and research.',
+                'Prediction': 'To strengthen your analysis, develop your ability to predict potential consequences of teaching actions on student learning outcomes.'
+            },
+            'user-friendly English': {
+                'Description': 'focus on describing what you see without judging',
+                'Explanation': 'focus on explaining why things happen using teaching theories',
+                'Prediction': 'focus on predicting what might happen next for students'
+            },
+            'academic German': {
+                'Description': 'Um Ihre Analyse zu verbessern, konzentrieren Sie sich mehr auf detaillierte, objektive Beschreibung von Unterrichtsereignissen ohne bewertende Urteile.',
+                'Explanation': 'Um Ihre Reflexion zu verbessern, arbeiten Sie daran, beobachtete Ereignisse systematischer mit pädagogischen Theorien und Forschung zu verknüpfen.',
+                'Prediction': 'Um Ihre Analyse zu stärken, entwickeln Sie Ihre Fähigkeit, potentielle Konsequenzen von Lehrhandlungen auf Schülerlernresultate vorherzusagen.'
+            },
+            'user-friendly German': {
+                'Description': 'konzentrieren Sie sich darauf zu beschreiben, was Sie sehen, ohne zu bewerten',
+                'Explanation': 'konzentrieren Sie sich darauf zu erklären, warum Dinge passieren, mit Hilfe von Lehrtheorien',
+                'Prediction': 'konzentrieren Sie sich darauf vorherzusagen, was als nächstes für Schüler passieren könnte'
+            }
+        };
 
         const prompts = {
             'academic English': `You are a supportive yet rigorous teaching mentor providing feedback on student teacher classroom video analysis using professional vision framework.
@@ -895,7 +984,7 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 3.  **Conclusion**: The conclusion must ONLY give advice on improving the weakest area.
 
 **Overall Assessment Template:**
-"A large part of your analysis reflects professional analysis. Only about [other]% of your text does not follow the steps of a professional lesson analysis. Above all, you are well able to identify and differentiate different teaching events in the video based on professional knowledge about effective teaching and learning processes without making judgments ([description]% describing). In addition, you relate many of the observed events to the respective theories of effective teaching and learning (explaining: [explanation]%). However, you could try to relate the observed and explained events more to possible consequences for student learning ([prediction]% predicting)."
+"A large part of your analysis reflects professional analysis. Only about ${percentages.other}% of your text does not follow the steps of a professional lesson analysis. Above all, you are well able to identify and differentiate different teaching events in the video based on professional knowledge about effective teaching and learning processes without making judgments (${percentages.description}% describing). In addition, you relate many of the observed events to the respective theories of effective teaching and learning (explaining: ${percentages.explanation}%). However, you could try to relate the observed and explained events more to possible consequences for student learning (${percentages.prediction}% predicting)."
 
 **CRITICAL FOCUS REQUIREMENTS:**
 - Focus ONLY on the student teacher's analysis skills, NEVER on their teaching practice.
@@ -905,7 +994,8 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 
 **FORMATTING:**
 - Your response MUST include these five sections: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
-- Each feedback section MUST use the sub-headings: "Strength:", "Suggestions:", "Why?:"`,
+- Each feedback section MUST use the sub-headings: "Strength:", "Suggestions:", "Why?:"
+- The conclusion must state: "${conclusionTemplates['academic English'][weakestComponent]}"`,
 
     'user-friendly English': `You are a supportive teaching mentor giving clear, simple feedback on a student teacher's video analysis.
 
@@ -925,7 +1015,7 @@ Use these ideas about good teaching for your feedback:
 **FORMATTING:**
 - Four sections: "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
 - Sub-headings: "Good:", "Tip:", "Why?:"
-- Simple conclusion: "You understand [what they do well]. To get better at analyzing teaching: [focus on weakest area], use teaching quality ideas, use psychology terms for predictions."`,
+- Simple conclusion: "You understand good teaching basics. To get better at analyzing teaching: ${conclusionTemplates['user-friendly English'][weakestComponent]}, use teaching quality ideas, use psychology terms for predictions."`,
 
     'academic German': `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
 
@@ -940,7 +1030,7 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 3.  **Fazit fokussieren**: Ratschläge nur auf Verbesserung des schwächsten Bereichs.
 
 **Gesamtbewertungs-Template:**
-"Ein großer Teil Ihrer Analyse spiegelt eine professionelle Analyse wider. Nur etwa [other]% Ihres Textes folgt nicht den Schritten einer professionellen Unterrichtsanalyse. Vor allem sind Sie gut in der Lage, verschiedene Unterrichtsereignisse im Video basierend auf professionellem Wissen über wirksame Lehr- und Lernprozesse zu identifizieren und zu differenzieren, ohne Bewertungen vorzunehmen ([description]% beschreibend). Zusätzlich verknüpfen Sie viele der beobachteten Ereignisse mit den jeweiligen Theorien wirksamen Lehrens und Lernens ([explanation]% erklärend). Sie könnten jedoch versuchen, die beobachteten und erklärten Ereignisse mehr mit möglichen Konsequenzen für das Schülerlernen zu verknüpfen ([prediction]% vorhersagend)."
+"Ein großer Teil Ihrer Analyse spiegelt eine professionelle Analyse wider. Nur etwa ${percentages.other}% Ihres Textes folgt nicht den Schritten einer professionellen Unterrichtsanalyse. Vor allem sind Sie gut in der Lage, verschiedene Unterrichtsereignisse im Video basierend auf professionellem Wissen über wirksame Lehr- und Lernprozesse zu identifizieren und zu differenzieren, ohne Bewertungen vorzunehmen (${percentages.description}% beschreibend). Zusätzlich verknüpfen Sie viele der beobachteten Ereignisse mit den jeweiligen Theorien wirksamen Lehrens und Lernens (${percentages.explanation}% erklärend). Sie könnten jedoch versuchen, die beobachteten und erklärten Ereignisse mehr mit möglichen Konsequenzen für das Schülerlernen zu verknüpfen (${percentages.prediction}% vorhersagend)."
 
 **KRITISCHE FOKUS-ANFORDERUNGEN:**
 - Konzentrieren Sie sich NUR auf die Analysefähigkeiten des Lehramtsstudierenden, NIEMALS auf dessen Lehrpraxis.
@@ -950,7 +1040,8 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 
 **FORMATTING:**
 - Ihre Antwort MUSS diese fünf Abschnitte enthalten: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
-- Jeder Feedback-Abschnitt MUSS die Unterüberschriften verwenden: "Stärke:", "Verbesserungsvorschläge:", "Warum?:"`,
+- Jeder Feedback-Abschnitt MUSS die Unterüberschriften verwenden: "Stärke:", "Verbesserungsvorschläge:", "Warum?:"
+- Das Fazit muss lauten: "${conclusionTemplates['academic German'][weakestComponent]}"`,
 
     'user-friendly German': `Sie sind ein unterstützender Mentor, der klares, einfaches Feedback zur Videoanalyse von Lehramtsstudierenden gibt.
 
@@ -970,26 +1061,11 @@ Nutzen Sie diese Ideen über guten Unterricht für Ihr Feedback:
 **FORMATTING:**
 - Vier Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
 - Unterüberschriften: "Gut:", "Tipp:", "Warum?:"
-- Einfaches Fazit: "Sie verstehen [was sie gut machen]. Um besser im Unterrichtsanalysieren zu werden: [Fokus auf schwächsten Bereich], nutzen Sie Unterrichtsqualitätsideen, verwenden Sie psychologische Begriffe für Vorhersagen."`,
+- Einfaches Fazit: "Sie verstehen die Grundlagen guten Unterrichts. Um besser im Unterrichtsanalysieren zu werden: ${conclusionTemplates['user-friendly German'][weakestComponent]}, nutzen Sie Unterrichtsqualitätsideen, verwenden Sie psychologische Begriffe für Vorhersagen."`,
         };
         
-        // Inject analysis results into the prompt templates
-        if (analysisResult && analysisResult.percentages) {
-            const { description, explanation, prediction, other } = analysisResult.percentages;
-            for (const key in prompts) {
-                prompts[key] = prompts[key]
-                    .replace(/\[description\]/g, description)
-                    .replace(/\[explanation\]/g, explanation)
-                    .replace(/\[prediction\]/g, prediction)
-                    .replace(/\[other\]/g, other)
-                    .replace(/\[focus on weakest component\]/g, `focus on ${analysisResult.weakest_component}`);
-            }
-        }
-        
         const finalPrompt = (baseSystemMessage + prompts[promptType]);
-
-        // Replace any remaining placeholders if analysisResult was null
-        return finalPrompt.replace(/\[.*?\]/g, 'N/A');
+        return finalPrompt;
     }
 
     // Get the currently selected style
