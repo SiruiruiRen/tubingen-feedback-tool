@@ -597,32 +597,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const analysisPrompt = language === 'en'
             ? `You are an expert in analyzing teaching reflections using the professional vision framework. Analyze this reflection and categorize each sentence/paragraph based on its primary purpose:
 
-**DESCRIPTION (D)**: Objective observations of classroom events without interpretation or judgment
-- Examples: "The teacher asked a question", "Students raised their hands", "The lesson lasted 45 minutes"
+**DESCRIPTION**: Identify and differentiate teaching events based on knowledge about effective teaching and learning, WITHOUT making judgments, interpretations, evaluations. Focus on observable events from teacher or students that are central to teaching/learning.
+- Examples: "The teacher refers to the topic of the lesson: Binomial formulae", "The teacher explains", "The teacher gives feedback"
 
-**EXPLANATION (E)**: Interpretations connecting observations to educational theories, research, or pedagogical knowledge
-- Examples: "This wait time allowed for processing", "The group work promoted collaboration", "This approach aligns with constructivist theory"
+**EXPLANATION**: Relate observable teaching events to theories on teaching with an impact on learning. Connect what happened to educational theories.
+- Examples: "The teacher's open question should activate the students cognitively", "Through this connection, today's learning objective can be linked to what is already known"
 
-**PREDICTION (P)**: Anticipating future outcomes, consequences, or effects on student learning
-- Examples: "This will likely improve engagement", "Students may struggle with this concept", "This approach should enhance retention"
+**PREDICTION**: Estimate consequences of teaching events for students based on learning theories.
+- Examples: "The teacher's feedback could have a negative effect on the pupils", "Feedback from the teacher could increase their motivation to learn"
 
-**OTHER (O)**: Content not related to professional vision (personal opinions, general comments, off-topic content)
+**OTHER**: Content not related to professional vision (personal opinions, general comments, off-topic content)
 
 Analyze the reflection systematically. For each major idea/sentence, determine its category. Then calculate percentages that sum to exactly 100%.
 
 Return ONLY a JSON object with this structure: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Prediction"}`
             : `Sie sind ein Experte für die Analyse von Unterrichtsreflexionen mit dem Framework professioneller Unterrichtswahrnehmung. Analysieren Sie diese Reflexion und kategorisieren Sie jeden Satz/Absatz basierend auf seinem Hauptzweck:
 
-**BESCHREIBUNG (B)**: Objektive Beobachtungen von Unterrichtsereignissen ohne Interpretation oder Bewertung
-- Beispiele: "Die Lehrkraft stellte eine Frage", "Schüler hoben ihre Hände", "Die Stunde dauerte 45 Minuten"
+**BESCHREIBUNG**: Identifizieren und differenzieren Sie Unterrichtsereignisse basierend auf Wissen über effektives Lehren und Lernen, OHNE Urteile, Interpretationen oder Bewertungen zu treffen. Konzentrieren Sie sich auf beobachtbare Ereignisse von Lehrern oder Schülern, die zentral für das Lehren/Lernen sind.
+- Beispiele: "Die Lehrkraft bezieht sich auf das Thema der Stunde: Binomische Formeln", "Die Lehrkraft erklärt", "Die Lehrkraft gibt Feedback"
 
-**ERKLÄRUNG (E)**: Interpretationen, die Beobachtungen mit pädagogischen Theorien, Forschung oder pädagogischem Wissen verknüpfen
-- Beispiele: "Diese Wartezeit ermöglichte die Verarbeitung", "Die Gruppenarbeit förderte die Zusammenarbeit", "Dieser Ansatz entspricht der konstruktivistischen Theorie"
+**ERKLÄRUNG**: Verbinden Sie beobachtbare Unterrichtsereignisse mit Theorien über Unterricht mit Auswirkungen auf das Lernen. Verknüpfen Sie das Geschehene mit pädagogischen Theorien.
+- Beispiele: "Die offene Frage der Lehrkraft sollte die Schüler kognitiv aktivieren", "Durch diese Verbindung kann das heutige Lernziel mit bereits Bekanntem verknüpft werden"
 
-**VORHERSAGE (V)**: Antizipation zukünftiger Ergebnisse, Konsequenzen oder Auswirkungen auf das Schülerlernen
-- Beispiele: "Dies wird wahrscheinlich das Engagement verbessern", "Schüler könnten mit diesem Konzept Schwierigkeiten haben", "Dieser Ansatz sollte die Retention verbessern"
+**VORHERSAGE**: Schätzen Sie Konsequenzen von Unterrichtsereignissen für Schüler basierend auf Lerntheorien ein.
+- Beispiele: "Das Feedback der Lehrkraft könnte negative Auswirkungen auf die Schüler haben", "Feedback der Lehrkraft könnte ihre Lernmotivation steigern"
 
-**SONSTIGES (S)**: Inhalt, der nicht mit professioneller Vision zusammenhängt (persönliche Meinungen, allgemeine Kommentare, themenfremder Inhalt)
+**SONSTIGES**: Inhalt, der nicht mit professioneller Vision zusammenhängt (persönliche Meinungen, allgemeine Kommentare, themenfremder Inhalt)
 
 Analysieren Sie die Reflexion systematisch. Bestimmen Sie für jede Hauptidee/jeden Satz die Kategorie. Berechnen Sie dann Prozentsätze, die sich zu genau 100% addieren.
 
@@ -976,6 +976,11 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
 **Knowledge Base Integration:**
 Base your feedback on the theoretical framework of empirical teaching quality research about effective teaching and learning components, for example according to the process-oriented teaching-learning model of Seidel & Shavelson, 2007 (document knowledge base 1) or the three basic dimensions of teaching quality according to Klieme 2006 (document knowledge base 2). Use references to effective teaching and learning components (document knowledge base 1 and 2) for feedback on description and explanation. To analyze possible consequences for student learning regarding prediction, effective teaching and learning components as superordinate theoretical category can be explained by the self-determination theory of motivation according to Deci & Ryan, 1993 (document knowledge base 3) or the theory of cognitive and constructive learning according to Atkinson & Shiffrin, Craik & Lockhart, Anderson (document knowledge base 4).
 
+**Professional Vision Framework Definitions:**
+- **Description**: Identify and differentiate teaching events based on knowledge about effective teaching and learning, WITHOUT making judgments, interpretations, evaluations. Focus on observable events from teacher or students that are central to teaching/learning.
+- **Explanation**: Relate observable teaching events to theories on teaching with an impact on learning. Connect what happened to educational theories.
+- **Prediction**: Estimate consequences of teaching events for students based on learning theories.
+
 **MANDATORY WEIGHTED FEEDBACK STRUCTURE:**
 1.  **Overall Assessment**: Use the provided percentages to fill in the template.
 2.  **STRICT SENTENCE COUNT RULES**: You MUST follow these sentence counts exactly.
@@ -988,8 +993,9 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 
 **CRITICAL FOCUS REQUIREMENTS:**
 - Focus ONLY on the student teacher's analysis skills, NEVER on their teaching practice.
-- For the Prediction section, do NOT predict what students might do. Focus on the teacher's ability to make predictions.
-- For the Description section, feedback MUST emphasize the importance of NO evaluation or judgment.
+- For the Prediction section, do NOT predict what students might do. Focus on the teacher's ability to make predictions about consequences for students based on learning theories.
+- For the Description section, feedback MUST emphasize identifying and differentiating teaching events WITHOUT judgments, interpretations, or evaluations.
+- For the Explanation section, focus on connecting observable events to educational theories.
 - Target the weakest professional vision component for development in the conclusion.
 
 **FORMATTING:**
@@ -1005,6 +1011,11 @@ Use these ideas about good teaching for your feedback:
 -   **The Big 3 of Quality Teaching (Klieme, 2006):** Good teaching needs (1) Good Management, (2) Good Support, and (3) Good Challenge.
 -   **The Motivation Boosters (Deci & Ryan, 1993):** Students are motivated when they feel: Choice, Success, and Connection.
 -   **How Memory Works (Cognitive Theories):** To remember things, students need to understand meaning (deep processing), not just memorize facts (shallow processing).
+
+**What to Look For (Simple Definitions):**
+- **Description**: Spot teaching events without judging them. Just say what the teacher or students did that matters for learning.
+- **Explanation**: Connect what you saw to teaching theories. Explain why it happened using education research.
+- **Prediction**: Guess what might happen to students' learning because of what the teacher did, using learning theories.
 
 **SIMPLE BUT STRONG WEIGHTING RULES:**
 1.  **STRICT SENTENCE COUNT RULES**: You MUST follow these sentence counts exactly. The weakest area is ${weakestComponent}.
@@ -1022,6 +1033,11 @@ Use these ideas about good teaching for your feedback:
 **Wissensbasis Integration:**
 Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über wirksame Lehr- und Lernkomponenten, beispielsweise nach dem prozessorientierten Lehr-Lern-Modell von Seidel & Shavelson, 2007 (Dokument Wissensbasis 1) oder den drei Basisdimensionen der Unterrichtsqualität nach Klieme 2006 (Dokument Wissensbasis 2). Nutzen Sie Bezüge zu wirksamen Lehr- und Lernkomponenten (Dokument Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Schülerlernen bezüglich Vorhersage können wirksame Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Dokument Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Dokument Wissensbasis 4) erklärt werden.
 
+**Framework Professioneller Unterrichtswahrnehmung Definitionen:**
+- **Beschreibung**: Identifizieren und differenzieren Sie Unterrichtsereignisse basierend auf Wissen über effektives Lehren und Lernen, OHNE Urteile, Interpretationen oder Bewertungen zu treffen. Konzentrieren Sie sich auf beobachtbare Ereignisse von Lehrern oder Schülern, die zentral für das Lehren/Lernen sind.
+- **Erklärung**: Verbinden Sie beobachtbare Unterrichtsereignisse mit Theorien über Unterricht mit Auswirkungen auf das Lernen. Verknüpfen Sie das Geschehene mit pädagogischen Theorien.
+- **Vorhersage**: Schätzen Sie Konsequenzen von Unterrichtsereignissen für Schüler basierend auf Lerntheorien ein.
+
 **OBLIGATORISCHE GEWICHTETE FEEDBACK-STRUKTUR:**
 1.  **Gesamtbewertung**: Verwenden Sie die bereitgestellten Prozentsätze, um die Vorlage auszufüllen.
 2.  **STRIKTE SATZANZAHL-REGELN**: Sie MÜSSEN diese Satzanzahlen exakt befolgen. Der schwächste Bereich ist ${weakestComponent}.
@@ -1034,8 +1050,9 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 
 **KRITISCHE FOKUS-ANFORDERUNGEN:**
 - Konzentrieren Sie sich NUR auf die Analysefähigkeiten des Lehramtsstudierenden, NIEMALS auf dessen Lehrpraxis.
-- Machen Sie im Abschnitt "Vorhersage" KEINE Vorhersagen darüber, was Schüler tun könnten. Konzentrieren Sie sich auf die Fähigkeit des Lehrers, Vorhersagen zu treffen.
-- Im Abschnitt "Beschreibung" MUSS das Feedback die Wichtigkeit von KEINER Bewertung oder Beurteilung betonen.
+- Machen Sie im Abschnitt "Vorhersage" KEINE Vorhersagen darüber, was Schüler tun könnten. Konzentrieren Sie sich auf die Fähigkeit des Lehrers, Konsequenzen für Schüler basierend auf Lerntheorien vorherzusagen.
+- Im Abschnitt "Beschreibung" MUSS das Feedback das Identifizieren und Differenzieren von Unterrichtsereignissen OHNE Urteile, Interpretationen oder Bewertungen betonen.
+- Im Abschnitt "Erklärung" konzentrieren Sie sich auf das Verbinden beobachtbarer Ereignisse mit pädagogischen Theorien.
 - Zielen Sie in der Schlussfolgerung auf die Entwicklung der schwächsten Komponente der professionellen Vision ab.
 
 **FORMATTING:**
@@ -1051,6 +1068,11 @@ Nutzen Sie diese Ideen über guten Unterricht für Ihr Feedback:
 -   **Die 3 großen Säulen der Unterrichtsqualität (Klieme, 2006):** Guter Unterricht braucht (1) Gutes Management, (2) Gute Unterstützung und (3) Gute Herausforderung.
 -   **Die Motivations-Booster (Deci & Ryan, 1993):** Schüler sind motivierter, wenn sie fühlen: Wahl, Erfolg und Verbundenheit.
 -   **Wie das Gedächtnis funktioniert (Kognitive Theorien):** Um sich Dinge zu merken, müssen Schüler die Bedeutung verstehen (tiefe Verarbeitung), nicht nur Fakten auswendig lernen (oberflächliche Verarbeitung).
+
+**Worauf Sie achten sollten (Einfache Definitionen):**
+- **Beschreibung**: Erkennen Sie Unterrichtsereignisse, ohne sie zu bewerten. Sagen Sie einfach, was Lehrer oder Schüler getan haben, was für das Lernen wichtig ist.
+- **Erklärung**: Verbinden Sie das Gesehene mit Unterrichtstheorien. Erklären Sie, warum es passiert ist, mit Hilfe von Bildungsforschung.
+- **Vorhersage**: Schätzen Sie ein, was mit dem Lernen der Schüler passieren könnte, wegen dem was der Lehrer getan hat, basierend auf Lerntheorien.
 
 **EINFACHE ABER STARKE GEWICHTUNGSREGELN:**
 1.  **STRIKTE SATZANZAHL-REGELN**: Sie MÜSSEN diese Satzanzahlen exakt befolgen. Der schwächste Bereich ist ${weakestComponent}.
