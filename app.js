@@ -521,6 +521,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const reviseClicked = sessionStorage.getItem('reviseClicked') === 'true';
         
         if (reviseClicked && storedReflection && storedReflection.trim() === reflectionText.value.trim()) {
+            // Log the warning event with context about how many times this has happened
+            const currentWarningCount = parseInt(sessionStorage.getItem('noChangeWarningCount') || '0') + 1;
+            sessionStorage.setItem('noChangeWarningCount', currentWarningCount.toString());
+            
+            logEvent('revision_warning_shown', {
+                reflection_id: currentReflectionId,
+                language: currentLanguage,
+                warning_count: currentWarningCount,
+                reflection_length: reflectionText.value.length,
+                revise_clicked_at: sessionStorage.getItem('reviseClickedAt'),
+                time_since_revise_click: sessionStorage.getItem('reviseClickedAt') ? 
+                    Date.now() - new Date(sessionStorage.getItem('reviseClickedAt')).getTime() : null,
+                session_id: getOrCreateSessionId(),
+                video_id: videoSelect.value,
+                participant_name: nameInput.value.trim(),
+                timestamp: new Date().toISOString()
+            });
+            
             showAlert(translations[currentLanguage].no_changes_warning, 'warning');
             reflectionText.focus();
             return;
@@ -656,8 +674,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     revise_clicked_but_no_change: isRevisionAttemptWithSameText
                 });
                 
-                // Clear the revise clicked flag after submission
+                // Clear the revise clicked flag and warning count after successful submission
                 sessionStorage.removeItem('reviseClicked');
+                sessionStorage.removeItem('noChangeWarningCount');
             }
             
             const alertMessage = currentLanguage === 'en' 
@@ -1241,6 +1260,8 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
         sessionStorage.removeItem('reflection');
         sessionStorage.removeItem('feedbackExtended');
         sessionStorage.removeItem('feedbackShort');
+        sessionStorage.removeItem('reviseClicked');
+        sessionStorage.removeItem('noChangeWarningCount');
         reviseReflectionBtn.style.display = 'none';
         currentCapabilitiesRating = null;
         currentEaseRating = null;

@@ -53,6 +53,7 @@ The Tübingen Teacher Feedback Tool now uses a clean, event-driven logging syste
 | **submit_rating** | User submits UMUX ratings | `{reflection_id, capabilities_rating, ease_rating, umux_score, current_feedback_style, language}` |
 | **learn_concepts_interaction** | User clicks "Learn the Key Concepts" | `{reflection_id, language, action, has_reflection_text, reflection_length, has_generated_feedback, timestamp}` |
 | **copy_feedback** | User copies feedback to clipboard | `{style, language, reflection_id, text_length}` |
+| **revision_warning_shown** | Warning displayed when user tries to submit same text after clicking revise | `{reflection_id, language, warning_count, reflection_length, revise_clicked_at, time_since_revise_click, session_id, video_id, participant_name, timestamp}` |
 
 ## Analysis Views
 
@@ -214,7 +215,24 @@ WHERE event_type = 'learn_concepts_interaction'
 ORDER BY session_id, timestamp_utc;
 ```
 
-#### Q8: Complete user journey analysis
+#### Q8: Users who repeatedly get warnings for submitting same text
+```sql
+SELECT 
+    session_id,
+    (event_data->>'participant_name')::text as participant_name,
+    (event_data->>'video_id')::text as video_id,
+    COUNT(*) as total_warnings,
+    MAX((event_data->>'warning_count')::int) as max_warning_count,
+    AVG((event_data->>'time_since_revise_click')::int / 1000.0) as avg_seconds_between_revise_and_warning,
+    MIN(timestamp_utc) as first_warning,
+    MAX(timestamp_utc) as last_warning
+FROM user_events 
+WHERE event_type = 'revision_warning_shown'
+GROUP BY session_id, event_data->>'participant_name', event_data->>'video_id'
+ORDER BY total_warnings DESC, max_warning_count DESC;
+```
+
+#### Q9: Complete user journey analysis
 ```sql
 WITH user_journey AS (
     SELECT 
