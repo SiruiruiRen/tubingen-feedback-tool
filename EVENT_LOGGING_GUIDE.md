@@ -295,7 +295,7 @@ ORDER BY revise_clicks_from_this_style DESC;
 ```sql
 -- Comprehensive revision behavior including warnings, time spent, and outcomes
 -- NOTE: If you get "parent_reflection_id does not exist" error, run the migration script first
-WITH revision_journey AS (
+WITH reflection_times AS (
     SELECT 
         r.session_id,
         r.participant_name,
@@ -307,35 +307,37 @@ WITH revision_journey AS (
         LENGTH(r.reflection_text) as reflection_length,
         r.analysis_percentages,
         -- Get time spent on this revision
-        LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY COALESCE(r.revision_number, 1)) as previous_submission_time,
-        -- Get warnings for this revision attempt
+        LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY COALESCE(r.revision_number, 1)) as previous_submission_time
+    FROM reflections r
+),
+revision_journey AS (
+    SELECT 
+        rt.*,
+        -- Get warnings for this revision attempt (simplified time window)
         (SELECT COUNT(*) FROM user_events ue 
-         WHERE ue.session_id = r.session_id 
+         WHERE ue.session_id = rt.session_id 
          AND ue.event_type = 'revision_warning_shown'
-         AND ue.timestamp_utc BETWEEN COALESCE(
-             LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY r.revision_number), 
-             r.created_at - INTERVAL '1 hour'
-         ) AND r.created_at
+         AND ue.timestamp_utc BETWEEN 
+             COALESCE(rt.previous_submission_time, rt.submission_time - INTERVAL '1 hour') 
+             AND rt.submission_time
         ) as warnings_during_revision,
         -- Get concept interactions during revision
         (SELECT COUNT(*) FROM user_events ue 
-         WHERE ue.session_id = r.session_id 
+         WHERE ue.session_id = rt.session_id 
          AND ue.event_type = 'learn_concepts_interaction'
-         AND ue.timestamp_utc BETWEEN COALESCE(
-             LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY r.revision_number), 
-             r.created_at - INTERVAL '1 hour'
-         ) AND r.created_at
+         AND ue.timestamp_utc BETWEEN 
+             COALESCE(rt.previous_submission_time, rt.submission_time - INTERVAL '1 hour') 
+             AND rt.submission_time
         ) as concept_checks_during_revision,
         -- Get feedback reading time before this revision
         (SELECT SUM((event_data->>'duration_seconds')::numeric) FROM user_events ue 
-         WHERE ue.session_id = r.session_id 
+         WHERE ue.session_id = rt.session_id 
          AND ue.event_type = 'view_feedback_end'
-         AND ue.timestamp_utc BETWEEN COALESCE(
-             LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY r.revision_number), 
-             r.created_at - INTERVAL '1 hour'
-         ) AND r.created_at
+         AND ue.timestamp_utc BETWEEN 
+             COALESCE(rt.previous_submission_time, rt.submission_time - INTERVAL '1 hour') 
+             AND rt.submission_time
         ) as total_feedback_reading_seconds
-    FROM reflections r
+    FROM reflection_times rt
 )
 SELECT 
     session_id,
@@ -466,6 +468,87 @@ ORDER BY total_warnings_received DESC, total_concept_interactions DESC;
 - `user_behavior_pattern`: Overall behavior classification for this user
 
 **Research Insight:** Simplified analysis that works with any database schema and shows overall user patterns
+
+### RQ4D: Ultra-Simple Revision Analysis (No Window Functions)
+
+```sql
+-- Simplest possible version - no complex SQL features
+SELECT 
+    r.session_id,
+    r.participant_name,
+    r.video_id,
+    r.language,
+    LENGTH(r.reflection_text) as reflection_length,
+    r.created_at as submission_time,
+    
+    -- Basic counts per user session
+    warnings.warning_count,
+    concepts.concept_count,
+    revise_clicks.revise_count,
+    feedback_time.total_reading_seconds,
+    
+    -- Simple behavior classification
+    CASE 
+        WHEN warnings.warning_count > 0 AND concepts.concept_count > 0 THEN 'Struggled + Used Help'
+        WHEN warnings.warning_count > 0 THEN 'Struggled'
+        WHEN concepts.concept_count > 0 THEN 'Used Help'
+        ELSE 'Smooth Process'
+    END as behavior_pattern
+    
+FROM reflections r
+
+-- Count warnings per session
+LEFT JOIN (
+    SELECT 
+        session_id,
+        COUNT(*) as warning_count
+    FROM user_events 
+    WHERE event_type = 'revision_warning_shown'
+    GROUP BY session_id
+) warnings ON r.session_id = warnings.session_id
+
+-- Count concept interactions per session  
+LEFT JOIN (
+    SELECT 
+        session_id,
+        COUNT(*) as concept_count
+    FROM user_events 
+    WHERE event_type = 'learn_concepts_interaction'
+    GROUP BY session_id
+) concepts ON r.session_id = concepts.session_id
+
+-- Count revise clicks per session
+LEFT JOIN (
+    SELECT 
+        session_id,
+        COUNT(*) as revise_count
+    FROM user_events 
+    WHERE event_type = 'click_revise'
+    GROUP BY session_id
+) revise_clicks ON r.session_id = revise_clicks.session_id
+
+-- Sum feedback reading time per session
+LEFT JOIN (
+    SELECT 
+        session_id,
+        SUM((event_data->>'duration_seconds')::numeric) as total_reading_seconds
+    FROM user_events 
+    WHERE event_type = 'view_feedback_end'
+    GROUP BY session_id
+) feedback_time ON r.session_id = feedback_time.session_id
+
+ORDER BY COALESCE(warnings.warning_count, 0) DESC, r.created_at;
+```
+
+**Column Explanations:**
+- `reflection_length`: Number of characters in reflection text
+- `warning_count`: Total warnings received in this session (NULL = 0)
+- `concept_count`: Total concept interactions in this session (NULL = 0)  
+- `revise_count`: Total revise button clicks in this session (NULL = 0)
+- `total_reading_seconds`: Total feedback reading time in this session (NULL = 0)
+- `behavior_pattern`: Simple classification of user behavior
+
+**Research Insight:** Basic revision patterns without complex SQL - works on any database
 
 ### RQ5: User Engagement Levels - Complete participation analysis
 
