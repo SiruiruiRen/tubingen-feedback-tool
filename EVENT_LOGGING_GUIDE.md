@@ -38,32 +38,34 @@ The Tübingen Teacher Feedback Tool uses an event-driven logging system to track
 ### RQ1: Revision Patterns - Who revises and how much?
 
 ```sql
--- Basic revision statistics
+-- Basic revision statistics (fixed redundancy)
 SELECT 
     participant_name,
-    COUNT(*) as total_submissions,
-    COUNT(*) - 1 as revisions_made,
-    MAX(revision_number) as highest_revision,
     video_id,
-    language
+    language,
+    COUNT(*) as total_submissions,
+    MAX(revision_number) as highest_revision_reached,
+    COUNT(*) - 1 as total_revisions_made,
+    MIN(created_at) as first_submission_time,
+    MAX(created_at) as last_submission_time,
+    EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at)))/60 as total_revision_time_minutes
 FROM reflections 
 GROUP BY participant_name, video_id, language
-HAVING COUNT(*) > 1
-ORDER BY revisions_made DESC;
+ORDER BY total_revisions_made DESC, highest_revision_reached DESC;
 ```
 
 **Column Explanations:**
 - `participant_name`: User's name as entered in the system
-- `total_submissions`: Total number of reflections submitted (original + all revisions)
-  - Example: If user submitted original, then revised twice = 3 total submissions
-- `revisions_made`: Number of times user revised their reflection (total_submissions - 1)
-  - Example: 3 total submissions = 2 revisions made
-- `highest_revision`: The highest revision number reached
-  - 1 = original submission only, 2 = revised once, 3 = revised twice, etc.
 - `video_id`: Which video the user analyzed
 - `language`: Interface language used ('en' or 'de')
+- `total_submissions`: Total number of reflections submitted (original + all revisions)
+- `highest_revision_reached`: The highest revision number reached (1, 2, 3, etc.)
+- `total_revisions_made`: Number of times user revised (always = total_submissions - 1)
+- `first_submission_time`: When user submitted their original reflection
+- `last_submission_time`: When user submitted their final revision
+- `total_revision_time_minutes`: Total time spent on revision process (from first to last submission)
 
-**Note:** This query only shows users who made at least one revision (HAVING COUNT(*) > 1)
+**Note:** Shows all users, including those with no revisions (total_revisions_made = 0)
 
 ### RQ2: Reading Time Analysis - How long do users spend reading feedback?
 
@@ -96,6 +98,67 @@ ORDER BY avg_reading_seconds DESC;
 
 **Research Insight:** Compare extended vs short feedback reading times to understand user preferences
 
+### RQ2B: Feedback-to-Revision Analysis - How feedback leads to revisions
+
+```sql
+-- Time between reading feedback and clicking revise
+WITH feedback_reading AS (
+    SELECT 
+        session_id,
+        reflection_id,
+        (event_data->>'style')::text as feedback_style,
+        (event_data->>'language')::text as language,
+        timestamp_utc as feedback_end_time,
+        (event_data->>'duration_seconds')::numeric as reading_duration
+    FROM user_events 
+    WHERE event_type = 'view_feedback_end'
+),
+revise_clicks AS (
+    SELECT 
+        session_id,
+        reflection_id,
+        (event_data->>'from_style')::text as clicked_from_style,
+        timestamp_utc as revise_click_time,
+        (event_data->>'current_reflection_length')::numeric as reflection_length
+    FROM user_events 
+    WHERE event_type = 'click_revise'
+)
+SELECT 
+    fr.session_id,
+    fr.reflection_id,
+    fr.feedback_style,
+    fr.language,
+    fr.reading_duration,
+    rc.clicked_from_style,
+    rc.reflection_length,
+    EXTRACT(EPOCH FROM (rc.revise_click_time - fr.feedback_end_time))/60 as minutes_from_reading_to_revise,
+    CASE 
+        WHEN EXTRACT(EPOCH FROM (rc.revise_click_time - fr.feedback_end_time)) < 60 THEN 'Immediate (<1min)'
+        WHEN EXTRACT(EPOCH FROM (rc.revise_click_time - fr.feedback_end_time)) < 300 THEN 'Quick (1-5min)'
+        WHEN EXTRACT(EPOCH FROM (rc.revise_click_time - fr.feedback_end_time)) < 900 THEN 'Considered (5-15min)'
+        ELSE 'Delayed (>15min)'
+    END as revision_timing_pattern
+FROM feedback_reading fr
+JOIN revise_clicks rc ON fr.session_id = rc.session_id 
+    AND fr.reflection_id = rc.reflection_id
+    AND fr.feedback_style = rc.clicked_from_style
+WHERE rc.revise_click_time > fr.feedback_end_time
+ORDER BY minutes_from_reading_to_revise;
+```
+
+**Column Explanations:**
+- `feedback_style`: Which feedback type user read before revising
+- `reading_duration`: How long user spent reading that feedback
+- `minutes_from_reading_to_revise`: Time gap between finishing reading and clicking revise
+- `revision_timing_pattern`: Categorized timing behavior
+  - 'Immediate' = revised within 1 minute of reading
+  - 'Quick' = revised within 1-5 minutes
+  - 'Considered' = revised within 5-15 minutes  
+  - 'Delayed' = revised after 15+ minutes
+- `reflection_length`: Length of reflection when user decided to revise
+
+**Research Insight:** Shows which feedback style motivates faster revision and how reading time correlates with revision decisions
+
 ### RQ3: Warning Patterns - Users who struggle with revisions
 
 ```sql
@@ -125,6 +188,68 @@ ORDER BY total_warnings DESC, max_consecutive_warnings DESC;
 
 **Research Insight:** Identifies users who struggle with the revision process and may need additional guidance
 
+### RQ3B: Concept Usage in Revision Process
+
+```sql
+-- Do users check concepts before/during revision?
+WITH concept_interactions AS (
+    SELECT 
+        session_id,
+        reflection_id,
+        timestamp_utc as concept_time,
+        (event_data->>'action')::text as concept_action,
+        (event_data->>'has_reflection_text')::boolean as had_text,
+        (event_data->>'has_generated_feedback')::boolean as had_feedback
+    FROM user_events 
+    WHERE event_type = 'learn_concepts_interaction'
+),
+revise_attempts AS (
+    SELECT 
+        session_id,
+        reflection_id,
+        timestamp_utc as revise_time,
+        (event_data->>'from_style')::text as from_style
+    FROM user_events 
+    WHERE event_type = 'click_revise'
+),
+successful_revisions AS (
+    SELECT 
+        session_id,
+        parent_reflection_id,
+        timestamp_utc as revision_submit_time,
+        revision_number
+    FROM user_events 
+    WHERE event_type = 'resubmit_reflection'
+)
+SELECT 
+    ra.session_id,
+    ra.reflection_id,
+    ra.from_style,
+    COUNT(ci.concept_time) as concept_checks_before_revise,
+    COUNT(CASE WHEN ci.concept_action = 'expand' THEN 1 END) as concept_expansions,
+    MIN(CASE WHEN ci.concept_time < ra.revise_time 
+        THEN EXTRACT(EPOCH FROM (ra.revise_time - ci.concept_time))/60 END) as minutes_since_last_concept_check,
+    CASE WHEN sr.revision_submit_time IS NOT NULL THEN 'Successful' ELSE 'Abandoned' END as revision_outcome,
+    CASE WHEN COUNT(ci.concept_time) > 0 THEN 'Used Concepts' ELSE 'No Concepts' END as concept_usage_pattern
+FROM revise_attempts ra
+LEFT JOIN concept_interactions ci ON ra.session_id = ci.session_id 
+    AND ci.concept_time BETWEEN ra.revise_time - INTERVAL '30 minutes' AND ra.revise_time
+LEFT JOIN successful_revisions sr ON ra.session_id = sr.session_id 
+    AND ra.reflection_id = sr.parent_reflection_id
+GROUP BY ra.session_id, ra.reflection_id, ra.from_style, sr.revision_submit_time
+ORDER BY concept_checks_before_revise DESC;
+```
+
+**Column Explanations:**
+- `from_style`: Which feedback style triggered the revision attempt
+- `concept_checks_before_revise`: Number of times user clicked "Learn Key Concepts" in 30min before revising
+- `concept_expansions`: How many times user expanded the concept definitions
+- `minutes_since_last_concept_check`: Time between last concept check and clicking revise
+- `revision_outcome`: Whether user successfully submitted a revision or abandoned it
+- `concept_usage_pattern`: Whether user consulted concepts before revising
+
+**Research Insight:** Shows correlation between concept usage and successful revisions
+
 ### RQ4: Feedback Style Preferences - Extended vs Short usage
 
 ```sql
@@ -149,6 +274,115 @@ ORDER BY revise_clicks_from_this_style DESC;
   - Helps understand if longer/shorter reflections are more likely to be revised
 
 **Research Insight:** Determines which feedback style is more effective at motivating users to improve their reflections
+
+### RQ4B: Complete Revision Journey Analysis
+
+```sql
+-- Comprehensive revision behavior including warnings, time spent, and outcomes
+WITH revision_journey AS (
+    SELECT 
+        r.session_id,
+        r.participant_name,
+        r.video_id,
+        r.language,
+        r.revision_number,
+        r.parent_reflection_id,
+        r.created_at as submission_time,
+        LENGTH(r.reflection_text) as reflection_length,
+        r.analysis_percentages,
+        -- Get time spent on this revision
+        LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY r.revision_number) as previous_submission_time,
+        -- Get warnings for this revision attempt
+        (SELECT COUNT(*) FROM user_events ue 
+         WHERE ue.session_id = r.session_id 
+         AND ue.event_type = 'revision_warning_shown'
+         AND ue.timestamp_utc BETWEEN COALESCE(
+             LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY r.revision_number), 
+             r.created_at - INTERVAL '1 hour'
+         ) AND r.created_at
+        ) as warnings_during_revision,
+        -- Get concept interactions during revision
+        (SELECT COUNT(*) FROM user_events ue 
+         WHERE ue.session_id = r.session_id 
+         AND ue.event_type = 'learn_concepts_interaction'
+         AND ue.timestamp_utc BETWEEN COALESCE(
+             LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY r.revision_number), 
+             r.created_at - INTERVAL '1 hour'
+         ) AND r.created_at
+        ) as concept_checks_during_revision,
+        -- Get feedback reading time before this revision
+        (SELECT SUM((event_data->>'duration_seconds')::numeric) FROM user_events ue 
+         WHERE ue.session_id = r.session_id 
+         AND ue.event_type = 'view_feedback_end'
+         AND ue.timestamp_utc BETWEEN COALESCE(
+             LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY r.revision_number), 
+             r.created_at - INTERVAL '1 hour'
+         ) AND r.created_at
+        ) as total_feedback_reading_seconds
+    FROM reflections r
+)
+SELECT 
+    session_id,
+    participant_name,
+    video_id,
+    language,
+    revision_number,
+    CASE 
+        WHEN revision_number = 1 THEN 'Original'
+        ELSE CONCAT('Revision ', revision_number - 1)
+    END as submission_type,
+    reflection_length,
+    CASE 
+        WHEN previous_submission_time IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (submission_time - previous_submission_time))/60 
+        ELSE NULL 
+    END as minutes_spent_revising,
+    warnings_during_revision,
+    concept_checks_during_revision,
+    COALESCE(total_feedback_reading_seconds, 0) as feedback_reading_seconds,
+    CASE 
+        WHEN warnings_during_revision > 0 AND concept_checks_during_revision > 0 THEN 'Struggled + Used Help'
+        WHEN warnings_during_revision > 0 THEN 'Struggled'
+        WHEN concept_checks_during_revision > 0 THEN 'Used Help'
+        ELSE 'Smooth Process'
+    END as revision_pattern,
+    -- Analysis of content changes
+    CASE 
+        WHEN revision_number > 1 THEN 
+            (analysis_percentages->>'description')::numeric - 
+            LAG((analysis_percentages->>'description')::numeric) OVER (PARTITION BY session_id ORDER BY revision_number)
+        ELSE NULL 
+    END as description_change,
+    CASE 
+        WHEN revision_number > 1 THEN 
+            (analysis_percentages->>'explanation')::numeric - 
+            LAG((analysis_percentages->>'explanation')::numeric) OVER (PARTITION BY session_id ORDER BY revision_number)
+        ELSE NULL 
+    END as explanation_change,
+    CASE 
+        WHEN revision_number > 1 THEN 
+            (analysis_percentages->>'prediction')::numeric - 
+            LAG((analysis_percentages->>'prediction')::numeric) OVER (PARTITION BY session_id ORDER BY revision_number)
+        ELSE NULL 
+    END as prediction_change
+FROM revision_journey
+ORDER BY session_id, revision_number;
+```
+
+**Column Explanations:**
+- `submission_type`: 'Original' or 'Revision 1', 'Revision 2', etc.
+- `minutes_spent_revising`: Time between previous submission and this one
+- `warnings_during_revision`: Number of "no changes" warnings received during this revision
+- `concept_checks_during_revision`: Times user checked concept definitions during revision
+- `feedback_reading_seconds`: Total time spent reading feedback before this revision
+- `revision_pattern`: Categorized revision behavior
+  - 'Smooth Process' = no warnings, no concept checks needed
+  - 'Used Help' = checked concepts but no warnings
+  - 'Struggled' = got warnings but didn't check concepts
+  - 'Struggled + Used Help' = got warnings and checked concepts
+- `description_change`, `explanation_change`, `prediction_change`: How percentages changed from previous version
+
+**Research Insight:** Complete picture of revision behavior including struggle indicators and learning resource usage
 
 ### RQ5: User Engagement Levels - Complete participation analysis
 
