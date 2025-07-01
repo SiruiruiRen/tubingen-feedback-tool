@@ -6,15 +6,30 @@ The Tübingen Teacher Feedback Tool uses an event-driven logging system to track
 
 ## Database Schema
 
+### ⚠️ Important: Database Update Required
+
+If you get errors like `"column parent_reflection_id does not exist"`, your database needs to be updated:
+
+```sql
+-- Run this to update your database schema:
+-- Option 1: Safe migration (preserves existing data)
+\i supabase-safe-migration.sql
+
+-- Option 2: Fresh start (if no important data to preserve)  
+\i supabase-update.sql
+```
+
 ### Main Tables
 
 #### `reflections` - Core reflection data
 - **id**, **session_id**, **participant_name**, **video_id**, **language**
-- **reflection_text**, **analysis_percentages**, **weakest_component**
+- **reflection_text** (user's written reflection), **analysis_percentages**, **weakest_component**
 - **feedback_extended**, **feedback_short**
 - **revision_number** (1=original, 2+=revision), **parent_reflection_id**
 - **capabilities_rating**, **ease_rating**, **umux_score**
 - **created_at**, **rated_at**
+
+**Note:** `reflection_length` in queries = `LENGTH(reflection_text)` = number of characters in the reflection
 
 #### `user_events` - Detailed interaction log
 - **id**, **session_id**, **reflection_id**, **event_type**, **timestamp_utc**
@@ -148,14 +163,14 @@ ORDER BY minutes_from_reading_to_revise;
 
 **Column Explanations:**
 - `feedback_style`: Which feedback type user read before revising
-- `reading_duration`: How long user spent reading that feedback
+- `reading_duration`: How long user spent reading that feedback (in seconds)
 - `minutes_from_reading_to_revise`: Time gap between finishing reading and clicking revise
 - `revision_timing_pattern`: Categorized timing behavior
   - 'Immediate' = revised within 1 minute of reading
   - 'Quick' = revised within 1-5 minutes
   - 'Considered' = revised within 5-15 minutes  
   - 'Delayed' = revised after 15+ minutes
-- `reflection_length`: Length of reflection when user decided to revise
+- `reflection_length`: Number of characters in the reflection text when user decided to revise
 
 **Research Insight:** Shows which feedback style motivates faster revision and how reading time correlates with revision decisions
 
@@ -214,12 +229,12 @@ revise_attempts AS (
 ),
 successful_revisions AS (
     SELECT 
-        session_id,
-        parent_reflection_id,
-        timestamp_utc as revision_submit_time,
-        revision_number
-    FROM user_events 
-    WHERE event_type = 'resubmit_reflection'
+        ue.session_id,
+        (ue.event_data->>'parent_reflection_id')::integer as parent_reflection_id,
+        ue.timestamp_utc as revision_submit_time,
+        (ue.event_data->>'revision_number')::integer as revision_number
+    FROM user_events ue
+    WHERE ue.event_type = 'resubmit_reflection'
 )
 SELECT 
     ra.session_id,
@@ -279,19 +294,20 @@ ORDER BY revise_clicks_from_this_style DESC;
 
 ```sql
 -- Comprehensive revision behavior including warnings, time spent, and outcomes
+-- NOTE: If you get "parent_reflection_id does not exist" error, run the migration script first
 WITH revision_journey AS (
     SELECT 
         r.session_id,
         r.participant_name,
         r.video_id,
         r.language,
-        r.revision_number,
+        COALESCE(r.revision_number, 1) as revision_number,
         r.parent_reflection_id,
         r.created_at as submission_time,
         LENGTH(r.reflection_text) as reflection_length,
         r.analysis_percentages,
         -- Get time spent on this revision
-        LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY r.revision_number) as previous_submission_time,
+        LAG(r.created_at) OVER (PARTITION BY r.session_id ORDER BY COALESCE(r.revision_number, 1)) as previous_submission_time,
         -- Get warnings for this revision attempt
         (SELECT COUNT(*) FROM user_events ue 
          WHERE ue.session_id = r.session_id 
@@ -383,6 +399,73 @@ ORDER BY session_id, revision_number;
 - `description_change`, `explanation_change`, `prediction_change`: How percentages changed from previous version
 
 **Research Insight:** Complete picture of revision behavior including struggle indicators and learning resource usage
+
+### RQ4C: Simplified Revision Analysis (Database-Compatible)
+
+```sql
+-- Simpler version that works with current database schema
+SELECT 
+    r.session_id,
+    r.participant_name,
+    r.video_id,
+    r.language,
+    r.reflection_text,
+    LENGTH(r.reflection_text) as reflection_length,
+    r.created_at as submission_time,
+    
+    -- Count warnings for this user/session
+    (SELECT COUNT(*) 
+     FROM user_events ue 
+     WHERE ue.session_id = r.session_id 
+     AND ue.event_type = 'revision_warning_shown'
+    ) as total_warnings_received,
+    
+    -- Count concept interactions for this user/session  
+    (SELECT COUNT(*) 
+     FROM user_events ue 
+     WHERE ue.session_id = r.session_id 
+     AND ue.event_type = 'learn_concepts_interaction'
+    ) as total_concept_interactions,
+    
+    -- Count revise clicks for this user/session
+    (SELECT COUNT(*) 
+     FROM user_events ue 
+     WHERE ue.session_id = r.session_id 
+     AND ue.event_type = 'click_revise'
+    ) as total_revise_clicks,
+    
+    -- Total feedback reading time for this user/session
+    (SELECT SUM((event_data->>'duration_seconds')::numeric) 
+     FROM user_events ue 
+     WHERE ue.session_id = r.session_id 
+     AND ue.event_type = 'view_feedback_end'
+    ) as total_feedback_reading_seconds,
+    
+    -- Categorize user behavior
+    CASE 
+        WHEN (SELECT COUNT(*) FROM user_events ue WHERE ue.session_id = r.session_id AND ue.event_type = 'revision_warning_shown') > 0 
+         AND (SELECT COUNT(*) FROM user_events ue WHERE ue.session_id = r.session_id AND ue.event_type = 'learn_concepts_interaction') > 0 
+        THEN 'Struggled + Used Help'
+        WHEN (SELECT COUNT(*) FROM user_events ue WHERE ue.session_id = r.session_id AND ue.event_type = 'revision_warning_shown') > 0 
+        THEN 'Struggled'
+        WHEN (SELECT COUNT(*) FROM user_events ue WHERE ue.session_id = r.session_id AND ue.event_type = 'learn_concepts_interaction') > 0 
+        THEN 'Used Help'
+        ELSE 'Smooth Process'
+    END as user_behavior_pattern
+    
+FROM reflections r
+ORDER BY total_warnings_received DESC, total_concept_interactions DESC;
+```
+
+**Column Explanations:**
+- `reflection_length`: Number of characters in the reflection text
+- `total_warnings_received`: How many "no changes" warnings this user got across all attempts
+- `total_concept_interactions`: How many times user clicked "Learn Key Concepts"
+- `total_revise_clicks`: How many times user clicked "Revise Reflection" button
+- `total_feedback_reading_seconds`: Total time spent reading feedback (all sessions combined)
+- `user_behavior_pattern`: Overall behavior classification for this user
+
+**Research Insight:** Simplified analysis that works with any database schema and shows overall user patterns
 
 ### RQ5: User Engagement Levels - Complete participation analysis
 
