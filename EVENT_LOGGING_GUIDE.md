@@ -2,330 +2,207 @@
 
 ## Overview
 
-The Tübingen Teacher Feedback Tool now uses a clean, event-driven logging system to track detailed user behavior patterns. This system captures meaningful interactions and provides clear insights into how participants engage with the feedback tool.
+The Tübingen Teacher Feedback Tool uses an event-driven logging system to track detailed user behavior patterns for educational research.
 
 ## Database Schema
 
-### 1. Main Tables
+### Main Tables
 
-#### `reflections` (Clean Core Data)
-- **id**: Primary key
-- **session_id**: Unique session identifier
-- **participant_name**: User's name
-- **video_id**: Selected video identifier
-- **language**: 'en' or 'de'
-- **reflection_text**: The actual reflection content
-- **analysis_percentages**: JSON with distribution percentages
-- **weakest_component**: Identified weakest area
-- **feedback_extended**: Generated extended feedback
-- **feedback_short**: Generated short feedback
-- **revision_number**: 1 for original, 2+ for revisions
-- **parent_reflection_id**: Links to original reflection for revisions
-- **capabilities_rating**: UMUX-Lite rating (1-5)
-- **ease_rating**: UMUX-Lite rating (1-5)
-- **umux_score**: Calculated UMUX score
-- **created_at**: Timestamp
-- **rated_at**: Rating submission timestamp
+#### `reflections` - Core reflection data
+- **id**, **session_id**, **participant_name**, **video_id**, **language**
+- **reflection_text**, **analysis_percentages**, **weakest_component**
+- **feedback_extended**, **feedback_short**
+- **revision_number** (1=original, 2+=revision), **parent_reflection_id**
+- **capabilities_rating**, **ease_rating**, **umux_score**
+- **created_at**, **rated_at**
 
-#### `user_events` (Detailed Interaction Log)
-- **id**: Primary key
-- **session_id**: Links to session
-- **reflection_id**: Links to specific reflection
-- **event_type**: Type of interaction (see Event Types below)
-- **timestamp_utc**: Precise timestamp
-- **event_data**: JSON with event-specific details
-- **user_agent**: Browser information
-- **language**: Interface language at time of event
+#### `user_events` - Detailed interaction log
+- **id**, **session_id**, **reflection_id**, **event_type**, **timestamp_utc**
+- **event_data** (JSON), **user_agent**, **language**
 
-### 2. Event Types
+### Event Types
+| Event Type | Description |
+|------------|-------------|
+| `submit_reflection` | First-time reflection submission |
+| `resubmit_reflection` | Revised reflection submission |
+| `resubmit_same_text` | User clicked revise but submitted identical text |
+| `click_revise` | User clicks "Revise Reflection" button |
+| `revision_warning_shown` | Warning shown for submitting same text after revise |
+| `view_feedback_start/end` | Feedback reading time tracking |
+| `select_feedback_style` | Switch between Extended/Short tabs |
+| `copy_feedback` | Copy feedback to clipboard |
+| `submit_rating` | UMUX rating submission |
 
-| Event Type | Description | Event Data |
-|------------|-------------|------------|
-| **session_start** | User starts a new session | `{user_agent, language, timestamp}` |
-| **session_end** | User leaves/closes the application | `{session_duration, language}` |
-| **submit_reflection** | First-time reflection submission | `{reflection_id, language, video_id, reflection_length, analysis_result}` |
-| **resubmit_reflection** | Revised reflection submission | `{reflection_id, language, video_id, reflection_length, revision_number, parent_reflection_id, analysis_result}` |
-| **resubmit_same_text** | User clicked revise but submitted identical text | `{reflection_id, language, video_id, reflection_length, revision_number, parent_reflection_id, analysis_result, is_revision_attempt_with_same_text, revise_clicked_but_no_change}` |
-| **select_feedback_style** | User switches between Extended/Short tabs | `{from_style, to_style, language, reflection_id}` |
-| **view_feedback_start** | User begins viewing feedback | `{style, language, reflection_id}` |
-| **view_feedback_end** | User stops viewing feedback | `{style, language, duration_seconds, reflection_id}` |
-| **click_revise** | User clicks "Revise Reflection" button | `{from_style, language, reflection_id, current_reflection_length, timestamp}` |
-| **submit_rating** | User submits UMUX ratings | `{reflection_id, capabilities_rating, ease_rating, umux_score, current_feedback_style, language}` |
-| **learn_concepts_interaction** | User clicks "Learn the Key Concepts" | `{reflection_id, language, action, has_reflection_text, reflection_length, has_generated_feedback, timestamp}` |
-| **copy_feedback** | User copies feedback to clipboard | `{style, language, reflection_id, text_length}` |
-| **revision_warning_shown** | Warning displayed when user tries to submit same text after clicking revise | `{reflection_id, language, warning_count, reflection_length, revise_clicked_at, time_since_revise_click, session_id, video_id, participant_name, timestamp}` |
+## Research Queries
 
-## Analysis Views
+### RQ1: Revision Patterns - Who revises and how much?
 
-### 3. Pre-built Analysis Views
-
-#### `reading_patterns`
-Analyzes how long users spend reading different feedback styles:
 ```sql
-SELECT * FROM reading_patterns 
-WHERE session_id = 'your_session_id';
-```
-
-**Columns:**
-- `session_id`, `reflection_id`, `participant_name`
-- `revision_number`: Which version of reflection
-- `feedback_style`: 'extended' or 'short'
-- `feedback_language`: 'en' or 'de'
-- `reading_duration_seconds`: Time spent reading
-- `reading_pattern`: 'quick_scan', 'normal_read', or 'deep_read'
-
-#### `revision_patterns`
-Tracks revision behavior and changes:
-```sql
-SELECT * FROM revision_patterns 
-WHERE session_id = 'your_session_id';
-```
-
-**Columns:**
-- `session_id`, `participant_name`
-- `original_reflection_id`, `revised_reflection_id`
-- `revision_number`: 2, 3, 4, etc.
-- `clicked_from_style`: Which feedback style triggered revision
-- `original_length`, `revised_length`, `length_change`
-- `original_analysis`, `revised_analysis`: JSON with percentages
-- `description_change`, `explanation_change`, `prediction_change`
-
-#### `participant_summary`
-High-level participant engagement overview:
-```sql
-SELECT * FROM participant_summary 
-WHERE session_id = 'your_session_id';
-```
-
-**Columns:**
-- `session_id`, `participant_name`, `preferred_language`
-- `total_submissions`, `original_submissions`, `revisions`
-- `max_revision_number`: Highest revision reached
-- `styles_viewed`, `languages_viewed`: Variety of engagement
-- `avg_reading_duration`: Average time per feedback view
-- `definitions_expanded`, `feedback_copied`: Interaction counts
-- `umux_score`: Final satisfaction rating
-
-## Research Questions & Queries
-
-### 4. Key Research Questions
-
-#### Q1: How long do users spend reading different feedback styles?
-```sql
-SELECT 
-    feedback_style,
-    feedback_language,
-    AVG(reading_duration_seconds) as avg_duration,
-    COUNT(*) as total_views
-FROM reading_patterns 
-GROUP BY feedback_style, feedback_language
-ORDER BY avg_duration DESC;
-```
-
-#### Q2: What triggers users to revise their reflections?
-```sql
-SELECT 
-    clicked_from_style,
-    COUNT(*) as revision_count,
-    AVG(length_change) as avg_text_change,
-    AVG(description_change) as avg_description_change,
-    AVG(explanation_change) as avg_explanation_change,
-    AVG(prediction_change) as avg_prediction_change
-FROM revision_patterns 
-GROUP BY clicked_from_style;
-```
-
-#### Q3: How do reading patterns change after revision?
-```sql
-WITH pre_revision AS (
-    SELECT session_id, AVG(reading_duration_seconds) as pre_duration
-    FROM reading_patterns 
-    WHERE revision_number = 1
-    GROUP BY session_id
-),
-post_revision AS (
-    SELECT session_id, AVG(reading_duration_seconds) as post_duration
-    FROM reading_patterns 
-    WHERE revision_number > 1
-    GROUP BY session_id
-)
-SELECT 
-    COUNT(*) as participants_who_revised,
-    AVG(post_duration - pre_duration) as avg_duration_change
-FROM pre_revision pr
-JOIN post_revision po ON pr.session_id = po.session_id;
-```
-
-#### Q4: User engagement patterns and satisfaction
-```sql
+-- Basic revision statistics
 SELECT 
     participant_name,
-    total_submissions,
-    revisions,
-    styles_viewed,
-    languages_viewed,
-    avg_reading_duration,
-    definitions_expanded,
-    feedback_copied,
-    umux_score,
-    CASE 
-        WHEN umux_score >= 80 THEN 'High Satisfaction'
-        WHEN umux_score >= 60 THEN 'Medium Satisfaction'
-        ELSE 'Low Satisfaction'
-    END as satisfaction_level
-FROM participant_summary
-ORDER BY umux_score DESC NULLS LAST;
+    COUNT(*) as total_submissions,
+    COUNT(*) - 1 as revisions_made,
+    MAX(revision_number) as highest_revision,
+    video_id,
+    language
+FROM reflections 
+GROUP BY participant_name, video_id, language
+HAVING COUNT(*) > 1
+ORDER BY revisions_made DESC;
 ```
 
-#### Q5: Detailed interaction timeline for a specific user
+### RQ2: Reading Time Analysis - How long do users spend reading feedback?
+
 ```sql
+-- Reading duration by feedback style
 SELECT 
-    event_type,
-    timestamp_utc,
-    event_data,
-    EXTRACT(EPOCH FROM (timestamp_utc - LAG(timestamp_utc) OVER (ORDER BY timestamp_utc))) as seconds_since_last_event
+    (event_data->>'style')::text as feedback_style,
+    (event_data->>'language')::text as language,
+    AVG((event_data->>'duration_seconds')::numeric) as avg_reading_seconds,
+    COUNT(*) as total_readings,
+    MIN((event_data->>'duration_seconds')::numeric) as min_seconds,
+    MAX((event_data->>'duration_seconds')::numeric) as max_seconds
 FROM user_events 
-WHERE session_id = 'specific_session_id'
-ORDER BY timestamp_utc;
+WHERE event_type = 'view_feedback_end'
+GROUP BY event_data->>'style', event_data->>'language'
+ORDER BY avg_reading_seconds DESC;
 ```
 
-#### Q6: Users who clicked revise but submitted the same text
-```sql
-SELECT 
-    session_id,
-    reflection_id,
-    event_data->>'from_style' as clicked_from_style,
-    timestamp_utc as resubmit_time
-FROM user_events 
-WHERE event_type = 'resubmit_same_text'
-ORDER BY timestamp_utc;
-```
+### RQ3: Warning Patterns - Users who struggle with revisions
 
-#### Q7: Learning concepts interaction patterns
 ```sql
+-- Users who get multiple warnings for submitting same text
 SELECT 
-    session_id,
-    event_data->>'action' as action,
-    event_data->>'has_reflection_text' as had_text_when_clicked,
-    event_data->>'has_generated_feedback' as had_feedback_when_clicked,
-    (event_data->>'reflection_length')::int as reflection_length,
-    timestamp_utc
-FROM user_events 
-WHERE event_type = 'learn_concepts_interaction'
-ORDER BY session_id, timestamp_utc;
-```
-
-#### Q8: Users who repeatedly get warnings for submitting same text
-```sql
-SELECT 
-    session_id,
     (event_data->>'participant_name')::text as participant_name,
     (event_data->>'video_id')::text as video_id,
     COUNT(*) as total_warnings,
-    MAX((event_data->>'warning_count')::int) as max_warning_count,
-    AVG((event_data->>'time_since_revise_click')::int / 1000.0) as avg_seconds_between_revise_and_warning,
-    MIN(timestamp_utc) as first_warning,
-    MAX(timestamp_utc) as last_warning
+    MAX((event_data->>'warning_count')::int) as max_consecutive_warnings,
+    AVG((event_data->>'time_since_revise_click')::numeric / 1000.0) as avg_seconds_thinking
 FROM user_events 
 WHERE event_type = 'revision_warning_shown'
-GROUP BY session_id, event_data->>'participant_name', event_data->>'video_id'
-ORDER BY total_warnings DESC, max_warning_count DESC;
+GROUP BY event_data->>'participant_name', event_data->>'video_id'
+ORDER BY total_warnings DESC, max_consecutive_warnings DESC;
 ```
 
-#### Q9: Complete user journey analysis
+### RQ4: Feedback Style Preferences - Extended vs Short usage
+
 ```sql
-WITH user_journey AS (
+-- Which feedback style triggers more revisions?
+SELECT 
+    (event_data->>'from_style')::text as feedback_style_viewed,
+    COUNT(*) as revise_clicks_from_this_style,
+    AVG((event_data->>'current_reflection_length')::numeric) as avg_reflection_length
+FROM user_events 
+WHERE event_type = 'click_revise'
+GROUP BY event_data->>'from_style'
+ORDER BY revise_clicks_from_this_style DESC;
+```
+
+### RQ5: User Engagement Levels - Complete participation analysis
+
+```sql
+-- Comprehensive user engagement summary
+WITH user_stats AS (
+    SELECT 
+        r.participant_name,
+        r.video_id,
+        r.language,
+        COUNT(*) as total_reflections,
+        MAX(r.revision_number) as max_revision,
+        AVG(LENGTH(r.reflection_text)) as avg_reflection_length,
+        MAX(r.umux_score) as final_umux_score,
+        COUNT(CASE WHEN ue.event_type = 'copy_feedback' THEN 1 END) as feedback_copies,
+        COUNT(CASE WHEN ue.event_type = 'learn_concepts_interaction' THEN 1 END) as concept_interactions
+    FROM reflections r
+    LEFT JOIN user_events ue ON r.session_id = ue.session_id
+    GROUP BY r.participant_name, r.video_id, r.language, r.session_id
+)
+SELECT 
+    participant_name,
+    video_id,
+    language,
+    total_reflections,
+    max_revision,
+    ROUND(avg_reflection_length) as avg_text_length,
+    final_umux_score,
+    feedback_copies,
+    concept_interactions,
+    CASE 
+        WHEN max_revision > 2 THEN 'High Engagement'
+        WHEN max_revision = 2 THEN 'Medium Engagement' 
+        ELSE 'Single Submission'
+    END as engagement_level
+FROM user_stats
+ORDER BY max_revision DESC, total_reflections DESC;
+```
+
+### RQ6: Time-based Analysis - User journey timing
+
+```sql
+-- Time between key events for each user
+WITH user_timeline AS (
     SELECT 
         session_id,
         event_type,
         timestamp_utc,
-        event_data,
-        ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY timestamp_utc) as step_number
+        LAG(timestamp_utc) OVER (PARTITION BY session_id ORDER BY timestamp_utc) as prev_timestamp
     FROM user_events 
-    WHERE session_id = 'specific_session_id'
-),
-revision_attempts AS (
-    SELECT 
-        session_id,
-        COUNT(*) as total_revise_clicks,
-        COUNT(CASE WHEN event_type = 'resubmit_same_text' THEN 1 END) as same_text_resubmissions,
-        COUNT(CASE WHEN event_type = 'resubmit_reflection' THEN 1 END) as actual_revisions
-    FROM user_events 
-    WHERE event_type IN ('click_revise', 'resubmit_reflection', 'resubmit_same_text')
-    GROUP BY session_id
+    WHERE event_type IN ('submit_reflection', 'click_revise', 'resubmit_reflection', 'revision_warning_shown')
 )
 SELECT 
-    uj.session_id,
-    uj.step_number,
-    uj.event_type,
-    uj.timestamp_utc,
-    uj.event_data,
-    ra.total_revise_clicks,
-    ra.same_text_resubmissions,
-    ra.actual_revisions
-FROM user_journey uj
-LEFT JOIN revision_attempts ra ON uj.session_id = ra.session_id
-ORDER BY uj.session_id, uj.step_number;
+    session_id,
+    event_type,
+    timestamp_utc,
+    CASE 
+        WHEN prev_timestamp IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (timestamp_utc - prev_timestamp))
+        ELSE NULL 
+    END as seconds_since_previous_event
+FROM user_timeline
+ORDER BY session_id, timestamp_utc;
 ```
 
-## Usage Instructions
-
-### 5. How to Use the System
-
-1. **Run the Database Update:**
-   ```bash
-   # Execute the new schema
-   psql -h your-supabase-host -U postgres -d postgres -f supabase-update.sql
-   ```
-
-2. **Deploy the Updated App:**
-   - The app.js now automatically logs all events
-   - No additional configuration needed
-   - Events are logged in real-time as users interact
-
-3. **Analyze the Data:**
-   - Use the pre-built views for common analyses
-   - Write custom queries for specific research questions
-   - Export data for statistical analysis in R/Python
-
-### 6. Data Export for Analysis
+### RQ7: Language and Video Analysis - Content impact
 
 ```sql
--- Export all participant data for statistical analysis
+-- Performance by video and language
 SELECT 
-    ps.*,
-    rp.reading_duration_seconds,
-    rp.feedback_style,
-    rp.reading_pattern
-FROM participant_summary ps
-LEFT JOIN reading_patterns rp ON ps.session_id = rp.session_id
-ORDER BY ps.session_id, rp.feedback_style;
-
--- Export revision analysis data
-SELECT * FROM revision_patterns 
-ORDER BY session_id, revision_number;
+    video_id,
+    language,
+    COUNT(DISTINCT participant_name) as unique_participants,
+    AVG(revision_number) as avg_revisions_per_user,
+    AVG(umux_score) as avg_satisfaction,
+    AVG(LENGTH(reflection_text)) as avg_reflection_length,
+    COUNT(CASE WHEN revision_number > 1 THEN 1 END) as total_revisions
+FROM reflections
+GROUP BY video_id, language
+ORDER BY avg_satisfaction DESC, avg_revisions_per_user DESC;
 ```
 
-## Benefits of This System
+## Quick Analysis Commands
 
-### 7. Advantages
+### Most Active Users
+```sql
+SELECT participant_name, COUNT(*) as activities 
+FROM user_events 
+GROUP BY participant_name 
+ORDER BY activities DESC LIMIT 10;
+```
 
-1. **Clean Separation**: Core data vs. interaction logs
-2. **Detailed Tracking**: Every meaningful interaction captured
-3. **Flexible Analysis**: Pre-built views + custom queries
-4. **Real-time Logging**: No data loss, immediate insights
-5. **Research-Ready**: Structured for academic analysis
-6. **Privacy-Conscious**: No unnecessary personal data
-7. **Scalable**: Efficient indexing and querying
+### Recent Activity
+```sql
+SELECT event_type, COUNT(*) as count 
+FROM user_events 
+WHERE timestamp_utc > NOW() - INTERVAL '24 hours'
+GROUP BY event_type 
+ORDER BY count DESC;
+```
 
-### 8. Research Insights Available
-
-- **Reading Behavior**: Time spent on different feedback styles
-- **Revision Patterns**: What triggers revisions and how content changes
-- **Language Preferences**: EN vs DE usage patterns
-- **Engagement Levels**: Deep vs surface-level interaction
-- **Satisfaction Correlation**: How behavior relates to UMUX scores
-- **Learning Progression**: How users improve through revisions
-- **Interface Effectiveness**: Which features drive engagement
-
-This system provides comprehensive insights into user behavior while maintaining clean, analyzable data structures perfect for educational research. 
+### Warning Problem Users
+```sql
+SELECT DISTINCT (event_data->>'participant_name')::text as participant_name
+FROM user_events 
+WHERE event_type = 'revision_warning_shown' 
+AND (event_data->>'warning_count')::int >= 3;
+``` 
