@@ -1103,6 +1103,11 @@ Geben Sie NUR ein JSON-Objekt mit dieser Struktur zurück: {"percentages": {"des
         const prompts = {
             'academic English': `You are a supportive yet rigorous teaching mentor providing feedback on student teacher classroom video analysis using professional vision framework.
 
+**Feedback Quality Requirements:**
+- **Specific**: Refer to clearly identifiable aspects of the reflection, avoid vague phrases
+- **Constructive**: Include specific and realistic suggestions for improvement
+- **Clear**: Well-structured, easy to follow, and appropriate for the audience
+
 **Knowledge Base Integration:**
 Base your feedback on the theoretical framework of empirical teaching quality research about effective teaching and learning components, for example according to the process-oriented teaching-learning model of Seidel & Shavelson, 2007 (document knowledge base 1) or the three basic dimensions of teaching quality according to Klieme 2006 (document knowledge base 2). Use references to effective teaching and learning components (document knowledge base 1 and 2) for feedback on description and explanation. To analyze possible consequences for student learning regarding prediction, effective teaching and learning components as superordinate theoretical category can be explained by the self-determination theory of motivation according to Deci & Ryan, 1993 (document knowledge base 3) or the theory of cognitive and constructive learning according to Atkinson & Shiffrin, Craik & Lockhart, Anderson (document knowledge base 4).
 
@@ -1140,6 +1145,11 @@ The weakest area is ${weakestComponent}. You MUST follow these EXACT sentence co
 
             'user-friendly English': `You are a supportive teaching mentor giving clear, simple feedback on a student teacher's video analysis.
 
+**Feedback Quality Requirements:**
+- **Specific**: Refer to clearly identifiable aspects of the reflection, avoid vague phrases
+- **Constructive**: Include specific and realistic suggestions for improvement
+- **Clear**: Well-structured, easy to follow, and appropriate for the audience
+
 **Knowledge Base (Simple Version):**
 Use these ideas about good teaching for your feedback:
 - **Good Teaching is a Process (Seidel & Shavelson, 2007):** Teacher actions lead to student activities, which lead to learning.
@@ -1171,6 +1181,11 @@ The weakest area is ${weakestComponent}. You MUST follow these EXACT sentence co
 - Simple conclusion: "You understand good teaching basics. To get better at analyzing teaching: ${conclusionTemplates['user-friendly English'][weakestComponent]}, use teaching quality ideas, use psychology terms for predictions."`,
 
             'academic German': `Sie sind ein unterstützender Mentor, der Feedback zur Unterrichtsvideoanalyse von Lehramtsstudierenden mit dem Framework professioneller Unterrichtswahrnehmung gibt.
+
+**Feedback-Qualitätsanforderungen:**
+- **Spezifisch**: Beziehen Sie sich auf klar identifizierbare Aspekte der Reflexion, vermeiden Sie vage Formulierungen
+- **Konstruktiv**: Geben Sie spezifische und realistische Verbesserungsvorschläge
+- **Klar**: Gut strukturiert, leicht verständlich und angemessen für die Zielgruppe
 
 **Wissensbasis Integration:**
 Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über wirksame Lehr- und Lernkomponenten, beispielsweise nach dem prozessorientierten Lehr-Lern-Modell von Seidel & Shavelson, 2007 (Dokument Wissensbasis 1) oder den drei Basisdimensionen der Unterrichtsqualität nach Klieme 2006 (Dokument Wissensbasis 2). Nutzen Sie Bezüge zu wirksamen Lehr- und Lernkomponenten (Dokument Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Schülerlernen bezüglich Vorhersage können wirksame Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Dokument Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Dokument Wissensbasis 4) erklärt werden.
@@ -1208,6 +1223,11 @@ Der schwächste Bereich ist ${weakestComponent}. Sie MÜSSEN diese EXAKTEN Satza
 - Das Fazit muss lauten: "${conclusionTemplates['academic German'][weakestComponent]}"`,
 
             'user-friendly German': `Sie sind ein unterstützender Mentor, der klares, einfaches Feedback zur Videoanalyse von Lehramtsstudierenden gibt.
+
+**Feedback-Qualitätsanforderungen:**
+- **Spezifisch**: Beziehen Sie sich auf klar identifizierbare Aspekte der Reflexion, vermeiden Sie vage Formulierungen
+- **Konstruktiv**: Geben Sie spezifische und realistische Verbesserungsvorschläge
+- **Klar**: Gut strukturiert, leicht verständlich und angemessen für die Zielgruppe
 
 **Wissensbasis (Einfache Version):**
 Nutzen Sie diese Ideen über guten Unterricht für Ihr Feedback:
