@@ -516,11 +516,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Check if user clicked revise but didn't actually change the reflection - BEFORE any processing
+        // Check if user is submitting the same reflection (regardless of whether they clicked revise)
         const storedReflection = sessionStorage.getItem('reflection');
         const reviseClicked = sessionStorage.getItem('reviseClicked') === 'true';
         
-        if (reviseClicked && storedReflection && storedReflection.trim() === reflectionText.value.trim()) {
+        if (storedReflection && storedReflection.trim() === reflectionText.value.trim()) {
             // Log the warning event with context about how many times this has happened
             const currentWarningCount = parseInt(sessionStorage.getItem('noChangeWarningCount') || '0') + 1;
             sessionStorage.setItem('noChangeWarningCount', currentWarningCount.toString());
@@ -536,10 +536,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 session_id: getOrCreateSessionId(),
                 video_id: videoSelect.value,
                 participant_name: nameInput.value.trim(),
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                revise_clicked: reviseClicked, // Track whether revise was clicked or not
+                submission_type: reviseClicked ? 'after_revise_click' : 'direct_duplicate'
             });
             
-            showAlert(translations[currentLanguage].no_changes_warning, 'warning');
+            // Show appropriate warning message
+            const warningMessage = reviseClicked 
+                ? translations[currentLanguage].no_changes_warning 
+                : (currentLanguage === 'en' 
+                    ? 'You are submitting the same reflection again. Please make changes to improve your reflection or click "Revise Reflection" to edit it.'
+                    : 'Sie reichen die gleiche Reflexion erneut ein. Bitte nehmen Sie Änderungen vor, um Ihre Reflexion zu verbessern, oder klicken Sie auf "Reflexion überarbeiten", um sie zu bearbeiten.');
+            
+            showAlert(warningMessage, 'warning');
             reflectionText.focus();
             return;
         }
