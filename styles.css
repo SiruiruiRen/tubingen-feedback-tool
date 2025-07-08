@@ -1285,4 +1285,287 @@ textarea {
     text-align: center;
     font-size: 0.8rem;
     margin-top: 0.5rem;
+}
+
+/* Multi-Page Layout Styles */
+.progress-container {
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-container.d-none {
+  display: none !important;
+}
+
+/* Progress Bar Enhancement */
+.progress {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  transition: width 0.6s ease;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+}
+
+#progress-text {
+  font-weight: 500;
+  color: var(--dark-gray);
+}
+
+/* Survey Page Styles */
+.qualtrics-placeholder {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.qualtrics-placeholder h6 {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.qualtrics-placeholder code {
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  color: var(--dark-gray);
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Submit Final Reflection Button */
+#submit-final-task1, #submit-final-task2 {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--success-color) 0%, #45a049 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  transition: all var(--transition-speed);
+}
+
+#submit-final-task1:hover, #submit-final-task2:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+  background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+}
+
+#submit-final-task1.d-none, #submit-final-task2.d-none {
+  display: none !important;
+}
+
+/* Feedback Preference Modal Cards */
+.feedback-option-card {
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  border: 2px solid transparent;
+}
+
+.feedback-option-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--hover-shadow);
+  border-color: var(--primary-light);
+}
+
+.feedback-option-card[data-style="extended"]:hover {
+  border-color: var(--primary-color);
+}
+
+.feedback-option-card[data-style="short"]:hover {
+  border-color: var(--success-color);
+}
+
+.feedback-option-card .card-body {
+  padding: 2rem 1rem;
+}
+
+.feedback-option-card .bi {
+  transition: transform var(--transition-speed);
+}
+
+.feedback-option-card:hover .bi {
+  transform: scale(1.1);
+}
+
+/* Enhanced Modal Styles */
+.modal-content {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  color: white;
+  border-radius: 15px 15px 0 0;
+  padding: 1.25rem 1.5rem;
+  border-bottom: none;
+}
+
+.modal-title {
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-body {
+  padding: 2rem 1.5rem;
+  line-height: 1.6;
+}
+
+.modal-footer {
+  border-top: 1px solid #f0f0f0;
+  padding: 1rem 1.5rem;
+  border-radius: 0 0 15px 15px;
+}
+
+/* Think Aloud Modal Enhancement */
+#think-aloud-modal .modal-body {
+  text-align: center;
+}
+
+#think-aloud-modal .bi-chat-text-fill {
+  animation: pulse-gentle 2s infinite;
+}
+
+@keyframes pulse-gentle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+/* Final Submission Modal Enhancement */
+#final-submission-modal .bi-exclamation-triangle {
+  animation: warning-pulse 1.5s infinite;
+}
+
+@keyframes warning-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Button Enhancements for Multi-page */
+.btn-lg {
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--success-color) 0%, #45a049 100%);
+  border: none;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #45a049 0%, var(--success-color) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
+}
+
+/* Navigation Button Styles */
+#continue-to-task1, #continue-to-task2, #continue-to-postsurvey, #complete-study {
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+}
+
+#continue-to-task1:hover, #continue-to-task2:hover, #continue-to-postsurvey:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(63, 81, 181, 0.4);
+}
+
+#complete-study {
+  background: linear-gradient(135deg, var(--success-color) 0%, #2e7d32 100%);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+#complete-study:hover {
+  background: linear-gradient(135deg, #2e7d32 0%, var(--success-color) 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+/* Responsive Design for Multi-page */
+@media (max-width: 768px) {
+  .progress-container {
+    margin-bottom: 1rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .page-container .header {
+    margin-bottom: 1rem;
+    padding: 1rem;
+  }
+  
+  .feedback-option-card .card-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .modal-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .qualtrics-placeholder {
+    min-height: 300px;
+    padding: 1rem;
+  }
+  
+  #submit-final-task1, #submit-final-task2 {
+    padding: 12px;
+    font-size: 1rem;
+  }
+}
+
+/* Animation for page transitions */
+.page-container {
+  animation: fadeInPage 0.5s ease-in-out;
+}
+
+@keyframes fadeInPage {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Enhanced feedback content styling for tasks */
+.feedback-content {
+  max-height: calc(75vh - 120px);
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+/* Task-specific element spacing */
+.input-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.input-actions > .btn {
+  margin: 0;
+}
+
+.input-actions > #word-count-container-task1,
+.input-actions > #word-count-container-task2 {
+  text-align: center;
+  margin: 0.25rem 0;
+}
+
+/* Ensure proper spacing for task pages */
+#page-task1 .main-container,
+#page-task2 .main-container {
+  padding-bottom: 2rem;
 } 
