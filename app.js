@@ -1108,7 +1108,12 @@ function formatFeedback(text) {
 
 // Database Operations
 async function saveFeedbackToDatabase(taskId, data) {
-    if (!supabase || !currentSessionId) return;
+    if (!supabase || !currentSessionId) {
+        console.log('No database connection - skipping data save');
+        // Generate a mock reflection ID for UI consistency
+        TaskManager[taskId].currentReflectionId = `demo_${Date.now()}_${taskId}`;
+        return;
+    }
     
     try {
         const { data: result, error } = await supabase
@@ -1145,7 +1150,9 @@ async function saveFeedbackToDatabase(taskId, data) {
         
     } catch (error) {
         console.error(`Error saving feedback to database for ${taskId}:`, error);
-        throw error;
+        // Don't throw error - just log and continue in demo mode
+        console.log('Continuing in demo mode...');
+        TaskManager[taskId].currentReflectionId = `demo_${Date.now()}_${taskId}`;
     }
 }
 
@@ -1229,7 +1236,8 @@ function showAlert(message, type = 'info') {
 
 function initSupabase() {
     if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-        console.warn('Supabase credentials not set. Database features will not work.');
+        console.warn('Supabase credentials not set. Running in demo mode.');
+        showAlert('Running in demo mode - feedback generation works, but data won\'t be saved.', 'info');
         return null;
     }
     
@@ -1238,15 +1246,26 @@ function initSupabase() {
         if (typeof window.supabaseCreateClient !== 'function') {
             throw new Error('Supabase client not properly loaded.');
         }
-        return window.supabaseCreateClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        const client = window.supabaseCreateClient(SUPABASE_URL, SUPABASE_KEY);
+        if (!client) {
+            throw new Error('Supabase library not available.');
+        }
+        
+        return client;
     } catch (error) {
         console.error('Error initializing Supabase client:', error);
-        showAlert('Failed to connect to database. Some features may not work.', 'danger');
+        showAlert('Database connection failed - running in demo mode. Feedback generation still works!', 'warning');
         return null;
     }
 }
 
 async function verifySupabaseConnection(client) {
+    if (!client) {
+        console.log('No database client - running in demo mode');
+        return;
+    }
+    
     try {
         console.log('Verifying Supabase connection...');
         const { data, error } = await client.from('reflections').select('id').limit(1);
@@ -1254,10 +1273,10 @@ async function verifySupabaseConnection(client) {
         if (error) throw error;
         
         console.log('Successfully connected to Supabase database');
-        showAlert('Connected to database', 'success');
+        showAlert('✅ Database connected - all features available!', 'success');
     } catch (error) {
         console.error('Supabase connection verification failed:', error);
-        showAlert('Database connection issue: ' + error.message, 'danger');
+        showAlert('Database connection issue - running in demo mode. Feedback generation still works!', 'warning');
     }
 }
 
