@@ -93,7 +93,8 @@ const translations = {
         
         // Tooltips
         extended_tooltip: "Detailed academic feedback with comprehensive analysis and educational theory references",
-        short_tooltip: "Concise, easy-to-read feedback with key points and practical tips"
+        short_tooltip: "Concise, easy-to-read feedback with key points and practical tips",
+        generate_error: "Error generating feedback. Please try again."
     },
     de: {
         title: "Teacher Professional Vision Studie",
@@ -176,7 +177,8 @@ const translations = {
         
         // Tooltips
         extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse und pädagogischen Theoriereferenzen",
-        short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten und praktischen Tipps"
+        short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten und praktischen Tipps",
+        generate_error: "Fehler beim Generieren von Feedback. Bitte versuchen Sie es erneut."
     }
 };
 
@@ -215,7 +217,10 @@ const TaskManager = {
         currentFeedbackType: 'extended',
         currentFeedbackStartTime: null,
         feedbackGenerated: false,
-        finalSubmitted: false
+        finalSubmitted: false,
+        revisionCount: 0, // New for revision tracking
+        parentReflectionId: null, // New for revision tracking
+        firstSubmissionTime: null // New for revision tracking
     },
     task2: {
         currentReflectionId: null,
@@ -223,7 +228,10 @@ const TaskManager = {
         currentFeedbackType: 'extended', 
         currentFeedbackStartTime: null,
         feedbackGenerated: false,
-        finalSubmitted: false
+        finalSubmitted: false,
+        revisionCount: 0, // New for revision tracking
+        parentReflectionId: null, // New for revision tracking
+        firstSubmissionTime: null // New for revision tracking
     }
 };
 
@@ -635,20 +643,38 @@ async function generateFeedback(taskId) {
         return;
     }
 
-    // Check for duplicate submission
+    // Enhanced duplicate submission check with counter
+    const currentReflection = elements.reflectionText.value.trim();
     const storedReflection = sessionStorage.getItem(`reflection-${taskId}`);
-    if (storedReflection && storedReflection.trim() === elements.reflectionText.value.trim()) {
+    let warningCount = parseInt(sessionStorage.getItem(`warningCount-${taskId}`)) || 0;
+    
+    if (storedReflection && storedReflection === currentReflection && taskManager.feedbackGenerated) {
+        warningCount++;
+        sessionStorage.setItem(`warningCount-${taskId}`, warningCount);
+        
         logEvent('revision_warning_shown', {
             task: taskId,
+            participant_name: studentName,
+            video_id: videoSelected,
             reflection_id: taskManager.currentReflectionId,
             language: currentLanguage,
-            warning_count: 1,
-            reflection_length: elements.reflectionText.value.length
+            warning_count: warningCount,
+            reflection_length: currentReflection.length,
+            time_since_revise_click: Date.now() - (taskManager.lastReviseClickTime || 0)
         });
         
-        showAlert(translations[currentLanguage].no_changes_warning, 'warning');
+        const warningMessage = currentLanguage === 'en' 
+            ? `⚠️ Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or click "Submit Final Reflection" if you're satisfied with your current reflection.`
+            : `⚠️ Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder klicken Sie auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
+        
+        showAlert(warningMessage, 'warning');
         elements.reflectionText.focus();
         return;
+    }
+
+    // Reset warning count for new/modified reflections
+    if (storedReflection !== currentReflection) {
+        sessionStorage.setItem(`warningCount-${taskId}`, '0');
     }
 
     // Show loading spinner
@@ -659,17 +685,20 @@ async function generateFeedback(taskId) {
         const analysisResult = await analyzeReflectionDistribution(elements.reflectionText.value, currentLanguage);
         taskManager.currentAnalysisResult = analysisResult;
         
-        // Step 2: Generate both feedback versions
+        // Step 2: Generate both feedback versions with enhanced prompts
         const [extendedFeedback, shortFeedback] = await Promise.all([
             generateWeightedFeedback(elements.reflectionText.value, currentLanguage, 'academic', analysisResult),
             generateWeightedFeedback(elements.reflectionText.value, currentLanguage, 'user-friendly', analysisResult)
         ]);
         
-        // Step 3: Display feedback
-        elements.feedbackExtended.innerHTML = formatFeedback(extendedFeedback);
-        elements.feedbackShort.innerHTML = formatFeedback(shortFeedback);
+        // Step 3: Display analysis distribution
+        displayAnalysisDistribution(taskId, analysisResult);
         
-        // Show feedback tabs with user's preferred style first
+        // Step 4: Display structured feedback
+        elements.feedbackExtended.innerHTML = formatStructuredFeedback(extendedFeedback, analysisResult);
+        elements.feedbackShort.innerHTML = formatStructuredFeedback(shortFeedback, analysisResult);
+        
+        // Step 5: Show feedback tabs with user's preferred style first
         elements.feedbackTabs.classList.remove('d-none');
         if (userPreferredFeedbackStyle === 'short') {
             elements.shortTab.click();
@@ -677,10 +706,11 @@ async function generateFeedback(taskId) {
             elements.extendedTab.click();
         }
         
-        // Show submit final button
+        // Step 6: Show revise and submit buttons
+        elements.reviseBtn.style.display = 'inline-block';
         elements.submitFinalBtn.classList.remove('d-none');
         
-        // Save to database
+        // Step 7: Save to database with task-specific data
         await saveFeedbackToDatabase(taskId, {
             studentName,
             videoSelected,
@@ -690,26 +720,146 @@ async function generateFeedback(taskId) {
             shortFeedback
         });
         
-        // Update task state
+        // Step 8: Update task state
         taskManager.feedbackGenerated = true;
+        taskManager.currentReflectionId = Date.now(); // Generate unique reflection ID
         startFeedbackViewing(taskId, taskManager.currentFeedbackType, currentLanguage);
         
-        // Store reflection for duplicate detection
+        // Step 9: Store reflection for duplicate detection
         sessionStorage.setItem(`reflection-${taskId}`, elements.reflectionText.value);
         
-        // Trigger think aloud reminder for first feedback
+        // Step 10: Log successful generation
+        logEvent('submit_reflection', {
+            task: taskId,
+            participant_name: studentName,
+            video_id: videoSelected,
+            language: currentLanguage,
+            reflection_id: taskManager.currentReflectionId,
+            reflection_length: elements.reflectionText.value.length,
+            analysis_percentages: analysisResult.percentages,
+            weakest_component: analysisResult.weakest_component,
+            revision_number: 1
+        });
+        
+        // Step 11: Trigger think aloud reminder for first feedback
         if (!sessionStorage.getItem('thinkAloudReminderShown')) {
             window.dispatchEvent(new Event('firstFeedbackGenerated'));
         }
         
-        showAlert(`Feedback generated successfully for ${taskId}!`, 'success');
-        
     } catch (error) {
-        console.error(`Error in generateFeedback for ${taskId}:`, error);
-        showAlert(`Error generating feedback: ${error.message}`, 'danger');
+        console.error('Error generating feedback:', error);
+        showAlert(translations[currentLanguage].generate_error || 'Error generating feedback. Please try again.', 'danger');
     } finally {
         toggleLoading(taskId, false);
     }
+}
+
+// NEW: Display Analysis Distribution
+function displayAnalysisDistribution(taskId, analysisResult) {
+    const elements = DOMElements[taskId];
+    if (!elements || !analysisResult) return;
+    
+    // Find or create distribution container
+    let distributionContainer = document.getElementById(`analysis-distribution-${taskId}`);
+    if (!distributionContainer) {
+        distributionContainer = document.createElement('div');
+        distributionContainer.id = `analysis-distribution-${taskId}`;
+        distributionContainer.className = 'analysis-distribution mb-3';
+        
+        // Insert before feedback tabs
+        elements.feedbackTabs.parentNode.insertBefore(distributionContainer, elements.feedbackTabs);
+    }
+    
+    const { percentages, weakest_component } = analysisResult;
+    const isGerman = currentLanguage === 'de';
+    
+    distributionContainer.innerHTML = `
+        <h5>${isGerman ? '📊 Analyse Ihrer Reflexion' : '📊 Analysis of Your Reflection'}</h5>
+        <div class="distribution-text">
+            ${isGerman ? `Schwächster Bereich: <strong>${weakest_component}</strong> (${percentages[weakest_component.toLowerCase()] || 0}%)` 
+                      : `Weakest Component: <strong>${weakest_component}</strong> (${percentages[weakest_component.toLowerCase()] || 0}%)`}
+        </div>
+        
+        <div class="distribution-item">
+            <div class="distribution-label">
+                <span>${isGerman ? 'Beschreibung' : 'Description'}</span>
+                <span><strong>${percentages.description || 0}%</strong></span>
+            </div>
+            <div class="distribution-bar">
+                <div class="distribution-fill description" style="width: ${percentages.description || 0}%">
+                    ${percentages.description || 0}%
+                </div>
+            </div>
+        </div>
+        
+        <div class="distribution-item">
+            <div class="distribution-label">
+                <span>${isGerman ? 'Erklärung' : 'Explanation'}</span>
+                <span><strong>${percentages.explanation || 0}%</strong></span>
+            </div>
+            <div class="distribution-bar">
+                <div class="distribution-fill explanation" style="width: ${percentages.explanation || 0}%">
+                    ${percentages.explanation || 0}%
+                </div>
+            </div>
+        </div>
+        
+        <div class="distribution-item">
+            <div class="distribution-label">
+                <span>${isGerman ? 'Vorhersage' : 'Prediction'}</span>
+                <span><strong>${percentages.prediction || 0}%</strong></span>
+            </div>
+            <div class="distribution-bar">
+                <div class="distribution-fill prediction" style="width: ${percentages.prediction || 0}%">
+                    ${percentages.prediction || 0}%
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Enhanced feedback formatting with proper sections
+function formatStructuredFeedback(text, analysisResult) {
+    if (!text) return '';
+    
+    let formattedText = text.trim();
+    
+    // Enhanced section formatting with color coding
+    formattedText = formattedText.replace(/####\s*Overall Assessment.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">📊 ')}</h4></div>`;
+    });
+    
+    formattedText = formattedText.replace(/####\s*Description.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-description">${match.replace(/####\s*/, '<h4 class="feedback-heading">👁️ ')}</h4></div>`;
+    });
+    
+    formattedText = formattedText.replace(/####\s*Explanation.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-explanation">${match.replace(/####\s*/, '<h4 class="feedback-heading">🧠 ')}</h4></div>`;
+    });
+    
+    formattedText = formattedText.replace(/####\s*Prediction.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-prediction">${match.replace(/####\s*/, '<h4 class="feedback-heading">🔮 ')}</h4></div>`;
+    });
+    
+    formattedText = formattedText.replace(/####\s*Conclusion.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">✅ ')}</h4></div>`;
+    });
+    
+    // Format sub-headings with emphasis
+    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Good|Tip|Tips|Suggestions|Why\?|Why):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
+    
+    // Format bold text
+    formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    
+    // Format list items
+    formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
+    formattedText = formattedText.replace(/(<li>.*?<\/li>\s*)+/g, '<ul>$&</ul>');
+    
+    // Replace newlines with <br>
+    formattedText = formattedText.replace(/\n/g, '<br>');
+    formattedText = formattedText.replace(/<br>\s*<br>/g, '<br>');
+    
+    return formattedText;
 }
 
 // Utility Functions
@@ -782,12 +932,17 @@ function handleReviseReflectionClick(taskId) {
     
     if (!elements || !taskManager) return;
     
+    // Store the time when revise was clicked for warning tracking
+    taskManager.lastReviseClickTime = Date.now();
+    
     logEvent('click_revise', {
         task: taskId,
         from_style: taskManager.currentFeedbackType,
         language: currentLanguage,
         reflection_id: taskManager.currentReflectionId,
-        current_reflection_length: elements.reflectionText.value.length
+        current_reflection_length: elements.reflectionText.value.length,
+        participant_name: elements.nameInput.value.trim(),
+        video_id: elements.videoSelect.value
     });
     
     const previousReflection = sessionStorage.getItem(`reflection-${taskId}`);
@@ -797,6 +952,16 @@ function handleReviseReflectionClick(taskId) {
             ? 'Your previous reflection has been loaded. Edit it and click "Generate Feedback" for new feedback.'
             : 'Ihre vorherige Reflexion wurde geladen. Bearbeiten Sie sie und klicken Sie auf "Feedback generieren" für neues Feedback.';
         showAlert(message, 'info');
+    }
+    
+    // Hide revise button and feedback until new generation
+    elements.reviseBtn.style.display = 'none';
+    elements.feedbackTabs.classList.add('d-none');
+    
+    // Remove analysis distribution
+    const distributionContainer = document.getElementById(`analysis-distribution-${taskId}`);
+    if (distributionContainer) {
+        distributionContainer.remove();
     }
     
     elements.reflectionText.scrollIntoView({ behavior: 'smooth' });
@@ -1070,15 +1235,142 @@ async function generateWeightedFeedback(reflection, language, style, analysisRes
 
 function getFeedbackPrompt(promptType, analysisResult) {
     const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
+    const percentages = analysisResult ? analysisResult.percentages : { description: 30, explanation: 35, prediction: 25, other: 10 };
     
     const prompts = {
-        'academic English': `You are a supportive teaching mentor providing academic feedback on reflection analysis. Focus on the weakest area: ${weakestComponent}. Provide structured feedback with sections for Description, Explanation, and Prediction. Use educational theory references and maintain an academic tone.`,
+        'academic English': `You are a supportive teaching mentor providing academic feedback on a student teacher's reflection analysis using the professional vision framework.
+
+ANALYSIS RESULTS: The student's reflection contains ${percentages.description}% Description, ${percentages.explanation}% Explanation, ${percentages.prediction}% Prediction, and ${percentages.other}% Other content. The weakest component is ${weakestComponent}.
+
+PROFESSIONAL VISION FRAMEWORK:
+- **Description**: Accurately noting what happened in the classroom without interpretation
+- **Explanation**: Interpreting classroom events using educational theory and research
+- **Prediction**: Forecasting how teacher actions might affect student learning
+
+FEEDBACK STRUCTURE REQUIREMENTS:
+You MUST provide feedback in exactly these sections with proper headings:
+
+#### Overall Assessment
+Provide a comprehensive overview using actual percentages: "Your reflection demonstrates ${percentages.description}% description, ${percentages.explanation}% explanation, and ${percentages.prediction}% prediction. The weakest area is ${weakestComponent}."
+
+#### Description  
+**Strength:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
+**Suggestions:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]  
+**Why?:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
+
+#### Explanation
+**Strength:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
+**Suggestions:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
+**Why?:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
+
+#### Prediction  
+**Strength:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
+**Suggestions:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
+**Why?:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
+
+#### Conclusion
+Provide specific next steps focusing on improving ${weakestComponent}.
+
+Focus extra attention on ${weakestComponent} as it's the weakest area. Use educational theory references and maintain academic rigor.`,
         
-        'user-friendly English': `You are a friendly teaching mentor giving practical feedback. Focus on the weakest area: ${weakestComponent}. Provide clear, actionable advice in sections for Description, Explanation, and Prediction. Use simple language and practical examples.`,
+        'user-friendly English': `You are a friendly teaching mentor giving practical, easy-to-understand feedback on a student teacher's video analysis.
+
+ANALYSIS RESULTS: The student's reflection has ${percentages.description}% Description, ${percentages.explanation}% Explanation, ${percentages.prediction}% Prediction, and ${percentages.other}% Other content. They need the most help with ${weakestComponent}.
+
+WHAT TO LOOK FOR:
+- **Description**: What exactly happened in the classroom (no judging, just facts)
+- **Explanation**: Why it happened (using teaching theories)  
+- **Prediction**: How it might affect student learning
+
+FEEDBACK STRUCTURE REQUIREMENTS:
+You MUST provide feedback in exactly these sections:
+
+#### Description
+**Good:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
+**Tip:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
+**Why?:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
+
+#### Explanation  
+**Good:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
+**Tip:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
+**Why?:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
+
+#### Prediction
+**Good:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence] 
+**Tip:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
+**Why?:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
+
+#### Conclusion
+Give simple, practical advice for improving ${weakestComponent}.
+
+Use simple language and focus most on helping with ${weakestComponent} since that's where they need the most support.`,
         
-        'academic German': `Sie sind ein unterstützender Mentor, der akademisches Feedback zur Reflexionsanalyse gibt. Fokus auf den schwächsten Bereich: ${weakestComponent}. Geben Sie strukturiertes Feedback mit Abschnitten für Beschreibung, Erklärung und Vorhersage. Verwenden Sie pädagogische Theoriereferenzen.`,
+        'academic German': `Sie sind ein unterstützender Mentor, der akademisches Feedback zur Reflexionsanalyse eines Studierenden gibt, basierend auf dem Professional Vision Framework.
+
+ANALYSEERGEBNISSE: Die Reflexion des Studierenden enthält ${percentages.description}% Beschreibung, ${percentages.explanation}% Erklärung, ${percentages.prediction}% Vorhersage und ${percentages.other}% Sonstiges. Die schwächste Komponente ist ${weakestComponent}.
+
+PROFESSIONAL VISION FRAMEWORK:
+- **Beschreibung**: Genaue Beobachtung ohne Interpretation
+- **Erklärung**: Interpretation mit pädagogischen Theorien
+- **Vorhersage**: Prognose der Auswirkungen auf das Lernen
+
+FEEDBACK-STRUKTUR ANFORDERUNGEN:
+Sie MÜSSEN Feedback in genau diesen Abschnitten mit korrekten Überschriften geben:
+
+#### Gesamtbewertung
+Umfassender Überblick mit tatsächlichen Prozentsätzen: "Ihre Reflexion zeigt ${percentages.description}% Beschreibung, ${percentages.explanation}% Erklärung und ${percentages.prediction}% Vorhersage. Der schwächste Bereich ist ${weakestComponent}."
+
+#### Beschreibung
+**Stärke:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
+**Vorschläge:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
+**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
+
+#### Erklärung  
+**Stärke:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
+**Vorschläge:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
+**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
+
+#### Vorhersage
+**Stärke:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]  
+**Vorschläge:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
+**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
+
+#### Fazit
+Spezifische nächste Schritte zur Verbesserung von ${weakestComponent}.
+
+Konzentrieren Sie sich besonders auf ${weakestComponent} als schwächsten Bereich.`,
         
-        'user-friendly German': `Sie sind ein freundlicher Mentor, der praktisches Feedback gibt. Fokus auf den schwächsten Bereich: ${weakestComponent}. Geben Sie klare, umsetzbare Ratschläge in Abschnitten für Beschreibung, Erklärung und Vorhersage. Verwenden Sie einfache Sprache.`
+        'user-friendly German': `Sie sind ein freundlicher Mentor, der praktisches, leicht verständliches Feedback zur Videoanalyse eines Studierenden gibt.
+
+ANALYSEERGEBNISSE: Die Reflexion hat ${percentages.description}% Beschreibung, ${percentages.explanation}% Erklärung, ${percentages.prediction}% Vorhersage und ${percentages.other}% Sonstiges. Am meisten Hilfe brauchen sie bei ${weakestComponent}.
+
+WORAUF ACHTEN:
+- **Beschreibung**: Was genau passiert ist (keine Bewertung, nur Fakten)
+- **Erklärung**: Warum es passiert ist (mit Lehrtheorien)
+- **Vorhersage**: Wie es das Lernen beeinflussen könnte
+
+FEEDBACK-STRUKTUR ANFORDERUNGEN:
+Sie MÜSSEN Feedback in genau diesen Abschnitten geben:
+
+#### Beschreibung
+**Gut:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
+**Tipp:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]  
+**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
+
+#### Erklärung
+**Gut:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
+**Tipp:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
+**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
+
+#### Vorhersage  
+**Gut:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
+**Tipp:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
+**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
+
+#### Fazit
+Einfache, praktische Ratschläge zur Verbesserung von ${weakestComponent}.
+
+Verwenden Sie einfache Sprache und konzentrieren Sie sich auf ${weakestComponent}.`
     };
     
     return prompts[promptType] || prompts['academic English'];
@@ -1106,54 +1398,125 @@ function formatFeedback(text) {
     return formattedText;
 }
 
-// Database Operations
+// Enhanced Database Functions with Task-Specific Logging
 async function saveFeedbackToDatabase(taskId, data) {
-    if (!supabase || !currentSessionId) {
-        console.log('No database connection - skipping data save');
-        // Generate a mock reflection ID for UI consistency
-        TaskManager[taskId].currentReflectionId = `demo_${Date.now()}_${taskId}`;
+    if (!supabase) {
+        console.log('No database connection - running in demo mode');
         return;
     }
-    
+
     try {
+        const revisionNumber = TaskManager[taskId].revisionCount || 1;
+        const parentReflectionId = TaskManager[taskId].parentReflectionId || null;
+
+        const reflectionData = {
+            session_id: currentSessionId,
+            participant_name: data.studentName,
+            video_id: data.videoSelected,
+            language: currentLanguage,
+            task_id: taskId, // CRITICAL: Task-specific tracking
+            reflection_text: data.reflectionText,
+            analysis_percentages: data.analysisResult.percentages,
+            weakest_component: data.analysisResult.weakest_component,
+            feedback_extended: data.extendedFeedback,
+            feedback_short: data.shortFeedback,
+            revision_number: revisionNumber,
+            parent_reflection_id: parentReflectionId,
+            created_at: new Date().toISOString()
+        };
+
         const { data: result, error } = await supabase
             .from('reflections')
-            .insert([{
-                session_id: currentSessionId,
-                participant_name: data.studentName,
-                video_id: data.videoSelected,
-                language: currentLanguage,
-                reflection_text: data.reflectionText,
-                analysis_percentages: data.analysisResult.percentages,
-                weakest_component: data.analysisResult.weakest_component,
-                feedback_extended: data.extendedFeedback,
-                feedback_short: data.shortFeedback,
-                task_id: taskId,
-                created_at: new Date().toISOString()
-            }])
-            .select();
+            .insert([reflectionData])
+            .select()
+            .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Database insert error:', error);
+            return;
+        }
+
+        // Update task manager with database ID
+        TaskManager[taskId].currentReflectionId = result.id;
         
-        if (result && result.length > 0) {
-            TaskManager[taskId].currentReflectionId = result[0].id.toString();
-            
-            logEvent('submit_reflection', {
-                task: taskId,
-                reflection_id: TaskManager[taskId].currentReflectionId,
-                language: currentLanguage,
-                video_id: data.videoSelected,
-                reflection_length: data.reflectionText.length,
-                analysis_result: data.analysisResult
-            });
+        // If this is a revision, store parent ID for next revision
+        if (revisionNumber === 1) {
+            TaskManager[taskId].parentReflectionId = result.id;
         }
         
+        console.log(`✅ ${taskId} reflection saved to database:`, result.id);
+        
     } catch (error) {
-        console.error(`Error saving feedback to database for ${taskId}:`, error);
-        // Don't throw error - just log and continue in demo mode
-        console.log('Continuing in demo mode...');
-        TaskManager[taskId].currentReflectionId = `demo_${Date.now()}_${taskId}`;
+        console.error('Error saving to database:', error);
     }
+}
+
+// Enhanced resubmit function for revisions
+async function resubmitReflection(taskId) {
+    const elements = DOMElements[taskId];
+    const taskManager = TaskManager[taskId];
+    
+    if (!elements || !taskManager) return;
+    
+    // Increment revision count
+    taskManager.revisionCount = (taskManager.revisionCount || 1) + 1;
+    
+    // Log revision submission
+    logEvent('resubmit_reflection', {
+        task: taskId,
+        participant_name: elements.nameInput.value.trim(),
+        video_id: elements.videoSelect.value,
+        language: currentLanguage,
+        reflection_id: taskManager.currentReflectionId,
+        parent_reflection_id: taskManager.parentReflectionId,
+        revision_number: taskManager.revisionCount,
+        reflection_length: elements.reflectionText.value.length,
+        time_since_first_submission: Date.now() - (taskManager.firstSubmissionTime || Date.now())
+    });
+    
+    // Generate new feedback
+    await generateFeedback(taskId);
+}
+
+// Show Final Submission Modal with Enhanced Logging
+function showFinalSubmissionModal(taskId) {
+    const elements = DOMElements[taskId];
+    if (!elements) return;
+    
+    logEvent('final_submission', {
+        task: taskId,
+        participant_name: elements.nameInput.value.trim(),
+        video_id: elements.videoSelect.value,
+        language: currentLanguage,
+        reflection_id: TaskManager[taskId].currentReflectionId,
+        total_revisions: TaskManager[taskId].revisionCount || 1,
+        final_reflection_length: elements.reflectionText.value.length
+    });
+    
+    const modal = new bootstrap.Modal(DOMElements.modals.finalSubmission);
+    modal.show();
+    
+    // Handle confirmation
+    const confirmBtn = document.getElementById('confirm-final-submission');
+    confirmBtn.onclick = () => {
+        // Mark task as completed
+        TaskManager[taskId].completed = true;
+        
+        // Navigate to next page
+        if (taskId === 'task1') {
+            PageNavigator.showPage('survey1');
+        } else if (taskId === 'task2') {
+            PageNavigator.showPage('survey2');
+        }
+        
+        modal.hide();
+        showAlert(
+            currentLanguage === 'en' 
+                ? '✅ Final reflection submitted successfully!' 
+                : '✅ Endgültige Reflexion erfolgreich eingereicht!', 
+            'success'
+        );
+    };
 }
 
 // Utility Functions
