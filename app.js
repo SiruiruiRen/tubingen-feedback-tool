@@ -1243,15 +1243,22 @@ function initSupabase() {
     
     try {
         console.log('Initializing Supabase client...');
-        if (typeof window.supabaseCreateClient !== 'function') {
-            throw new Error('Supabase client not properly loaded.');
+        
+        // Check if Supabase library is loaded properly
+        if (typeof window.supabase === 'undefined' || !window.supabase) {
+            throw new Error('Supabase library not loaded from CDN.');
         }
         
-        const client = window.supabaseCreateClient(SUPABASE_URL, SUPABASE_KEY);
+        if (typeof window.supabase.createClient !== 'function') {
+            throw new Error('Supabase createClient function not available.');
+        }
+        
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         if (!client) {
-            throw new Error('Supabase library not available.');
+            throw new Error('Failed to create Supabase client instance.');
         }
         
+        console.log('✅ Supabase client initialized successfully');
         return client;
     } catch (error) {
         console.error('Error initializing Supabase client:', error);
