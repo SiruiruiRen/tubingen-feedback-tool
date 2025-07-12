@@ -789,7 +789,7 @@ function formatStructuredFeedback(text, analysisResult) {
     
     let formattedText = text.trim();
     
-    // Clean section formatting without emojis
+    // English section formatting
     formattedText = formattedText.replace(/####\s*Overall Assessment.*?(?=####|\n\n|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
@@ -810,8 +810,29 @@ function formatStructuredFeedback(text, analysisResult) {
         return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
+    // German section formatting
+    formattedText = formattedText.replace(/####\s*Gesamtbewertung.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
+    });
+    
+    formattedText = formattedText.replace(/####\s*Beschreibung.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-description">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
+    });
+    
+    formattedText = formattedText.replace(/####\s*Erklärung.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-explanation">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
+    });
+    
+    formattedText = formattedText.replace(/####\s*Vorhersage.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-prediction">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
+    });
+    
+    formattedText = formattedText.replace(/####\s*Fazit.*?(?=####|\n\n|$)/gs, (match) => {
+        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
+    });
+    
     // Format sub-headings with professional emphasis
-    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Good|Tip|Tips|Suggestions|Why\?|Why):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
+    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Good|Tip|Tips|Suggestions|Why\?|Why|Stärke|Stärken|Gut|Tipp|Tipps|Vorschläge|Warum\?):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
     
     // Format bold text
     formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
