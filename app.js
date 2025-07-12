@@ -664,8 +664,8 @@ async function generateFeedback(taskId) {
         });
         
         const warningMessage = currentLanguage === 'en' 
-            ? `⚠️ Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or click "Submit Final Reflection" if you're satisfied with your current reflection.`
-            : `⚠️ Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder klicken Sie auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
+            ? `Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or click "Submit Final Reflection" if you're satisfied with your current reflection.`
+            : `Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder klicken Sie auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
         
         showAlert(warningMessage, 'warning');
         elements.reflectionText.focus();
@@ -706,9 +706,8 @@ async function generateFeedback(taskId) {
             elements.extendedTab.click();
         }
         
-        // Step 6: Show revise and submit buttons
+        // Step 6: Show revise button (submit button is always visible)
         elements.reviseBtn.style.display = 'inline-block';
-        elements.submitFinalBtn.classList.remove('d-none');
         
         // Step 7: Save to database with task-specific data
         await saveFeedbackToDatabase(taskId, {
@@ -754,7 +753,7 @@ async function generateFeedback(taskId) {
     }
 }
 
-// NEW: Display Analysis Distribution
+// Professional Analysis Summary (simplified)
 function displayAnalysisDistribution(taskId, analysisResult) {
     const elements = DOMElements[taskId];
     if (!elements || !analysisResult) return;
@@ -764,7 +763,7 @@ function displayAnalysisDistribution(taskId, analysisResult) {
     if (!distributionContainer) {
         distributionContainer = document.createElement('div');
         distributionContainer.id = `analysis-distribution-${taskId}`;
-        distributionContainer.className = 'analysis-distribution mb-3';
+        distributionContainer.className = 'analysis-distribution-professional mb-3';
         
         // Insert before feedback tabs
         elements.feedbackTabs.parentNode.insertBefore(distributionContainer, elements.feedbackTabs);
@@ -774,78 +773,44 @@ function displayAnalysisDistribution(taskId, analysisResult) {
     const isGerman = currentLanguage === 'de';
     
     distributionContainer.innerHTML = `
-        <h5>${isGerman ? '📊 Analyse Ihrer Reflexion' : '📊 Analysis of Your Reflection'}</h5>
-        <div class="distribution-text">
-            ${isGerman ? `Schwächster Bereich: <strong>${weakest_component}</strong> (${percentages[weakest_component.toLowerCase()] || 0}%)` 
-                      : `Weakest Component: <strong>${weakest_component}</strong> (${percentages[weakest_component.toLowerCase()] || 0}%)`}
-        </div>
-        
-        <div class="distribution-item">
-            <div class="distribution-label">
-                <span>${isGerman ? 'Beschreibung' : 'Description'}</span>
-                <span><strong>${percentages.description || 0}%</strong></span>
-            </div>
-            <div class="distribution-bar">
-                <div class="distribution-fill description" style="width: ${percentages.description || 0}%">
-                    ${percentages.description || 0}%
-                </div>
-            </div>
-        </div>
-        
-        <div class="distribution-item">
-            <div class="distribution-label">
-                <span>${isGerman ? 'Erklärung' : 'Explanation'}</span>
-                <span><strong>${percentages.explanation || 0}%</strong></span>
-            </div>
-            <div class="distribution-bar">
-                <div class="distribution-fill explanation" style="width: ${percentages.explanation || 0}%">
-                    ${percentages.explanation || 0}%
-                </div>
-            </div>
-        </div>
-        
-        <div class="distribution-item">
-            <div class="distribution-label">
-                <span>${isGerman ? 'Vorhersage' : 'Prediction'}</span>
-                <span><strong>${percentages.prediction || 0}%</strong></span>
-            </div>
-            <div class="distribution-bar">
-                <div class="distribution-fill prediction" style="width: ${percentages.prediction || 0}%">
-                    ${percentages.prediction || 0}%
-                </div>
-            </div>
+        <div class="professional-analysis-summary">
+            <h6>${isGerman ? 'Analyse Ihrer Reflexion' : 'Analysis of Your Reflection'}</h6>
+            <p class="analysis-text">
+                ${isGerman ? `Ihre Reflexion enthält ${percentages.description || 0}% Beschreibung, ${percentages.explanation || 0}% Erklärung und ${percentages.prediction || 0}% Vorhersage. Der schwächste Bereich ist ${weakest_component}.` 
+                          : `Your reflection contains ${percentages.description || 0}% description, ${percentages.explanation || 0}% explanation, and ${percentages.prediction || 0}% prediction. The weakest component is ${weakest_component}.`}
+            </p>
         </div>
     `;
 }
 
-// Enhanced feedback formatting with proper sections
+// Professional feedback formatting with clean sections
 function formatStructuredFeedback(text, analysisResult) {
     if (!text) return '';
     
     let formattedText = text.trim();
     
-    // Enhanced section formatting with color coding
+    // Clean section formatting without emojis
     formattedText = formattedText.replace(/####\s*Overall Assessment.*?(?=####|\n\n|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">📊 ')}</h4></div>`;
+        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
     formattedText = formattedText.replace(/####\s*Description.*?(?=####|\n\n|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-description">${match.replace(/####\s*/, '<h4 class="feedback-heading">👁️ ')}</h4></div>`;
+        return `<div class="feedback-section feedback-section-description">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
     formattedText = formattedText.replace(/####\s*Explanation.*?(?=####|\n\n|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-explanation">${match.replace(/####\s*/, '<h4 class="feedback-heading">🧠 ')}</h4></div>`;
+        return `<div class="feedback-section feedback-section-explanation">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
     formattedText = formattedText.replace(/####\s*Prediction.*?(?=####|\n\n|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-prediction">${match.replace(/####\s*/, '<h4 class="feedback-heading">🔮 ')}</h4></div>`;
+        return `<div class="feedback-section feedback-section-prediction">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
     formattedText = formattedText.replace(/####\s*Conclusion.*?(?=####|\n\n|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">✅ ')}</h4></div>`;
+        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    // Format sub-headings with emphasis
+    // Format sub-headings with professional emphasis
     formattedText = formattedText.replace(/\*\*(Strength|Strengths|Good|Tip|Tips|Suggestions|Why\?|Why):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
     
     // Format bold text
@@ -885,7 +850,7 @@ function clearText(taskId) {
     elements.feedbackExtended.innerHTML = `<p class="text-muted">${translations[currentLanguage].feedback_placeholder}</p>`;
     elements.feedbackShort.innerHTML = `<p class="text-muted">${translations[currentLanguage].feedback_placeholder}</p>`;
     elements.feedbackTabs.classList.add('d-none');
-    elements.submitFinalBtn.classList.add('d-none');
+    // Submit button remains visible - users can submit without generating feedback
     
     // Reset task state
     Object.assign(taskManager, {
@@ -969,18 +934,61 @@ function handleReviseReflectionClick(taskId) {
 }
 
 function handleFinalSubmission(taskId) {
+    const elements = DOMElements[taskId];
     const taskManager = TaskManager[taskId];
     
-    if (!taskManager || !taskManager.feedbackGenerated) {
-        showAlert('Please generate feedback before final submission.', 'warning');
+    if (!elements || !taskManager) return;
+    
+    // Check if there's any reflection text
+    const currentReflection = elements.reflectionText.value.trim();
+    if (!currentReflection) {
+        showAlert('Please enter a reflection before final submission.', 'warning');
+        elements.reflectionText.focus();
         return;
     }
+    
+    // Check for duplicate submission (same text as previously stored)
+    const storedReflection = sessionStorage.getItem(`reflection-${taskId}`);
+    let warningCount = parseInt(sessionStorage.getItem(`warningCount-${taskId}`)) || 0;
+    
+    if (storedReflection && storedReflection === currentReflection && taskManager.feedbackGenerated) {
+        warningCount++;
+        sessionStorage.setItem(`warningCount-${taskId}`, warningCount);
+        
+        logEvent('revision_warning_shown', {
+            task: taskId,
+            participant_name: elements.nameInput.value.trim(),
+            video_id: elements.videoSelect.value,
+            reflection_id: taskManager.currentReflectionId,
+            language: currentLanguage,
+            warning_count: warningCount,
+            reflection_length: currentReflection.length,
+            time_since_revise_click: Date.now() - (taskManager.lastReviseClickTime || 0)
+        });
+        
+        const warningMessage = currentLanguage === 'en' 
+            ? `Warning ${warningCount}: You are submitting the same reflection text again. Please make changes to your reflection if you want to improve it, or click "Submit Final Reflection" again if you're satisfied with your current reflection.`
+            : `Warnung ${warningCount}: Sie reichen denselben Reflexionstext erneut ein. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, wenn Sie diese verbessern möchten, oder klicken Sie erneut auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
+        
+        showAlert(warningMessage, 'warning');
+        elements.reflectionText.focus();
+        return;
+    }
+    
+    // Store the current reflection
+    sessionStorage.setItem(`reflection-${taskId}`, currentReflection);
+    
+    // Reset warning count for final submission
+    sessionStorage.setItem(`warningCount-${taskId}`, '0');
     
     taskManager.finalSubmitted = true;
     
     logEvent('final_submission', {
         task: taskId,
-        reflection_id: taskManager.currentReflectionId,
+        reflection_id: taskManager.currentReflectionId || Date.now(),
+        participant_name: elements.nameInput.value.trim(),
+        video_id: elements.videoSelect.value,
+        reflection_text: currentReflection,
         language: currentLanguage,
         timestamp: new Date().toISOString()
     });
