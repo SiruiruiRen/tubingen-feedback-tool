@@ -129,7 +129,7 @@ const translations = {
         video_watched: "Angesehenes Video:",
         select_video: "Wählen Sie ein Video...",
         language: "Sprache:",
-        generate_feedback: "Feedback generieren", 
+        generate_feedback: "Feedback generieren",
         reflection_input: "Reflexion des Lehramtsstudierenden",
         paste_reflection: "Fügen Sie hier die Reflexion des Lehramtsstudierenden ein...",
         clear: "Löschen",
@@ -366,8 +366,8 @@ const PageNavigator = {
         logEvent('page_view', {
             page: pageId,
             progress: studyProgress,
-            timestamp: new Date().toISOString()
-        });
+                timestamp: new Date().toISOString()
+            });
     },
     
     nextPage: function() {
@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
             timestamp: new Date().toISOString()
         });
     }
-    
+
     // Initialize language and translations
     updateLanguage('en');
     
@@ -606,7 +606,7 @@ function showFinalSubmissionModal(taskId) {
         task: taskId,
         participant_name: elements.nameInput.value.trim(),
         video_id: elements.videoSelect.value,
-        language: currentLanguage,
+            language: currentLanguage,
         reflection_id: TaskManager[taskId].currentReflectionId,
         total_revisions: TaskManager[taskId].revisionCount || 1,
         final_reflection_length: elements.reflectionText.value.length
@@ -641,24 +641,24 @@ async function generateFeedback(taskId) {
     if (!elements || !taskManager) return;
     
     const studentName = elements.nameInput.value.trim();
-    if (!studentName) {
+        if (!studentName) {
         showAlert(translations[currentLanguage].enter_name || 'Please enter your name before generating feedback.', 'warning');
         elements.nameInput.focus();
-        return;
-    }
+            return;
+        }
 
     const videoSelected = elements.videoSelect.value;
-    if (!videoSelected) {
+        if (!videoSelected) {
         showAlert(translations[currentLanguage].select_video || 'Please select a video before generating feedback.', 'warning');
         elements.videoSelect.focus();
-        return;
-    }
+            return;
+        }
 
     if (!elements.reflectionText.value.trim()) {
         showAlert(translations[currentLanguage].paste_reflection || 'Please enter a reflection text first.', 'warning');
         elements.reflectionText.focus();
-        return;
-    }
+            return;
+        }
 
     // Enhanced duplicate submission check with counter
     const currentReflection = elements.reflectionText.value.trim();
@@ -682,12 +682,12 @@ async function generateFeedback(taskId) {
         console.log(`⚠️ Duplicate submission detected! Warning count: ${warningCount}`);
         
         // Log both the warning event and the resubmit_same_text event
-        logEvent('revision_warning_shown', {
+            logEvent('revision_warning_shown', {
             task: taskId,
             participant_name: studentName,
             video_id: videoSelected,
             reflection_id: taskManager.currentReflectionId,
-            language: currentLanguage,
+                language: currentLanguage,
             warning_count: warningCount,
             reflection_length: currentReflection.length,
             time_since_revise_click: Date.now() - (taskManager.lastReviseClickTime || 0),
@@ -707,18 +707,18 @@ async function generateFeedback(taskId) {
         const warningMessage = currentLanguage === 'en' 
             ? `🚨 Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or the feedback will be identical to what you already received.`
             : `🚨 Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.`;
-        
-        showAlert(warningMessage, 'warning');
+            
+            showAlert(warningMessage, 'warning');
         elements.reflectionText.focus();
-        return;
-    }
+            return;
+        }
 
     // Reset warning count for new/modified reflections
     if (storedReflection !== currentReflection) {
         sessionStorage.setItem(`warningCount-${taskId}`, '0');
     }
-
-    // Show loading spinner
+        
+        // Show loading spinner
     toggleLoading(taskId, true);
     
     try {
@@ -727,7 +727,7 @@ async function generateFeedback(taskId) {
         taskManager.currentAnalysisResult = analysisResult;
         
         // Step 2: Generate both feedback versions with enhanced prompts
-        const [extendedFeedback, shortFeedback] = await Promise.all([
+            const [extendedFeedback, shortFeedback] = await Promise.all([
             generateWeightedFeedback(elements.reflectionText.value, currentLanguage, 'academic', analysisResult),
             generateWeightedFeedback(elements.reflectionText.value, currentLanguage, 'user-friendly', analysisResult)
         ]);
@@ -762,7 +762,8 @@ async function generateFeedback(taskId) {
         
         // Step 8: Update task state and store reflection immediately
         taskManager.feedbackGenerated = true;
-        taskManager.currentReflectionId = Date.now();
+        // Use smaller, safer ID instead of large timestamp
+        taskManager.currentReflectionId = Math.floor(Math.random() * 1000000) + Date.now() % 1000000;
         
         // CRITICAL: Store reflection immediately after first successful generation
         sessionStorage.setItem(`reflection-${taskId}`, elements.reflectionText.value.trim());
@@ -1080,7 +1081,7 @@ function handleFinalSubmission(taskId) {
     // Log successful final submission
     logEvent('final_submission', {
         task: taskId,
-        reflection_id: taskManager.currentReflectionId || Date.now(),
+        reflection_id: taskManager.currentReflectionId || Math.floor(Math.random() * 1000000),
         participant_name: elements.nameInput.value.trim(),
         video_id: elements.videoSelect.value,
         reflection_text: currentReflection,
@@ -1235,46 +1236,46 @@ async function analyzeReflectionDistribution(reflection, language) {
         ? `Analyze this teaching reflection and determine the distribution of content across Description, Explanation, and Prediction components. Return ONLY a JSON object: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Prediction", "analysis_summary": "Brief explanation"}`
         : `Analysieren Sie diese Unterrichtsreflexion und bestimmen Sie die Verteilung auf Beschreibung, Erklärung und Vorhersage. Geben Sie NUR ein JSON-Objekt zurück: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Vorhersage", "analysis_summary": "Kurze Erklärung"}`;
 
-    const requestData = {
-        model: model,
-        messages: [
-            {
-                role: "system",
+        const requestData = {
+            model: model,
+            messages: [
+                {
+                    role: "system",
                 content: "You are an expert in analyzing teaching reflections. Return ONLY a valid JSON object."
-            },
-            {
-                role: "user",
+                },
+                {
+                    role: "user",
                 content: analysisPrompt + "\n\nReflection:\n" + reflection
-            }
-        ],
+                }
+            ],
         temperature: 0.3,
-        max_tokens: 300,
+            max_tokens: 300,
         response_format: { type: "json_object" }
-    };
+        };
 
-    try {
-        const response = await fetch(OPENAI_API_URL, {
-            method: 'POST',
+        try {
+            const response = await fetch(OPENAI_API_URL, {
+                method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData)
-        });
+                body: JSON.stringify(requestData)
+            });
 
         if (!response.ok) throw new Error('Error analyzing reflection distribution');
 
-        const result = await response.json();
+            const result = await response.json();
         const analysis = JSON.parse(result.choices[0].message.content);
+            
+            // Validate and normalize percentages
+            const { percentages } = analysis;
+                const keys = ['description', 'explanation', 'prediction', 'other'];
+            
+                keys.forEach(key => {
+                if (typeof percentages[key] !== 'number' || isNaN(percentages[key]) || percentages[key] < 0) {
+                        percentages[key] = 0;
+                    }
+                });
 
-        // Validate and normalize percentages
-        const { percentages } = analysis;
-        const keys = ['description', 'explanation', 'prediction', 'other'];
-        
-        keys.forEach(key => {
-            if (typeof percentages[key] !== 'number' || isNaN(percentages[key]) || percentages[key] < 0) {
-                percentages[key] = 0;
-            }
-        });
-
-        // Ensure percentages sum to 100
+            // Ensure percentages sum to 100
         const total = Object.values(percentages).reduce((sum, value) => sum + value, 0);
         if (total > 0) {
             const scaleFactor = 100 / total;
@@ -1283,63 +1284,63 @@ async function analyzeReflectionDistribution(reflection, language) {
             });
         }
 
-        return analysis;
+            return analysis;
 
-    } catch (error) {
+        } catch (error) {
         console.error('Error in analyzeReflectionDistribution:', error);
-        return {
-            percentages: { description: 30, explanation: 35, prediction: 25, other: 10 },
-            weakest_component: "Prediction",
-            analysis_summary: "Default distribution due to analysis error"
-        };
+            return {
+                percentages: { description: 30, explanation: 35, prediction: 25, other: 10 },
+                weakest_component: "Prediction",
+                analysis_summary: "Default distribution due to analysis error"
+            };
+        }
     }
-}
 
-async function generateWeightedFeedback(reflection, language, style, analysisResult) {
-    const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
-    const systemPrompt = getFeedbackPrompt(promptType, analysisResult);
-    
-    const languageInstruction = language === 'en' 
+    async function generateWeightedFeedback(reflection, language, style, analysisResult) {
+        const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
+        const systemPrompt = getFeedbackPrompt(promptType, analysisResult);
+        
+        const languageInstruction = language === 'en' 
         ? "IMPORTANT: You MUST respond in English. The entire feedback MUST be in English only."
         : "WICHTIG: Sie MÜSSEN auf Deutsch antworten. Das gesamte Feedback MUSS ausschließlich auf Deutsch sein.";
-    
-    const enhancedPrompt = languageInstruction + "\n\n" + systemPrompt;
-    
-    const requestData = {
-        model: model,
-        messages: [
-            {
-                role: "system",
-                content: enhancedPrompt
-            },
-            {
-                role: "user",
+        
+        const enhancedPrompt = languageInstruction + "\n\n" + systemPrompt;
+        
+        const requestData = {
+            model: model,
+            messages: [
+                {
+                    role: "system",
+                    content: enhancedPrompt
+                },
+                {
+                    role: "user",
                 content: `Based on the analysis showing ${analysisResult.percentages.description}% description, ${analysisResult.percentages.explanation}% explanation, ${analysisResult.percentages.prediction}% prediction, provide feedback for this reflection:\n\n${reflection}`
-            }
-        ],
+                }
+            ],
         temperature: 0.7,
         max_tokens: 2000
-    };
-    
-    try {
-        const response = await fetch(OPENAI_API_URL, {
-            method: 'POST',
+        };
+        
+        try {
+            const response = await fetch(OPENAI_API_URL, {
+                method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
             throw new Error(errorData.error?.message || 'Error generating feedback');
-        }
-        
-        const result = await response.json();
+            }
+            
+            const result = await response.json();
         return result.choices[0].message.content;
-    } catch (error) {
+        } catch (error) {
         console.error('Error in generateWeightedFeedback:', error);
-        throw error;
+            throw error;
+        }
     }
-}
 
 function getFeedbackPrompt(promptType, analysisResult) {
     const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
@@ -1599,7 +1600,7 @@ function showFinalSubmissionModal(taskId) {
         task: taskId,
         participant_name: elements.nameInput.value.trim(),
         video_id: elements.videoSelect.value,
-        language: currentLanguage,
+            language: currentLanguage,
         reflection_id: TaskManager[taskId].currentReflectionId,
         total_revisions: TaskManager[taskId].revisionCount || 1,
         final_reflection_length: elements.reflectionText.value.length
@@ -1638,8 +1639,8 @@ async function logEvent(eventType, eventData = {}) {
                 language: currentLanguage,
                 timestamp_utc: new Date().toISOString()
             }]);
-        
-        if (error) {
+
+            if (error) {
             console.error('Error logging event:', error);
         } else {
             console.log(`Event logged: ${eventType}`, eventData);
@@ -1656,7 +1657,7 @@ function toggleLoading(taskId, isLoading) {
     if (isLoading) {
         elements.loadingSpinner.style.display = 'flex';
         elements.generateBtn.disabled = true;
-    } else {
+            } else {
         elements.loadingSpinner.style.display = 'none';
         elements.generateBtn.disabled = false;
     }
@@ -1690,14 +1691,14 @@ function showAlert(message, type = 'info') {
     }, 5000);
 }
 
-function initSupabase() {
-    if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    function initSupabase() {
+        if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
         console.warn('Supabase credentials not set. Running in demo mode.');
         showAlert('Running in demo mode - feedback generation works, but data won\'t be saved.', 'info');
-        return null;
-    }
-    
-    try {
+            return null;
+        }
+        
+        try {
         console.log('Initializing Supabase client...');
         
         // Check if Supabase library is loaded properly
@@ -1716,35 +1717,35 @@ function initSupabase() {
         
         console.log('✅ Supabase client initialized successfully');
         return client;
-    } catch (error) {
-        console.error('Error initializing Supabase client:', error);
+        } catch (error) {
+            console.error('Error initializing Supabase client:', error);
         showAlert('Database connection failed - running in demo mode. Feedback generation still works!', 'warning');
-        return null;
+            return null;
+        }
     }
-}
 
-async function verifySupabaseConnection(client) {
+    async function verifySupabaseConnection(client) {
     if (!client) {
         console.log('No database client - running in demo mode');
         return;
     }
     
-    try {
-        console.log('Verifying Supabase connection...');
-        const { data, error } = await client.from('reflections').select('id').limit(1);
-        
+        try {
+            console.log('Verifying Supabase connection...');
+            const { data, error } = await client.from('reflections').select('id').limit(1);
+            
         if (error) throw error;
-        
-        console.log('Successfully connected to Supabase database');
+            
+            console.log('Successfully connected to Supabase database');
         showAlert('✅ Database connected - all features available!', 'success');
-    } catch (error) {
-        console.error('Supabase connection verification failed:', error);
+        } catch (error) {
+            console.error('Supabase connection verification failed:', error);
         showAlert('Database connection issue - running in demo mode. Feedback generation still works!', 'warning');
     }
 }
 
 // Cleanup on page unload
-window.addEventListener('beforeunload', () => {
+    window.addEventListener('beforeunload', () => {
     // End any active feedback viewing sessions
     Object.keys(TaskManager).forEach(taskId => {
         const taskManager = TaskManager[taskId];
@@ -1752,13 +1753,13 @@ window.addEventListener('beforeunload', () => {
             endFeedbackViewing(taskId, taskManager.currentFeedbackType, currentLanguage);
         }
     });
-    
-    logEvent('session_end', {
-        session_duration: Date.now() - performance.timing.navigationStart,
+        
+        logEvent('session_end', {
+            session_duration: Date.now() - performance.timing.navigationStart,
         language: currentLanguage,
         final_page: currentPage,
         final_progress: studyProgress
+        });
     });
-});
 
 console.log('Multi-page Teacher Professional Vision Study loaded successfully');

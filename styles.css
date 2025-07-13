@@ -373,7 +373,7 @@ textarea {
     margin-bottom: 0;
 }
 
-/* Modern feedback content styling - match Analysis section exactly */
+/* Modern feedback content styling - EXACTLY match Analysis section */
 #feedback-extended, #feedback-short {
   white-space: pre-wrap;
   min-height: 200px;
@@ -384,58 +384,54 @@ textarea {
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-/* Feedback content text - match Analysis section exactly */
-#feedback-extended .section-content, #feedback-short .section-content {
-  font-size: 0.9rem;
-  color: var(--dark-gray);
-  line-height: 1.4;
-  margin-bottom: 0;
-  font-weight: 400;
-}
-
-/* All text in feedback sections should match Analysis section */
-#feedback-extended, #feedback-short {
-  font-size: 0.9rem;
-  color: var(--dark-gray);
-  line-height: 1.4;
-  font-weight: 400;
-}
-
-/* Remove ALL bold formatting - match Analysis section exactly */
-#feedback-extended strong, #feedback-short strong {
-  color: var(--dark-gray);
-  font-weight: 400;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-/* Remove bold from feedback keywords - match Analysis section */
-#feedback-extended strong.feedback-keyword,
-#feedback-short strong.feedback-keyword {
-  color: var(--dark-gray) !important;
-  font-weight: 400 !important;
+  
+  /* CRITICAL: Match Analysis section exactly */
   font-size: 0.9rem !important;
+  color: var(--dark-gray) !important;
   line-height: 1.4 !important;
+  font-weight: 400 !important;
+  font-family: inherit !important;
 }
 
-/* Make sure all paragraphs match Analysis section */
-#feedback-extended p, #feedback-short p {
-  font-size: 0.9rem;
-  color: var(--dark-gray);
-  line-height: 1.4;
-  font-weight: 400;
-  margin-bottom: 0.5rem;
+/* ALL text elements in feedback must match Analysis section */
+#feedback-extended *, #feedback-short * {
+  font-size: 0.9rem !important;
+  color: var(--dark-gray) !important;
+  line-height: 1.4 !important;
+  font-weight: 400 !important;
+  font-family: inherit !important;
 }
 
-/* Make sure all text content matches Analysis section */
-#feedback-extended div, #feedback-short div {
-  font-size: 0.9rem;
-  color: var(--dark-gray);
-  line-height: 1.4;
-  font-weight: 400;
+/* Remove ALL special formatting from text content */
+#feedback-extended p, #feedback-short p,
+#feedback-extended div, #feedback-short div,
+#feedback-extended span, #feedback-short span,
+#feedback-extended strong, #feedback-short strong,
+#feedback-extended b, #feedback-short b,
+#feedback-extended em, #feedback-short em,
+#feedback-extended i, #feedback-short i {
+  font-size: 0.9rem !important;
+  color: var(--dark-gray) !important;
+  line-height: 1.4 !important;
+  font-weight: 400 !important;
+  font-family: inherit !important;
+  background: none !important;
+  padding: 0 !important;
+  margin: 0 0 0.5rem 0 !important;
+  border: none !important;
+  text-decoration: none !important;
 }
+
+/* Section content should match Analysis text exactly */
+#feedback-extended .section-content, #feedback-short .section-content {
+  font-size: 0.9rem !important;
+  color: var(--dark-gray) !important;
+  line-height: 1.4 !important;
+  font-weight: 400 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Duplicate rules removed - using comprehensive rules above */
 
 /* Duplicate removed - using correct formatting above */
 
