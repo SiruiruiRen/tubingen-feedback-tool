@@ -383,33 +383,61 @@ textarea {
   background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  line-height: 1.6;
-  font-size: 0.95rem;
-  color: #374151;
-  font-weight: 400;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Simple text formatting - match Analysis section exactly */
-#feedback-extended strong, #feedback-short strong {
-  color: #374151;
-  font-weight: 400;
-  display: inline;
+/* Feedback content text - match Analysis section exactly */
+#feedback-extended .section-content, #feedback-short .section-content {
+  font-size: 0.9rem;
+  color: var(--dark-gray);
+  line-height: 1.4;
   margin-bottom: 0;
-  font-size: 0.95rem;
+  font-weight: 400;
 }
 
-/* Remove special keyword styling - keep it simple like Analysis section */
+/* All text in feedback sections should match Analysis section */
+#feedback-extended, #feedback-short {
+  font-size: 0.9rem;
+  color: var(--dark-gray);
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+/* Remove ALL bold formatting - match Analysis section exactly */
+#feedback-extended strong, #feedback-short strong {
+  color: var(--dark-gray);
+  font-weight: 400;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Remove bold from feedback keywords - match Analysis section */
 #feedback-extended strong.feedback-keyword,
 #feedback-short strong.feedback-keyword {
-  color: #374151 !important;
+  color: var(--dark-gray) !important;
   font-weight: 400 !important;
-  font-size: 0.95rem !important;
-  padding: 0;
-  background: none;
-  border-radius: 0;
-  margin-right: 0;
+  font-size: 0.9rem !important;
+  line-height: 1.4 !important;
 }
+
+/* Make sure all paragraphs match Analysis section */
+#feedback-extended p, #feedback-short p {
+  font-size: 0.9rem;
+  color: var(--dark-gray);
+  line-height: 1.4;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+
+/* Make sure all text content matches Analysis section */
+#feedback-extended div, #feedback-short div {
+  font-size: 0.9rem;
+  color: var(--dark-gray);
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+/* Duplicate removed - using correct formatting above */
 
 #feedback-extended ul, #feedback-short ul {
   padding-left: 1.5rem;
@@ -1175,30 +1203,7 @@ textarea {
   }
 }
 
-/* Color coding for different sections is now handled by the .feedback-section-* classes applied from app.js */
-
-#feedback-extended .section-content, #feedback-short .section-content {
-  margin-bottom: 0.75rem;
-  padding-left: 0.75rem;
-  position: relative;
-}
-
-/* Style different feedback components - removed, using consistent blue color instead */
-
-/* Apply colors to all strong elements that match keywords */
-#feedback-extended strong, #feedback-short strong {
-  color: var(--primary-dark);
-  font-weight: 600;
-  display: inline-block;
-  margin-bottom: 0.1rem;
-}
-
-/* Black and bold for all feedback keywords */
-#feedback-extended strong.feedback-keyword,
-#feedback-short strong.feedback-keyword {
-  color: #000000 !important;
-  font-weight: 700 !important;
-}
+/* Duplicate rules removed - using the correct formatting above */
 
 #feedback-extended ul, #feedback-short ul {
   padding-left: 1.5rem;
