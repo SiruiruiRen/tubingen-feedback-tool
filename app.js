@@ -665,9 +665,21 @@ async function generateFeedback(taskId) {
     const storedReflection = sessionStorage.getItem(`reflection-${taskId}`);
     let warningCount = parseInt(sessionStorage.getItem(`warningCount-${taskId}`)) || 0;
     
+    // Debug logging
+    console.log(`Duplicate check for ${taskId}:`, {
+        currentLength: currentReflection.length,
+        storedLength: storedReflection ? storedReflection.length : 0,
+        feedbackGenerated: taskManager.feedbackGenerated,
+        areEqual: storedReflection === currentReflection,
+        warningCount: warningCount
+    });
+    
+    // Check for duplicate: same text AND feedback was already generated
     if (storedReflection && storedReflection === currentReflection && taskManager.feedbackGenerated) {
         warningCount++;
         sessionStorage.setItem(`warningCount-${taskId}`, warningCount);
+        
+        console.log(`⚠️ Duplicate submission detected! Warning count: ${warningCount}`);
         
         // Log both the warning event and the resubmit_same_text event
         logEvent('revision_warning_shown', {
@@ -693,8 +705,8 @@ async function generateFeedback(taskId) {
         });
         
         const warningMessage = currentLanguage === 'en' 
-            ? `Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or the feedback will be identical to what you already received.`
-            : `Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.`;
+            ? `🚨 Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or the feedback will be identical to what you already received.`
+            : `🚨 Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.`;
         
         showAlert(warningMessage, 'warning');
         elements.reflectionText.focus();
@@ -748,15 +760,16 @@ async function generateFeedback(taskId) {
             shortFeedback
         });
         
-        // Step 8: Update task state
+        // Step 8: Update task state and store reflection immediately
         taskManager.feedbackGenerated = true;
-        taskManager.currentReflectionId = Date.now(); // Generate unique reflection ID
+        taskManager.currentReflectionId = Date.now();
+        
+        // CRITICAL: Store reflection immediately after first successful generation
+        sessionStorage.setItem(`reflection-${taskId}`, elements.reflectionText.value.trim());
+        
         startFeedbackViewing(taskId, taskManager.currentFeedbackType, currentLanguage);
         
-        // Step 9: Store reflection for duplicate detection
-        sessionStorage.setItem(`reflection-${taskId}`, elements.reflectionText.value);
-        
-        // Step 10: Log successful generation
+        // Step 9: Log successful generation (moved down)
         logEvent('submit_reflection', {
             task: taskId,
             participant_name: studentName,
@@ -769,7 +782,7 @@ async function generateFeedback(taskId) {
             revision_number: 1
         });
         
-        // Step 11: Trigger think aloud reminder for first feedback
+        // Step 10: Trigger think aloud reminder for first feedback
         if (!sessionStorage.getItem('thinkAloudReminderShown')) {
             window.dispatchEvent(new Event('firstFeedbackGenerated'));
         }
@@ -1004,10 +1017,20 @@ function handleFinalSubmission(taskId) {
     const storedReflection = sessionStorage.getItem(`reflection-${taskId}`);
     let warningCount = parseInt(sessionStorage.getItem(`warningCount-${taskId}`)) || 0;
     
-    // Enhanced duplicate check: warn if same text AND (feedback was generated OR this is not first submission)
+    // Debug logging for final submission
+    console.log(`Final submission duplicate check for ${taskId}:`, {
+        currentLength: currentReflection.length,
+        storedLength: storedReflection ? storedReflection.length : 0,
+        areEqual: storedReflection === currentReflection,
+        warningCount: warningCount
+    });
+    
+    // Enhanced duplicate check: warn if same text as previously stored
     if (storedReflection && storedReflection === currentReflection) {
         warningCount++;
         sessionStorage.setItem(`warningCount-${taskId}`, warningCount);
+        
+        console.log(`⚠️ Final submission duplicate detected! Warning count: ${warningCount}`);
         
         // Log both the warning event and the resubmit_same_text event
         logEvent('revision_warning_shown', {
@@ -1034,19 +1057,21 @@ function handleFinalSubmission(taskId) {
         });
         
         const warningMessage = currentLanguage === 'en' 
-            ? `Warning ${warningCount}: You are submitting the same reflection text again. Please make changes to your reflection if you want to improve it, or click "Submit Final Reflection" again if you're satisfied with your current reflection.`
-            : `Warnung ${warningCount}: Sie reichen denselben Reflexionstext erneut ein. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, wenn Sie diese verbessern möchten, oder klicken Sie erneut auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
+            ? `🚨 Warning ${warningCount}: You are submitting the same reflection text again. Please make changes to your reflection if you want to improve it, or click "Submit Final Reflection" again if you're satisfied with your current reflection.`
+            : `🚨 Warnung ${warningCount}: Sie reichen denselben Reflexionstext erneut ein. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, wenn Sie diese verbessern möchten, oder klicken Sie erneut auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
         
         showAlert(warningMessage, 'warning');
         elements.reflectionText.focus();
         return;
     }
     
-    // Store the current reflection
+    // Store the current reflection for future duplicate detection
     sessionStorage.setItem(`reflection-${taskId}`, currentReflection);
     
     // Reset warning count for successful submission
     sessionStorage.setItem(`warningCount-${taskId}`, '0');
+    
+    console.log(`✅ Final submission successful for ${taskId}, reflection stored`);
     
     // Mark task as completed
     taskManager.finalSubmitted = true;
