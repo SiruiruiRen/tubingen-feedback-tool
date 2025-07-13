@@ -876,7 +876,7 @@ function formatStructuredFeedback(text, analysisResult) {
     
     // Format sub-headings with professional emphasis
     // First, handle English/German labels and make them bold
-    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Good|Tip|Tips|Suggestions):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
+    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Tip|Tips|Suggestions):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
     // Handle "Why?" label (remove colon if present)
     formattedText = formattedText.replace(/\*\*(Why\?|Why):?\*\*/g, '<strong class="feedback-keyword">Why?</strong>');
     // German labels

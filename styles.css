@@ -1717,3 +1717,26 @@ textarea {
   padding: 0.25rem 0 !important;
   margin-bottom: 0.5rem !important;
 } 
+
+/* Apply left colored border to entire section, not just heading */
+.feedback-section-description {
+  border-left: 4px solid #00ACC1 !important;
+  padding-left: 1rem !important;
+}
+.feedback-section-explanation {
+  border-left: 4px solid #7B1FA2 !important;
+  padding-left: 1rem !important;
+}
+.feedback-section-prediction {
+  border-left: 4px solid #388E3C !important;
+  padding-left: 1rem !important;
+}
+.feedback-section-overall {
+  border-left: 4px solid #3F51B5 !important;
+  padding-left: 1rem !important;
+}
+
+/* Make short-version body text slightly smaller */
+[id^="feedback-short"] .feedback-section * {
+  font-size: 0.8rem !important;
+} 
