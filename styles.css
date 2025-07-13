@@ -373,7 +373,7 @@ textarea {
     margin-bottom: 0;
 }
 
-/* Modern feedback content styling */
+/* Modern feedback content styling - match Analysis section exactly */
 #feedback-extended, #feedback-short {
   white-space: pre-wrap;
   min-height: 200px;
@@ -384,31 +384,31 @@ textarea {
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   line-height: 1.6;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #374151;
   font-weight: 400;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Modern strong elements */
+/* Simple text formatting - match Analysis section exactly */
 #feedback-extended strong, #feedback-short strong {
-  color: #1f2937;
-  font-weight: 600;
-  display: inline-block;
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 400;
+  display: inline;
+  margin-bottom: 0;
+  font-size: 0.95rem;
 }
 
-/* Modern keyword styling */
+/* Remove special keyword styling - keep it simple like Analysis section */
 #feedback-extended strong.feedback-keyword,
 #feedback-short strong.feedback-keyword {
-  color: #1f2937 !important;
-  font-weight: 700 !important;
-  font-size: 0.9rem !important;
-  padding: 2px 6px;
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 6px;
-  margin-right: 0.25rem;
+  color: #374151 !important;
+  font-weight: 400 !important;
+  font-size: 0.95rem !important;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  margin-right: 0;
 }
 
 #feedback-extended ul, #feedback-short ul {
