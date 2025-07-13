@@ -595,11 +595,28 @@ function showThinkAloudModal() {
 }
 
 function showFinalSubmissionModal(taskId) {
-    if (DOMElements.modals.finalSubmission) {
-        DOMElements.modals.finalSubmission.dataset.taskId = taskId;
-        const modal = new bootstrap.Modal(DOMElements.modals.finalSubmission);
-        modal.show();
-    }
+    const elements = DOMElements[taskId];
+    if (!elements) return;
+    
+    // Set the taskId data attribute for the modal so handleFinalSubmission can access it
+    const modalElement = DOMElements.modals.finalSubmission;
+    modalElement.dataset.taskId = taskId;
+    
+    logEvent('final_submission_modal_shown', {
+        task: taskId,
+        participant_name: elements.nameInput.value.trim(),
+        video_id: elements.videoSelect.value,
+        language: currentLanguage,
+        reflection_id: TaskManager[taskId].currentReflectionId,
+        total_revisions: TaskManager[taskId].revisionCount || 1,
+        final_reflection_length: elements.reflectionText.value.length
+    });
+    
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    
+    // Don't set onclick handler here - let setupModalListeners handle it
+    // This prevents conflicts and ensures handleFinalSubmission is called properly
 }
 
 function setupThinkAloudReminder() {
@@ -652,6 +669,7 @@ async function generateFeedback(taskId) {
         warningCount++;
         sessionStorage.setItem(`warningCount-${taskId}`, warningCount);
         
+        // Log both the warning event and the resubmit_same_text event
         logEvent('revision_warning_shown', {
             task: taskId,
             participant_name: studentName,
@@ -660,12 +678,23 @@ async function generateFeedback(taskId) {
             language: currentLanguage,
             warning_count: warningCount,
             reflection_length: currentReflection.length,
-            time_since_revise_click: Date.now() - (taskManager.lastReviseClickTime || 0)
+            time_since_revise_click: Date.now() - (taskManager.lastReviseClickTime || 0),
+            submission_type: 'generate_feedback'
+        });
+        
+        logEvent('resubmit_same_text', {
+            task: taskId,
+            participant_name: studentName,
+            video_id: videoSelected,
+            reflection_id: taskManager.currentReflectionId,
+            language: currentLanguage,
+            warning_count: warningCount,
+            reflection_length: currentReflection.length
         });
         
         const warningMessage = currentLanguage === 'en' 
-            ? `Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or click "Submit Final Reflection" if you're satisfied with your current reflection.`
-            : `Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder klicken Sie auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
+            ? `Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or the feedback will be identical to what you already received.`
+            : `Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.`;
         
         showAlert(warningMessage, 'warning');
         elements.reflectionText.focus();
@@ -963,7 +992,10 @@ function handleFinalSubmission(taskId) {
     // Check if there's any reflection text
     const currentReflection = elements.reflectionText.value.trim();
     if (!currentReflection) {
-        showAlert('Please enter a reflection before final submission.', 'warning');
+        const message = currentLanguage === 'en' 
+            ? 'Please enter a reflection before final submission.' 
+            : 'Bitte geben Sie eine Reflexion vor der endgültigen Einreichung ein.';
+        showAlert(message, 'warning');
         elements.reflectionText.focus();
         return;
     }
@@ -972,10 +1004,12 @@ function handleFinalSubmission(taskId) {
     const storedReflection = sessionStorage.getItem(`reflection-${taskId}`);
     let warningCount = parseInt(sessionStorage.getItem(`warningCount-${taskId}`)) || 0;
     
-    if (storedReflection && storedReflection === currentReflection && taskManager.feedbackGenerated) {
+    // Enhanced duplicate check: warn if same text AND (feedback was generated OR this is not first submission)
+    if (storedReflection && storedReflection === currentReflection) {
         warningCount++;
         sessionStorage.setItem(`warningCount-${taskId}`, warningCount);
         
+        // Log both the warning event and the resubmit_same_text event
         logEvent('revision_warning_shown', {
             task: taskId,
             participant_name: elements.nameInput.value.trim(),
@@ -984,7 +1018,19 @@ function handleFinalSubmission(taskId) {
             language: currentLanguage,
             warning_count: warningCount,
             reflection_length: currentReflection.length,
-            time_since_revise_click: Date.now() - (taskManager.lastReviseClickTime || 0)
+            time_since_revise_click: Date.now() - (taskManager.lastReviseClickTime || 0),
+            submission_type: 'final_submission'
+        });
+        
+        logEvent('resubmit_same_text', {
+            task: taskId,
+            participant_name: elements.nameInput.value.trim(),
+            video_id: elements.videoSelect.value,
+            reflection_id: taskManager.currentReflectionId,
+            language: currentLanguage,
+            warning_count: warningCount,
+            reflection_length: currentReflection.length,
+            submission_type: 'final_submission'
         });
         
         const warningMessage = currentLanguage === 'en' 
@@ -999,11 +1045,14 @@ function handleFinalSubmission(taskId) {
     // Store the current reflection
     sessionStorage.setItem(`reflection-${taskId}`, currentReflection);
     
-    // Reset warning count for final submission
+    // Reset warning count for successful submission
     sessionStorage.setItem(`warningCount-${taskId}`, '0');
     
+    // Mark task as completed
     taskManager.finalSubmitted = true;
+    TaskManager[taskId].completed = true;
     
+    // Log successful final submission
     logEvent('final_submission', {
         task: taskId,
         reflection_id: taskManager.currentReflectionId || Date.now(),
@@ -1011,16 +1060,21 @@ function handleFinalSubmission(taskId) {
         video_id: elements.videoSelect.value,
         reflection_text: currentReflection,
         language: currentLanguage,
+        warning_count_reached: warningCount,
         timestamp: new Date().toISOString()
     });
     
-    showAlert(`${taskId} completed successfully!`, 'success');
+    // Show success message
+    const successMessage = currentLanguage === 'en' 
+        ? '✅ Final reflection submitted successfully!' 
+        : '✅ Endgültige Reflexion erfolgreich eingereicht!';
+    showAlert(successMessage, 'success');
     
     // Navigate to next page
     if (taskId === 'task1') {
-        setTimeout(() => PageNavigator.showPage('survey1'), 1500);
+        PageNavigator.showPage('survey1');
     } else if (taskId === 'task2') {
-        setTimeout(() => PageNavigator.showPage('survey2'), 1500);
+        PageNavigator.showPage('survey2');
     }
 }
 
@@ -1512,7 +1566,11 @@ function showFinalSubmissionModal(taskId) {
     const elements = DOMElements[taskId];
     if (!elements) return;
     
-    logEvent('final_submission', {
+    // Set the taskId data attribute for the modal so handleFinalSubmission can access it
+    const modalElement = DOMElements.modals.finalSubmission;
+    modalElement.dataset.taskId = taskId;
+    
+    logEvent('final_submission_modal_shown', {
         task: taskId,
         participant_name: elements.nameInput.value.trim(),
         video_id: elements.videoSelect.value,
@@ -1522,30 +1580,11 @@ function showFinalSubmissionModal(taskId) {
         final_reflection_length: elements.reflectionText.value.length
     });
     
-    const modal = new bootstrap.Modal(DOMElements.modals.finalSubmission);
+    const modal = new bootstrap.Modal(modalElement);
     modal.show();
     
-    // Handle confirmation
-    const confirmBtn = document.getElementById('confirm-final-submission');
-    confirmBtn.onclick = () => {
-        // Mark task as completed
-        TaskManager[taskId].completed = true;
-        
-        // Navigate to next page
-        if (taskId === 'task1') {
-            PageNavigator.showPage('survey1');
-        } else if (taskId === 'task2') {
-            PageNavigator.showPage('survey2');
-        }
-        
-        modal.hide();
-        showAlert(
-            currentLanguage === 'en' 
-                ? '✅ Final reflection submitted successfully!' 
-                : '✅ Endgültige Reflexion erfolgreich eingereicht!', 
-            'success'
-        );
-    };
+    // Don't set onclick handler here - let setupModalListeners handle it
+    // This prevents conflicts and ensures handleFinalSubmission is called properly
 }
 
 // Utility Functions
