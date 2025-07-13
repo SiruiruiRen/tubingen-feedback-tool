@@ -894,6 +894,13 @@ function formatStructuredFeedback(text, analysisResult) {
     formattedText = formattedText.replace(/\n/g, '<br>');
     formattedText = formattedText.replace(/<br>\s*<br>/g, '<br>');
     
+    // After existing bold label replacements add plain label handling
+     // Handle plain (non-bold) labels at start of line
+    formattedText = formattedText.replace(/^(\s*)(Strengths?|Suggestions|Tip|Tips|Good)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
+    formattedText = formattedText.replace(/^(\s*)Why\?\s*:/gmi, '$1<strong class="feedback-keyword">Why?</strong> ');
+    formattedText = formattedText.replace(/^(\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Gut)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
+    formattedText = formattedText.replace(/^(\s*)Warum\?\s*:/gmi, '$1<strong class="feedback-keyword">Warum?</strong> ');
+    
     return formattedText;
 }
 
