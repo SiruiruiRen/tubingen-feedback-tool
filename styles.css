@@ -1715,7 +1715,7 @@ textarea {
 /* Tighter spacing between feedback sections */
 .feedback-section {
   padding: 0.25rem 0 !important;
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.35rem !important;
 } 
 
 /* Apply left colored border to entire section, not just heading */
@@ -1739,4 +1739,30 @@ textarea {
 /* Make short-version body text slightly smaller */
 [id^="feedback-short"] .feedback-section * {
   font-size: 0.8rem !important;
+} 
+
+/* Fixed alert container top-right */
+#alert-container {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 11000 !important;
+  width: 360px !important;
+}
+
+.alert {
+  margin-bottom: 0.5rem !important;
+}
+
+/* Reduce spacing between feedback sections */
+.feedback-section {
+  padding: 0.25rem 0 !important;
+  margin-bottom: 0.35rem !important;
+}
+
+/* Ensure body text not bold */
+.feedback-content p,
+.feedback-content span,
+.feedback-content li {
+  font-weight: 400 !important;
 } 

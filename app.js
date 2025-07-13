@@ -876,12 +876,12 @@ function formatStructuredFeedback(text, analysisResult) {
     
     // Format sub-headings with professional emphasis
     // First, handle English/German labels and make them bold
-    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Tip|Tips|Suggestions):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
+    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Tip|Tips|Suggestions|Good):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
     // Handle "Why?" label (remove colon if present)
-    formattedText = formattedText.replace(/\*\*(Why\?|Why):?\*\*/g, '<strong class="feedback-keyword">Why?</strong>');
+    formattedText = formattedText.replace(/\*\*(Why\\?|Why):?\*\*/g, '<strong class="feedback-keyword">Why?</strong>');
     // German labels
     formattedText = formattedText.replace(/\*\*(Stärke|Stärken|Gut|Tipp|Tipps|Vorschläge):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
-    formattedText = formattedText.replace(/\*\*(Warum\?):?\*\*/g, '<strong class="feedback-keyword">Warum?</strong>');
+    formattedText = formattedText.replace(/\*\*(Warum\\?):?\*\*/g, '<strong class="feedback-keyword">Warum?</strong>');
     
     // Format bold text
     formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -1785,34 +1785,24 @@ function showBubbleWarning(message, element, type = 'warning') {
         </div>
     `;
     
-    // Position bubble near the element
-    const rect = element.getBoundingClientRect();
     bubble.style.cssText = `
         position: fixed;
-        top: ${rect.bottom + window.scrollY + 10}px;
-        left: ${rect.left + window.scrollX}px;
+        top: 100px;
+        right: 20px;
         background: #fff3cd;
         border: 2px solid #ffc107;
         border-radius: 12px;
         padding: 1rem;
         box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-        z-index: 10000;
-        max-width: 400px;
-        font-size: 0.9rem;
+        z-index: 12000;
+        max-width: 360px;
+        font-size: 0.85rem;
         line-height: 1.4;
         color: #856404;
         animation: bubbleSlideIn 0.3s ease-out;
     `;
     
     document.body.appendChild(bubble);
-    
-    // Auto-remove after 8 seconds
-    setTimeout(() => {
-        if (bubble.parentElement) {
-            bubble.style.animation = 'bubbleSlideOut 0.3s ease-in';
-            setTimeout(() => bubble.remove(), 300);
-        }
-    }, 8000);
 }
 
 console.log('Multi-page Teacher Professional Vision Study loaded successfully');
