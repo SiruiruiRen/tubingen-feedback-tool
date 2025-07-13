@@ -24,8 +24,8 @@
 
     <!-- Page 1: Pre-Survey -->
     <div id="page-presurvey" class="page-container">
-        <div class="main-container">
-            <div class="header text-center">
+    <div class="main-container">
+        <div class="header text-center">
                 <h1 data-lang-key="title">Teacher Professional Vision Study</h1>
                 <p class="mb-4" data-lang-key="subtitle">Welcome to our research study on teaching reflection analysis</p>
             </div>
@@ -65,109 +65,109 @@
             <div class="header text-center">
                 <h1 data-lang-key="task1_title">Task 1: Teaching Reflection Analysis</h1>
                 <p class="mb-0" data-lang-key="task1_subtitle">Analyze your teaching reflection and receive feedback</p>
-            </div>
+        </div>
 
-            <div class="row">
-                <!-- Settings Panel -->
-                <div class="col-md-2">
-                    <div class="card">
-                        <div class="card-header" data-lang-key="settings">Settings</div>
-                        <div class="card-body">
-                            <div class="mb-3">
+        <div class="row">
+            <!-- Settings Panel -->
+            <div class="col-md-2">
+                <div class="card">
+                    <div class="card-header" data-lang-key="settings">Settings</div>
+                    <div class="card-body">
+                        <div class="mb-3">
                                 <label for="student-name-task1" class="form-label" data-lang-key="your_name">Your Name:</label>
                                 <input type="text" class="form-control" id="student-name-task1" placeholder="Enter your name" data-lang-key-placeholder="enter_name">
-                            </div>
-                            
-                            <div class="mb-3">
+                        </div>
+                        
+                        <div class="mb-3">
                                 <label for="video-select-task1" class="form-label" data-lang-key="video_watched">Video Watched:</label>
                                 <select class="form-select" id="video-select-task1">
-                                    <option value="" data-lang-key="select_video">Select a video...</option>
-                                    <option value="spider">Spinne fängt Fliege (Spider Catches Fly)</option>
-                                    <option value="binomial">Binomische Formeln (Binomial Formulas)</option>
-                                    <option value="height">Höhendifferenz (Height Difference)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="language-toggle mb-3">
-                                <label data-lang-key="language">Language:</label>
-                                <div class="form-check">
+                                <option value="" data-lang-key="select_video">Select a video...</option>
+                                <option value="spider">Spinne fängt Fliege (Spider Catches Fly)</option>
+                                <option value="binomial">Binomische Formeln (Binomial Formulas)</option>
+                                <option value="height">Höhendifferenz (Height Difference)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="language-toggle mb-3">
+                            <label data-lang-key="language">Language:</label>
+                            <div class="form-check">
                                     <input class="form-check-input" type="radio" name="language-task1" id="lang-en-task1" checked>
                                     <label class="form-check-label" for="lang-en-task1">English</label>
-                                </div>
-                                <div class="form-check">
+                            </div>
+                            <div class="form-check">
                                     <input class="form-check-input" type="radio" name="language-task1" id="lang-de-task1">
                                     <label class="form-check-label" for="lang-de-task1">Deutsch</label>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Input Panel -->
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-header" data-lang-key="reflection_input">Student Teacher Reflection</div>
-                        <div class="card-body d-flex flex-column position-relative">
+            <!-- Input Panel -->
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header" data-lang-key="reflection_input">Student Teacher Reflection</div>
+                    <div class="card-body d-flex flex-column position-relative">
                             <div id="loading-spinner-task1" class="loading-spinner">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
                             </div>
-                            
+                        </div>
+                        
                             <textarea id="reflection-text-task1" class="form-control flex-grow-1 mb-3" placeholder="Paste the student teacher's reflection here..." data-lang-key-placeholder="paste_reflection" spellcheck="false"></textarea>
-                            
-                            <div class="input-actions mt-auto">
+                        
+                        <div class="input-actions mt-auto">
                                 <button id="clear-btn-task1" class="btn btn-secondary" data-lang-key="clear">Clear</button>
                                 <div id="word-count-container-task1" class="text-muted">
                                     <span id="word-count-task1">0</span><span data-lang-key="words"> words</span>
-                                </div>
+                            </div>
                                 <button id="generate-btn-task1" class="btn btn-primary" data-lang-key="generate_feedback">Generate Feedback</button>
                                 <button id="submit-final-task1" class="btn btn-success btn-lg mt-2" data-lang-key="submit_final">
                                     <i class="bi bi-check-circle"></i> Submit Final Reflection
                                 </button>
-                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Feedback Panel -->
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <span data-lang-key="generated_feedback">Generated Feedback</span>
-                        </div>
-                        <div class="card-body d-flex flex-column">
+            <!-- Feedback Panel -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <span data-lang-key="generated_feedback">Generated Feedback</span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
                             <div id="feedback-display-task1" class="form-control h-100 flex-grow-1 mb-3">
                                 <ul class="nav nav-tabs feedback-tabs d-none" id="feedback-tabs-task1" role="tablist">
-                                    <li class="nav-item" role="presentation">
+                                <li class="nav-item" role="presentation">
                                         <button class="nav-link active" id="extended-tab-task1" data-bs-toggle="tab" data-bs-target="#feedback-extended-pane-task1" type="button" role="tab" data-lang-key="extended">Extended</button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
+                                </li>
+                                <li class="nav-item" role="presentation">
                                         <button class="nav-link" id="short-tab-task1" data-bs-toggle="tab" data-bs-target="#feedback-short-pane-task1" type="button" role="tab" data-lang-key="short">Short</button>
-                                    </li>
-                                </ul>
+                                </li>
+                            </ul>
                                 <div class="tab-content" id="feedback-tab-content-task1">
                                     <div class="tab-pane fade show active" id="feedback-extended-pane-task1" role="tabpanel">
                                         <div id="feedback-extended-task1" class="feedback-content">
-                                            <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
-                                        </div>
+                                        <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
                                     </div>
+                                </div>
                                     <div class="tab-pane fade" id="feedback-short-pane-task1" role="tabpanel">
                                         <div id="feedback-short-task1" class="feedback-content">
-                                             <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
-                                        </div>
+                                         <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="mt-auto">
-                                <div class="feedback-options">
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="feedback-options">
                                     <button id="copy-btn-task1" class="btn btn-outline-secondary" data-lang-key="copy">
-                                        <i class="bi bi-clipboard"></i> Copy
-                                    </button>
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
                                     <button id="revise-reflection-btn-task1" class="btn btn-outline-info" style="display: none;" data-lang-key="revise_reflection">
-                                        <i class="bi bi-pencil-square"></i> Revise Reflection
-                                    </button>
+                                    <i class="bi bi-pencil-square"></i> Revise Reflection
+                                </button>
                                 </div>
                             </div>
                         </div>
@@ -341,7 +341,7 @@
                                     <div class="tab-pane fade" id="feedback-short-pane-task2" role="tabpanel">
                                         <div id="feedback-short-task2" class="feedback-content">
                                              <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
-                                        </div>
+                                </div>
                                     </div>
                                 </div>
                             </div>
@@ -354,44 +354,44 @@
                                     <button id="revise-reflection-btn-task2" class="btn btn-outline-info" style="display: none;" data-lang-key="revise_reflection">
                                         <i class="bi bi-pencil-square"></i> Revise Reflection
                                     </button>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
             <!-- Definitions Section -->
-            <div class="definitions-section mt-4">
+        <div class="definitions-section mt-4">
                 <div class="definitions-header" data-bs-toggle="collapse" data-bs-target="#definitionsContent-task2" aria-expanded="false" role="button">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="mb-2">
-                                <i class="bi bi-lightbulb-fill text-warning me-2"></i>
-                                <span data-lang-key="learn_key_concepts">Learn the Key Concepts for Better Reflection</span>
-                            </h5>
-                        </div>
-                        <div class="expand-indicator">
-                            <i class="bi bi-chevron-down"></i>
-                        </div>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="mb-2">
+                            <i class="bi bi-lightbulb-fill text-warning me-2"></i>
+                            <span data-lang-key="learn_key_concepts">Learn the Key Concepts for Better Reflection</span>
+                        </h5>
+                    </div>
+                    <div class="expand-indicator">
+                        <i class="bi bi-chevron-down"></i>
                     </div>
                 </div>
+            </div>
                 <div class="collapse" id="definitionsContent-task2">
-                    <div class="definitions-grid">
-                        <div class="definition-card description-card">
-                            <div class="definition-icon">📝</div>
-                            <h6 data-lang-key="description">Description</h6>
-                            <p data-lang-key="description_def">Accurately observing and reporting what happened in the classroom - specific behaviors, interactions, and events without interpretation.</p>
-                        </div>
-                        <div class="definition-card explanation-card">
-                            <div class="definition-icon">🔍</div>
-                            <h6 data-lang-key="explanation">Explanation</h6>
-                            <p data-lang-key="explanation_def">Interpreting observed events using educational theory, research, and pedagogical knowledge - understanding why things happened.</p>
-                        </div>
-                        <div class="definition-card prediction-card">
-                            <div class="definition-icon">🔮</div>
-                            <h6 data-lang-key="prediction">Prediction</h6>
-                            <p data-lang-key="prediction_def">Anticipating future outcomes and effects on student learning based on observed teaching practices and their interpretations.</p>
+                <div class="definitions-grid">
+                    <div class="definition-card description-card">
+                        <div class="definition-icon">📝</div>
+                        <h6 data-lang-key="description">Description</h6>
+                        <p data-lang-key="description_def">Accurately observing and reporting what happened in the classroom - specific behaviors, interactions, and events without interpretation.</p>
+                    </div>
+                    <div class="definition-card explanation-card">
+                        <div class="definition-icon">🔍</div>
+                        <h6 data-lang-key="explanation">Explanation</h6>
+                        <p data-lang-key="explanation_def">Interpreting observed events using educational theory, research, and pedagogical knowledge - understanding why things happened.</p>
+                    </div>
+                    <div class="definition-card prediction-card">
+                        <div class="definition-icon">🔮</div>
+                        <h6 data-lang-key="prediction">Prediction</h6>
+                        <p data-lang-key="prediction_def">Anticipating future outcomes and effects on student learning based on observed teaching practices and their interpretations.</p>
                         </div>
                     </div>
                 </div>
@@ -523,7 +523,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Final Submission Confirmation Modal -->
     <div class="modal fade" id="final-submission-modal" tabindex="-1" aria-labelledby="final-submission-modal-label" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -548,12 +548,30 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Supabase JavaScript library with fallback -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    
+    <!-- Supabase loading check and fallback -->
     <script>
         // Check if Supabase loaded properly after a brief delay
         setTimeout(() => {
             if (typeof window.supabase === 'undefined' || !window.supabase) {
-                console.warn('Supabase library failed to load from CDN. Running in demo mode without database.');
+                console.warn('⚠️ Primary Supabase CDN failed, trying backup...');
+                
+                // Try alternative CDN
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = 'https://unpkg.com/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js';
+                fallbackScript.onload = () => {
+                    if (typeof window.supabase !== 'undefined') {
+                        console.log('✅ Supabase loaded from backup CDN');
+                    } else {
+                        console.error('❌ All Supabase CDN sources failed. Running in demo mode.');
+                    }
+                };
+                fallbackScript.onerror = () => {
+                    console.error('❌ Backup Supabase CDN also failed. Running in demo mode.');
+                };
+                document.head.appendChild(fallbackScript);
             } else {
                 console.log('✅ Supabase library loaded successfully');
             }
