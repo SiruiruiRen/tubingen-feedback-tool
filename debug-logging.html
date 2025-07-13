@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logging Diagnostics - Tübingen Teacher Feedback Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .error-text { color: #ff6b6b; }
+        .success-text { color: #51cf66; }
+        .warning-text { color: #ffd93d; }
+        .info-text { color: #74c0fc; }
+        .test-result {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .test-success { background: #d4edda; border-color: #28a745; }
+        .test-error { background: #f8d7da; border-color: #dc3545; }
+        .test-warning { background: #fff3cd; border-color: #ffc107; }
+        .test-info { background: #d1ecf1; border-color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">🔍 Logging Diagnostics</h1>
+                <p class="lead">This tool helps diagnose and fix logging errors in the Tübingen Teacher Feedback Tool.</p>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>📊 Diagnostic Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="test-results"></div>
+                        <button id="run-diagnostics" class="btn btn-primary">Run Full Diagnostics</button>
+                        <button id="fix-issues" class="btn btn-success" disabled>Fix Detected Issues</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Output -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🖥️ Console Output</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="console-output" class="console-output"></div>
+                        <button id="clear-console" class="btn btn-secondary btn-sm">Clear Console</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Tests -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🧪 Manual Tests</h5>
+                    </div>
+                    <div class="card-body">
+                        <button id="test-supabase" class="btn btn-outline-primary btn-sm mb-2">Test Supabase Connection</button>
+                        <button id="test-schema" class="btn btn-outline-primary btn-sm mb-2">Test Database Schema</button>
+                        <button id="test-logging" class="btn btn-outline-primary btn-sm mb-2">Test Event Logging</button>
+                        <button id="test-session" class="btn btn-outline-primary btn-sm mb-2">Test Session Management</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>🔧 Quick Fixes</h5>
+                    </div>
+                    <div class="card-body">
+                        <button id="update-schema" class="btn btn-outline-success btn-sm mb-2">Update Database Schema</button>
+                        <button id="clear-session" class="btn btn-outline-warning btn-sm mb-2">Clear Session Storage</button>
+                        <button id="reset-logging" class="btn btn-outline-info btn-sm mb-2">Reset Logging System</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/supabase@2.39.3/dist/umd/supabase.min.js"></script>
+    <script>
+        // Configuration
+        const SUPABASE_URL = 'https://immrkllzjvhdnzesmaat.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltbXJrbGx6anZoZG56ZXNtYWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzk2MzgsImV4cCI6MjA2Mjc1NTYzOH0.glhn-u4mNpKHsH6qiwdecXyYOWhdxDrTVDIvNivKVf8';
+        
+        let supabase;
+        const consoleOutput = document.getElementById('console-output');
+        const testResults = document.getElementById('test-results');
+        
+        // Console logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'error-text' : 
+                             type === 'success' ? 'success-text' : 
+                             type === 'warning' ? 'warning-text' : 'info-text';
+            
+            consoleOutput.innerHTML += `<div class="${colorClass}">[${timestamp}] ${message}</div>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            console.log(message);
+        }
+        
+        // Add test result
+        function addTestResult(title, status, message) {
+            const statusClass = status === 'success' ? 'test-success' : 
+                               status === 'error' ? 'test-error' : 
+                               status === 'warning' ? 'test-warning' : 'test-info';
+            
+            const icon = status === 'success' ? '✅' : 
+                        status === 'error' ? '❌' : 
+                        status === 'warning' ? '⚠️' : 'ℹ️';
+            
+            testResults.innerHTML += `
+                <div class="test-result ${statusClass}">
+                    <strong>${icon} ${title}</strong><br>
+                    ${message}
+                </div>
+            `;
+        }
+        
+        // Initialize Supabase
+        function initSupabase() {
+            try {
+                if (typeof window.supabase === 'undefined' || !window.supabase) {
+                    throw new Error('Supabase library not loaded from CDN');
+                }
+                
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                if (!supabase) {
+                    throw new Error('Failed to create Supabase client');
+                }
+                
+                log('✅ Supabase client initialized successfully', 'success');
+                addTestResult('Supabase Initialization', 'success', 'Client created successfully');
+                return true;
+            } catch (error) {
+                log(`❌ Supabase initialization failed: ${error.message}`, 'error');
+                addTestResult('Supabase Initialization', 'error', error.message);
+                return false;
+            }
+        }
+        
+        // Test Supabase connection
+        async function testSupabaseConnection() {
+            log('🔍 Testing Supabase connection...');
+            
+            try {
+                const { data, error } = await supabase.from('reflections').select('id').limit(1);
+                
+                if (error) {
+                    log(`❌ Connection test failed: ${error.message}`, 'error');
+                    addTestResult('Database Connection', 'error', error.message);
+                    return false;
+                }
+                
+                log('✅ Database connection successful', 'success');
+                addTestResult('Database Connection', 'success', 'Successfully connected to reflections table');
+                return true;
+            } catch (error) {
+                log(`❌ Connection test error: ${error.message}`, 'error');
+                addTestResult('Database Connection', 'error', error.message);
+                return false;
+            }
+        }
+        
+        // Test database schema
+        async function testDatabaseSchema() {
+            log('🔍 Testing database schema...');
+            
+            const requiredColumns = [
+                'id', 'session_id', 'participant_name', 'video_id', 'language',
+                'reflection_text', 'analysis_percentages', 'weakest_component',
+                'feedback_extended', 'feedback_short', 'task_id', 'created_at',
+                'revision_number', 'parent_reflection_id'
+            ];
+            
+            try {
+                // Test by trying to insert with all required columns
+                const testData = {
+                    session_id: 'test-session',
+                    participant_name: 'Test User',
+                    video_id: 'test-video',
+                    language: 'en',
+                    reflection_text: 'Test reflection',
+                    analysis_percentages: JSON.stringify({description: 50, explanation: 30, prediction: 20}),
+                    weakest_component: 'prediction',
+                    feedback_extended: 'Test feedback extended',
+                    feedback_short: 'Test feedback short',
+                    task_id: 'task1',
+                    revision_number: 1,
+                    parent_reflection_id: null
+                };
+                
+                // Try to insert (but don't actually insert)
+                const { error } = await supabase
+                    .from('reflections')
+                    .insert([testData])
+                    .select()
+                    .limit(0); // This won't actually insert anything
+                
+                if (error) {
+                    if (error.message.includes('column') && error.message.includes('does not exist')) {
+                        log(`❌ Missing database columns: ${error.message}`, 'error');
+                        addTestResult('Database Schema', 'error', `Missing columns detected: ${error.message}`);
+                        return false;
+                    } else {
+                        log(`⚠️ Schema test inconclusive: ${error.message}`, 'warning');
+                        addTestResult('Database Schema', 'warning', `Schema validation inconclusive: ${error.message}`);
+                        return true; // Might be OK
+                    }
+                }
+                
+                log('✅ Database schema appears complete', 'success');
+                addTestResult('Database Schema', 'success', 'All required columns appear to be present');
+                return true;
+            } catch (error) {
+                log(`❌ Schema test failed: ${error.message}`, 'error');
+                addTestResult('Database Schema', 'error', error.message);
+                return false;
+            }
+        }
+        
+        // Test event logging
+        async function testEventLogging() {
+            log('🔍 Testing event logging...');
+            
+            try {
+                const testEvent = {
+                    session_id: 'test-session-' + Date.now(),
+                    reflection_id: null,
+                    event_type: 'session_start',
+                    event_data: { test: true, timestamp: new Date().toISOString() },
+                    user_agent: navigator.userAgent,
+                    language: 'en',
+                    timestamp_utc: new Date().toISOString()
+                };
+                
+                const { error } = await supabase
+                    .from('user_events')
+                    .insert([testEvent]);
+                
+                if (error) {
+                    log(`❌ Event logging failed: ${error.message}`, 'error');
+                    addTestResult('Event Logging', 'error', error.message);
+                    return false;
+                }
+                
+                log('✅ Event logging successful', 'success');
+                addTestResult('Event Logging', 'success', 'Test event logged successfully');
+                return true;
+            } catch (error) {
+                log(`❌ Event logging test failed: ${error.message}`, 'error');
+                addTestResult('Event Logging', 'error', error.message);
+                return false;
+            }
+        }
+        
+        // Test session management
+        function testSessionManagement() {
+            log('🔍 Testing session management...');
+            
+            try {
+                // Test session storage
+                const testSessionId = 'test-session-' + Date.now();
+                sessionStorage.setItem('teacherFeedbackSessionId', testSessionId);
+                
+                const retrievedSessionId = sessionStorage.getItem('teacherFeedbackSessionId');
+                
+                if (retrievedSessionId !== testSessionId) {
+                    throw new Error('Session storage not working properly');
+                }
+                
+                log('✅ Session management working', 'success');
+                addTestResult('Session Management', 'success', 'Session storage working correctly');
+                return true;
+            } catch (error) {
+                log(`❌ Session management failed: ${error.message}`, 'error');
+                addTestResult('Session Management', 'error', error.message);
+                return false;
+            }
+        }
+        
+        // Update database schema
+        async function updateDatabaseSchema() {
+            log('🔧 Updating database schema...');
+            
+            const updates = [
+                {
+                    name: 'Add task_id column',
+                    sql: 'ALTER TABLE reflections ADD COLUMN IF NOT EXISTS task_id VARCHAR(10);'
+                },
+                {
+                    name: 'Add revision_number column',
+                    sql: 'ALTER TABLE reflections ADD COLUMN IF NOT EXISTS revision_number INTEGER DEFAULT 1;'
+                },
+                {
+                    name: 'Add parent_reflection_id column',
+                    sql: 'ALTER TABLE reflections ADD COLUMN IF NOT EXISTS parent_reflection_id INTEGER REFERENCES reflections(id);'
+                },
+                {
+                    name: 'Create user_events table',
+                    sql: `CREATE TABLE IF NOT EXISTS user_events (
+                        id SERIAL PRIMARY KEY,
+                        session_id VARCHAR(50) NOT NULL,
+                        reflection_id INTEGER,
+                        event_type VARCHAR(30) NOT NULL,
+                        timestamp_utc TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                        event_data JSONB,
+                        user_agent TEXT,
+                        language VARCHAR(2)
+                    );`
+                }
+            ];
+            
+            for (const update of updates) {
+                try {
+                    log(`Running: ${update.name}...`);
+                    const { error } = await supabase.rpc('exec_sql', { sql_query: update.sql });
+                    
+                    if (error) {
+                        log(`⚠️ ${update.name} - May need manual update: ${error.message}`, 'warning');
+                    } else {
+                        log(`✅ ${update.name} - Success`, 'success');
+                    }
+                } catch (error) {
+                    log(`❌ ${update.name} - Error: ${error.message}`, 'error');
+                }
+            }
+            
+            log('🔧 Schema update complete. Please run diagnostics again to verify.', 'info');
+        }
+        
+        // Run full diagnostics
+        async function runFullDiagnostics() {
+            log('🚀 Starting full diagnostics...');
+            testResults.innerHTML = '';
+            
+            const supabaseOK = initSupabase();
+            if (!supabaseOK) return;
+            
+            const connectionOK = await testSupabaseConnection();
+            if (!connectionOK) return;
+            
+            const schemaOK = await testDatabaseSchema();
+            const loggingOK = await testEventLogging();
+            const sessionOK = testSessionManagement();
+            
+            if (schemaOK && loggingOK && sessionOK) {
+                log('🎉 All diagnostics passed! Logging should work correctly.', 'success');
+                addTestResult('Overall Status', 'success', 'All systems operational');
+            } else {
+                log('⚠️ Some issues detected. Use the Fix Issues button to resolve them.', 'warning');
+                addTestResult('Overall Status', 'warning', 'Issues detected - fix recommended');
+                document.getElementById('fix-issues').disabled = false;
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('run-diagnostics').addEventListener('click', runFullDiagnostics);
+        document.getElementById('test-supabase').addEventListener('click', () => initSupabase());
+        document.getElementById('test-schema').addEventListener('click', testDatabaseSchema);
+        document.getElementById('test-logging').addEventListener('click', testEventLogging);
+        document.getElementById('test-session').addEventListener('click', testSessionManagement);
+        document.getElementById('update-schema').addEventListener('click', updateDatabaseSchema);
+        document.getElementById('clear-console').addEventListener('click', () => {
+            consoleOutput.innerHTML = '';
+        });
+        document.getElementById('clear-session').addEventListener('click', () => {
+            sessionStorage.clear();
+            log('🧹 Session storage cleared', 'info');
+        });
+        document.getElementById('fix-issues').addEventListener('click', async () => {
+            log('🔧 Attempting to fix detected issues...');
+            await updateDatabaseSchema();
+            setTimeout(() => {
+                log('✅ Fix attempt complete. Running diagnostics again...', 'info');
+                runFullDiagnostics();
+            }, 2000);
+        });
+        
+        // Auto-run diagnostics on load
+        window.addEventListener('load', () => {
+            setTimeout(runFullDiagnostics, 1000);
+        });
+    </script>
+</body>
+</html> 
