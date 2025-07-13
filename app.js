@@ -704,11 +704,11 @@ async function generateFeedback(taskId) {
             reflection_length: currentReflection.length
         });
         
-        const warningMessage = currentLanguage === 'en' 
-            ? `🚨 Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or the feedback will be identical to what you already received.`
-            : `🚨 Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.`;
-            
-            showAlert(warningMessage, 'warning');
+                const warningMessage = currentLanguage === 'en' 
+            ? `Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or the feedback will be identical to what you already received.`
+            : `Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.`;
+        
+        showBubbleWarning(warningMessage, elements.reflectionText, 'warning');
         elements.reflectionText.focus();
             return;
         }
@@ -1058,10 +1058,10 @@ function handleFinalSubmission(taskId) {
         });
         
         const warningMessage = currentLanguage === 'en' 
-            ? `🚨 Warning ${warningCount}: You are submitting the same reflection text again. Please make changes to your reflection if you want to improve it, or click "Submit Final Reflection" again if you're satisfied with your current reflection.`
-            : `🚨 Warnung ${warningCount}: Sie reichen denselben Reflexionstext erneut ein. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, wenn Sie diese verbessern möchten, oder klicken Sie erneut auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
+            ? `Warning ${warningCount}: You are submitting the same reflection text again. Please make changes to your reflection if you want to improve it, or click "Submit Final Reflection" again if you're satisfied with your current reflection.`
+            : `Warnung ${warningCount}: Sie reichen denselben Reflexionstext erneut ein. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, wenn Sie diese verbessern möchten, oder klicken Sie erneut auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
         
-        showAlert(warningMessage, 'warning');
+        showBubbleWarning(warningMessage, elements.reflectionText, 'warning');
         elements.reflectionText.focus();
         return;
     }
@@ -1761,5 +1761,52 @@ function showAlert(message, type = 'info') {
         final_progress: studyProgress
         });
     });
+
+// Enhanced bubble alert for duplicate warnings (more noticeable)
+function showBubbleWarning(message, element, type = 'warning') {
+    // Remove any existing bubbles
+    const existingBubbles = document.querySelectorAll('.bubble-warning');
+    existingBubbles.forEach(bubble => bubble.remove());
+    
+    // Create bubble element
+    const bubble = document.createElement('div');
+    bubble.className = `bubble-warning bubble-${type}`;
+    bubble.innerHTML = `
+        <div class="bubble-content">
+            <span class="bubble-icon">⚠️</span>
+            <span class="bubble-text">${message}</span>
+            <button class="bubble-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+    
+    // Position bubble near the element
+    const rect = element.getBoundingClientRect();
+    bubble.style.cssText = `
+        position: fixed;
+        top: ${rect.bottom + window.scrollY + 10}px;
+        left: ${rect.left + window.scrollX}px;
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 400px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: #856404;
+        animation: bubbleSlideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(bubble);
+    
+    // Auto-remove after 8 seconds
+    setTimeout(() => {
+        if (bubble.parentElement) {
+            bubble.style.animation = 'bubbleSlideOut 0.3s ease-in';
+            setTimeout(() => bubble.remove(), 300);
+        }
+    }, 8000);
+}
 
 console.log('Multi-page Teacher Professional Vision Study loaded successfully');

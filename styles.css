@@ -373,7 +373,7 @@ textarea {
     margin-bottom: 0;
 }
 
-/* Modern feedback content styling - EXACTLY match Analysis section */
+/* FORCE feedback content to match Analysis section EXACTLY */
 #feedback-extended, #feedback-short {
   white-space: pre-wrap;
   min-height: 200px;
@@ -385,21 +385,24 @@ textarea {
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   
-  /* CRITICAL: Match Analysis section exactly */
-  font-size: 0.9rem !important;
-  color: var(--dark-gray) !important;
+  /* FORCE exact match with Analysis section - smaller text */
+  font-size: 0.85rem !important;
+  color: #6c757d !important;
   line-height: 1.4 !important;
   font-weight: 400 !important;
-  font-family: inherit !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
-/* ALL text elements in feedback must match Analysis section */
-#feedback-extended *, #feedback-short * {
-  font-size: 0.9rem !important;
-  color: var(--dark-gray) !important;
+/* FORCE ALL text elements in feedback to match Analysis section */
+#feedback-extended *, 
+#feedback-short *,
+#feedback-extended h1, #feedback-extended h2, #feedback-extended h3, #feedback-extended h4, #feedback-extended h5, #feedback-extended h6,
+#feedback-short h1, #feedback-short h2, #feedback-short h3, #feedback-short h4, #feedback-short h5, #feedback-short h6 {
+  font-size: 0.85rem !important;
+  color: #6c757d !important;
   line-height: 1.4 !important;
   font-weight: 400 !important;
-  font-family: inherit !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
 /* Remove ALL special formatting from text content */
@@ -410,11 +413,11 @@ textarea {
 #feedback-extended b, #feedback-short b,
 #feedback-extended em, #feedback-short em,
 #feedback-extended i, #feedback-short i {
-  font-size: 0.9rem !important;
-  color: var(--dark-gray) !important;
+  font-size: 0.85rem !important;
+  color: #6c757d !important;
   line-height: 1.4 !important;
   font-weight: 400 !important;
-  font-family: inherit !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
   background: none !important;
   padding: 0 !important;
   margin: 0 0 0.5rem 0 !important;
@@ -424,8 +427,8 @@ textarea {
 
 /* Section content should match Analysis text exactly */
 #feedback-extended .section-content, #feedback-short .section-content {
-  font-size: 0.9rem !important;
-  color: var(--dark-gray) !important;
+  font-size: 0.85rem !important;
+  color: #6c757d !important;
   line-height: 1.4 !important;
   font-weight: 400 !important;
   margin-bottom: 0 !important;
@@ -1528,4 +1531,69 @@ textarea {
 #page-task1 .main-container,
 #page-task2 .main-container {
   padding-bottom: 2rem;
+} 
+
+/* Bubble warning animations and styling */
+@keyframes bubbleSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes bubbleSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+.bubble-warning {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.bubble-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.bubble-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.bubble-text {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.bubble-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #856404;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bubble-close:hover {
+  background: rgba(133, 100, 4, 0.1);
 } 
