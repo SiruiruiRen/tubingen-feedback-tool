@@ -762,8 +762,8 @@ async function generateFeedback(taskId) {
         
         // Step 8: Update task state and store reflection immediately
         taskManager.feedbackGenerated = true;
-        // Use smaller, safer ID instead of large timestamp
-        taskManager.currentReflectionId = Math.floor(Math.random() * 1000000) + Date.now() % 1000000;
+        // Removed buggy random ID override - keep database ID to maintain FK integrity
+        // taskManager.currentReflectionId = Math.floor(Math.random() * 1000000) + Date.now() % 1000000;
         
         // CRITICAL: Store reflection immediately after first successful generation
         sessionStorage.setItem(`reflection-${taskId}`, elements.reflectionText.value.trim());
@@ -875,7 +875,13 @@ function formatStructuredFeedback(text, analysisResult) {
     });
     
     // Format sub-headings with professional emphasis
-    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Good|Tip|Tips|Suggestions|Why\?|Why|Stärke|Stärken|Gut|Tipp|Tipps|Vorschläge|Warum\?):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
+    // First, handle English/German labels and make them bold
+    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Good|Tip|Tips|Suggestions):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
+    // Handle "Why?" label (remove colon if present)
+    formattedText = formattedText.replace(/\*\*(Why\?|Why):?\*\*/g, '<strong class="feedback-keyword">Why?</strong>');
+    // German labels
+    formattedText = formattedText.replace(/\*\*(Stärke|Stärken|Gut|Tipp|Tipps|Vorschläge):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
+    formattedText = formattedText.replace(/\*\*(Warum\?):?\*\*/g, '<strong class="feedback-keyword">Warum?</strong>');
     
     // Format bold text
     formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');

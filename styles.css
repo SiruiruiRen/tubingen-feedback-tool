@@ -1706,3 +1706,14 @@ textarea {
 .feedback-content .feedback-section-overall h4 {
   border-left: 4px solid #3F51B5 !important;
 } 
+
+.feedback-keyword {
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+}
+
+/* Tighter spacing between feedback sections */
+.feedback-section {
+  padding: 0.25rem 0 !important;
+  margin-bottom: 0.5rem !important;
+} 
