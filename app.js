@@ -875,8 +875,8 @@ function formatStructuredFeedback(text, analysisResult) {
     });
     
     // Format sub-headings with professional emphasis
-    // First, handle English/German labels and make them bold
-    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Tip|Tips|Suggestions|Good):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
+    // First, handle English/German labels and make them bold (colon outside)
+    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Tip|Tips|Suggestions|Good):\*\*/g, '<strong class="feedback-keyword">$1</strong>:');
     // Handle "Why?" label (remove colon if present)
     formattedText = formattedText.replace(/\*\*(Why\\?|Why):?\*\*/g, '<strong class="feedback-keyword">Why?</strong>');
     // German labels
@@ -896,7 +896,7 @@ function formatStructuredFeedback(text, analysisResult) {
     
     // After existing bold label replacements add plain label handling
      // Handle plain (non-bold) labels at start of line
-    formattedText = formattedText.replace(/^(\s*)(Strengths?|Suggestions|Tip|Tips|Good)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
+    formattedText = formattedText.replace(/^(\s*)(Strengths?|Strength|Suggestions|Tip|Tips|Good)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
     formattedText = formattedText.replace(/^(\s*)Why\?\s*:/gmi, '$1<strong class="feedback-keyword">Why?</strong> ');
     formattedText = formattedText.replace(/^(\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Gut)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
     formattedText = formattedText.replace(/^(\s*)Warum\?\s*:/gmi, '$1<strong class="feedback-keyword">Warum?</strong> ');
@@ -1029,6 +1029,7 @@ function handleFinalSubmission(taskId) {
     
     // No duplicate detection for final submission – user may submit same text if satisfied
     console.log('Final submission – duplicate detection skipped.');
+    const warningCount = 0;
     
     // Log successful final submission
     logEvent('final_submission', {
