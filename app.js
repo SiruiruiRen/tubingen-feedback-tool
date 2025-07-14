@@ -1203,32 +1203,19 @@ function createSentenceWindows(text) {
     const windows = [];
     let windowId = 1;
     
-    // Create overlapping 2-sentence and 3-sentence windows
-    for (let i = 0; i < cleanSentences.length; i++) {
-        // 2-sentence windows
-        if (i < cleanSentences.length - 1) {
-            const text2 = cleanSentences.slice(i, i + 2).join(' ');
-            if (text2.length >= 20) {
-                windows.push({
-                    id: `chunk_${String(windowId++).padStart(3, '0')}`,
-                    text: text2,
-                    sentence_count: 2,
-                    start_position: i
-                });
-            }
-        }
+    // Create non-overlapping 3-sentence windows for better speed
+    for (let i = 0; i < cleanSentences.length; i += 3) {
+        const remainingSentences = cleanSentences.length - i;
+        const sentenceCount = Math.min(3, remainingSentences);
+        const windowText = cleanSentences.slice(i, i + sentenceCount).join(' ');
         
-        // 3-sentence windows
-        if (i < cleanSentences.length - 2) {
-            const text3 = cleanSentences.slice(i, i + 3).join(' ');
-            if (text3.length >= 20) {
-                windows.push({
-                    id: `chunk_${String(windowId++).padStart(3, '0')}`,
-                    text: text3,
-                    sentence_count: 3,
-                    start_position: i
-                });
-            }
+        if (windowText.length >= 20) {
+            windows.push({
+                id: `chunk_${String(windowId++).padStart(3, '0')}`,
+                text: windowText,
+                sentence_count: sentenceCount,
+                start_position: i
+            });
         }
     }
     
@@ -1386,25 +1373,55 @@ function calculatePercentages(classificationResults) {
         };
     }
     
-    // Count 1s for each category
-    const descriptionCount = classificationResults.filter(r => r.description === 1).length;
-    const explanationCount = classificationResults.filter(r => r.explanation === 1).length;
-    const predictionCount = classificationResults.filter(r => r.prediction === 1).length;
-    const otherCount = classificationResults.filter(r => 
-        r.description === 0 && r.explanation === 0 && r.prediction === 0
-    ).length;
+    // Assign each window to exactly one category using priority system
+    // Priority: Description > Explanation > Prediction > Other
+    let descriptionCount = 0;
+    let explanationCount = 0;
+    let predictionCount = 0;
+    let otherCount = 0;
     
-    // Calculate percentages (rounded to 1 decimal place)
+    classificationResults.forEach(result => {
+        if (result.description === 1) {
+            descriptionCount++;
+        } else if (result.explanation === 1) {
+            explanationCount++;
+        } else if (result.prediction === 1) {
+            predictionCount++;
+        } else {
+            otherCount++;
+        }
+    });
+    
+    // Calculate percentages that add up to exactly 100%
     const descriptionPct = Math.round((descriptionCount / totalWindows) * 1000) / 10;
     const explanationPct = Math.round((explanationCount / totalWindows) * 1000) / 10;
     const predictionPct = Math.round((predictionCount / totalWindows) * 1000) / 10;
     const otherPct = Math.round((otherCount / totalWindows) * 1000) / 10;
     
-    // Find weakest component
+    // Ensure they add up to exactly 100% by adjusting the largest category if needed
+    const sum = descriptionPct + explanationPct + predictionPct + otherPct;
+    let adjustedPercentages = {
+        description: descriptionPct,
+        explanation: explanationPct,
+        prediction: predictionPct,
+        other: otherPct
+    };
+    
+    if (sum !== 100) {
+        // Find the largest category and adjust it
+        const largest = Object.keys(adjustedPercentages).reduce((a, b) => 
+            adjustedPercentages[a] > adjustedPercentages[b] ? a : b
+        );
+        adjustedPercentages[largest] += (100 - sum);
+        // Round to 1 decimal place
+        adjustedPercentages[largest] = Math.round(adjustedPercentages[largest] * 10) / 10;
+    }
+    
+    // Find weakest component (excluding other)
     const components = {
-        'Description': descriptionPct,
-        'Explanation': explanationPct,
-        'Prediction': predictionPct
+        'Description': adjustedPercentages.description,
+        'Explanation': adjustedPercentages.explanation,
+        'Prediction': adjustedPercentages.prediction
     };
     
     const weakestComponent = Object.keys(components).reduce((a, b) => 
@@ -1412,14 +1429,9 @@ function calculatePercentages(classificationResults) {
     );
     
     return {
-        percentages: {
-            description: descriptionPct,
-            explanation: explanationPct,
-            prediction: predictionPct,
-            other: otherPct
-        },
+        percentages: adjustedPercentages,
         weakest_component: weakestComponent,
-        analysis_summary: `Analyzed ${totalWindows} text windows using triple binary classification`
+        analysis_summary: `Analyzed ${totalWindows} non-overlapping text windows using triple binary classification`
     };
 }
 
@@ -1430,7 +1442,7 @@ async function analyzeReflectionDistribution(reflection, language) {
         
         // Step 1: Create sentence windows
         const windows = createSentenceWindows(reflection);
-        console.log(`📝 Created ${windows.length} sentence windows`);
+        console.log(`📝 Created ${windows.length} non-overlapping sentence windows`);
         
         // Step 2: Triple binary classification for each window
         const classificationResults = [];
@@ -1453,7 +1465,7 @@ async function analyzeReflectionDistribution(reflection, language) {
             });
         }
         
-        console.log('✅ Classification complete, calculating percentages...');
+        console.log('✅ Classification complete, calculating percentages (adding up to 100%)...');
         
         // Step 3: Mathematical aggregation
         const analysis = calculatePercentages(classificationResults);
