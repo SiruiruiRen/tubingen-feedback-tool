@@ -832,82 +832,93 @@ function formatStructuredFeedback(text, analysisResult) {
     
     let formattedText = text.trim();
     
+    // Step 1: Handle section headers (before newline conversion)
     // English section formatting
-    formattedText = formattedText.replace(/####\s*Overall Assessment.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Overall Assessment.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    formattedText = formattedText.replace(/####\s*Description.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Description.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-description">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    formattedText = formattedText.replace(/####\s*Explanation.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Explanation.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-explanation">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    formattedText = formattedText.replace(/####\s*Prediction.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Prediction.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-prediction">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    formattedText = formattedText.replace(/####\s*Conclusion.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Conclusion.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
     // German section formatting
-    formattedText = formattedText.replace(/####\s*Gesamtbewertung.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Gesamtbewertung.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    formattedText = formattedText.replace(/####\s*Beschreibung.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Beschreibung.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-description">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    formattedText = formattedText.replace(/####\s*Erklärung.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Erklärung.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-explanation">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    formattedText = formattedText.replace(/####\s*Vorhersage.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Vorhersage.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-prediction">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    formattedText = formattedText.replace(/####\s*Fazit.*?(?=####|\n\n|$)/gs, (match) => {
+    formattedText = formattedText.replace(/####\s*Fazit.*?(?=####|$)/gs, (match) => {
         return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
     });
     
-    // Format sub-headings with professional emphasis
-    // Step 1: Handle bold markdown labels first
-    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Tip|Tips|Suggestions|Good):\*\*/g, '<strong class="feedback-keyword">$1</strong>:');
-    formattedText = formattedText.replace(/\*\*(Stärke|Stärken|Gut|Tipp|Tipps|Vorschläge):\*\*/g, '<strong class="feedback-keyword">$1</strong>:');
+    // Step 2: Handle sub-headings (BEFORE newline conversion for better detection)
+    // Handle bold markdown labels first
+    formattedText = formattedText.replace(/\*\*(Strength|Strengths|Tip|Tips|Suggestions|Good):\*\*/gi, '<strong class="feedback-keyword">$1</strong>:');
+    formattedText = formattedText.replace(/\*\*(Stärke|Stärken|Gut|Tipp|Tipps|Vorschläge):\*\*/gi, '<strong class="feedback-keyword">$1</strong>:');
     
-    // Step 2: Handle "Why?" labels (remove colon if present)
-    formattedText = formattedText.replace(/\*\*(Why\?):?\*\*/g, '<strong class="feedback-keyword">Why?</strong>');
-    formattedText = formattedText.replace(/\*\*(Warum\?):?\*\*/g, '<strong class="feedback-keyword">Warum?</strong>');
+    // Handle "Why?" labels (remove colon if present)
+    formattedText = formattedText.replace(/\*\*(Why\?):?\*\*/gi, '<strong class="feedback-keyword">Why?</strong>');
+    formattedText = formattedText.replace(/\*\*(Warum\?):?\*\*/gi, '<strong class="feedback-keyword">Warum?</strong>');
     
-    // Step 3: Handle plain (non-bold) labels at start of line or after <br>
-    formattedText = formattedText.replace(/(^|<br>\s*)(Strength|Strengths|Suggestions|Tip|Tips|Good)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
-    formattedText = formattedText.replace(/(^|<br>\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Gut)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
+    // Handle plain (non-bold) labels at start of line with more variations
+    formattedText = formattedText.replace(/(^|\n\s*)(Strength|Strengths|Suggestions|Suggestion|Tip|Tips|Good)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
+    formattedText = formattedText.replace(/(^|\n\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Vorschlag|Gut)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
     
-    // Step 4: Handle plain "Why?" labels (remove colon)
-    formattedText = formattedText.replace(/(^|<br>\s*)Why\?\s*:/gmi, '$1<strong class="feedback-keyword">Why?</strong> ');
-    formattedText = formattedText.replace(/(^|<br>\s*)Warum\?\s*:/gmi, '$1<strong class="feedback-keyword">Warum?</strong> ');
+    // Handle plain "Why?" labels (remove colon)
+    formattedText = formattedText.replace(/(^|\n\s*)Why\?\s*:?/gmi, '$1<strong class="feedback-keyword">Why?</strong> ');
+    formattedText = formattedText.replace(/(^|\n\s*)Warum\?\s*:?/gmi, '$1<strong class="feedback-keyword">Warum?</strong> ');
     
-    // Step 5: Format remaining bold text
+    // Additional patterns to catch sub-headings that might be formatted differently
+    formattedText = formattedText.replace(/(^|\n\s*)(Good|Tip|Strength|Suggestions)(\s*:)/gmi, '$1<strong class="feedback-keyword">$2</strong>$3');
+    formattedText = formattedText.replace(/(^|\n\s*)(Gut|Tipp|Stärke|Vorschläge)(\s*:)/gmi, '$1<strong class="feedback-keyword">$2</strong>$3');
+    
+    // Step 3: Format remaining bold text
     formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     
-    // Step 6: Format list items
+    // Step 4: Format list items
     formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
     formattedText = formattedText.replace(/(<li>.*?<\/li>\s*)+/g, '<ul>$&</ul>');
     
-    // Step 7: Replace newlines with <br>
+    // Step 5: Replace newlines with <br> (do this AFTER all other processing)
     formattedText = formattedText.replace(/\n/g, '<br>');
     formattedText = formattedText.replace(/<br>\s*<br>/g, '<br>');
     
-    // Step 8: Final cleanup - ensure Why? doesn't have colon
+    // Step 6: Final cleanup - ensure Why? doesn't have colon
     formattedText = formattedText.replace(/<strong class="feedback-keyword">Why\?<\/strong>\s*:/g, '<strong class="feedback-keyword">Why?</strong>');
     formattedText = formattedText.replace(/<strong class="feedback-keyword">Warum\?<\/strong>\s*:/g, '<strong class="feedback-keyword">Warum?</strong>');
     
-    // Step 9: Split strong tags that accidentally include label + sentence
-    formattedText = formattedText.replace(/<strong>\s*(Strength|Strengths|Suggestions|Good|Tip|Tips|Why\?|Stärke|Stärken|Vorschläge|Gut|Tipp|Tipps|Warum\?)\s*:\s*([\s\S]*?)<\/strong>/g, '<strong class="feedback-keyword">$1</strong>: $2');
+    // Step 7: Split strong tags that accidentally include label + sentence
+    formattedText = formattedText.replace(/<strong>\s*(Strength|Strengths|Suggestions|Good|Tip|Tips|Why\?|Stärke|Stärken|Vorschläge|Gut|Tipp|Tipps|Warum\?)\s*:\s*([\s\S]*?)<\/strong>/gi, '<strong class="feedback-keyword">$1</strong>: $2');
+    
+    // Step 8: Handle edge cases where labels might be at the beginning of <br> tags
+    formattedText = formattedText.replace(/<br>\s*(Strength|Strengths|Suggestions|Suggestion|Tip|Tips|Good)\s*:/gi, '<br><strong class="feedback-keyword">$1</strong>:');
+    formattedText = formattedText.replace(/<br>\s*(Stärke|Stärken|Tipp|Tipps|Vorschläge|Vorschlag|Gut)\s*:/gi, '<br><strong class="feedback-keyword">$1</strong>:');
+    formattedText = formattedText.replace(/<br>\s*Why\?\s*:?/gi, '<br><strong class="feedback-keyword">Why?</strong> ');
+    formattedText = formattedText.replace(/<br>\s*Warum\?\s*:?/gi, '<br><strong class="feedback-keyword">Warum?</strong> ');
     
     return formattedText;
 }
