@@ -1353,6 +1353,48 @@ textarea {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* New Qualtrics Survey Section Styles */
+.qualtrics-survey-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6 !important;
+  transition: all 0.3s ease;
+}
+
+.qualtrics-survey-section:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: var(--primary-color) !important;
+}
+
+.qualtrics-survey-section h6 {
+  color: var(--dark-gray);
+  font-weight: 600;
+}
+
+.qualtrics-survey-section .btn {
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.qualtrics-survey-section .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.qualtrics-survey-section .alert {
+  border: none;
+  background: rgba(13, 110, 253, 0.1);
+}
+
+.qualtrics-survey-section .alert-success {
+  background: rgba(25, 135, 84, 0.1);
+}
+
+.qualtrics-survey-section .bi {
+  font-size: 1.1rem;
+}
+
 /* Submit Final Reflection Button */
 #submit-final-task1, #submit-final-task2 {
   width: 100%;
