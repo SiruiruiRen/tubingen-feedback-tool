@@ -46,8 +46,8 @@ const translations = {
         select_video: "Select a video...",
         language: "Language:",
         generate_feedback: "Generate Feedback",
-        reflection_input: "Student Teacher Reflection",
-        paste_reflection: "Paste the student teacher's reflection here...",
+        reflection_input: "Reflection Text",
+        paste_reflection: "Paste your reflection here...",
         clear: "Clear",
         generated_feedback: "Generated Feedback",
         feedback_placeholder: "Feedback will appear here after generation...",
@@ -130,8 +130,8 @@ const translations = {
         select_video: "Wählen Sie ein Video...",
         language: "Sprache:",
         generate_feedback: "Feedback generieren",
-        reflection_input: "Reflexion des Lehramtsstudierenden",
-        paste_reflection: "Fügen Sie hier die Reflexion des Lehramtsstudierenden ein...",
+        reflection_input: "Reflexionstext",
+        paste_reflection: "Fügen Sie hier Ihre Reflexion ein...",
         clear: "Löschen",
         generated_feedback: "Generiertes Feedback",
         feedback_placeholder: "Feedback wird hier nach der Generierung angezeigt...",
@@ -815,12 +815,26 @@ function displayAnalysisDistribution(taskId, analysisResult) {
     const { percentages, weakest_component } = analysisResult;
     const isGerman = currentLanguage === 'de';
     
+    // Check for gibberish/no professional vision
+    if (percentages.professional_vision <= 5) {
+        distributionContainer.innerHTML = `
+            <div class="professional-analysis-summary">
+                <h6>${isGerman ? 'Analyse Ihrer Reflexion' : 'Analysis of Your Reflection'}</h6>
+                <p class="analysis-text text-warning">
+                    ${isGerman ? 'Ihr Text bezieht sich nicht auf Professional Vision. Überarbeiten Sie ihn, um ihn auf das Video zu beziehen.' 
+                              : 'Your text does not relate to professional vision. Revise to relate to the video.'}
+                </p>
+            </div>
+        `;
+        return;
+    }
+
     distributionContainer.innerHTML = `
         <div class="professional-analysis-summary">
             <h6>${isGerman ? 'Analyse Ihrer Reflexion' : 'Analysis of Your Reflection'}</h6>
             <p class="analysis-text">
-                ${isGerman ? `Ihre Reflexion enthält ${percentages.description || 0}% Beschreibung, ${percentages.explanation || 0}% Erklärung und ${percentages.prediction || 0}% Vorhersage. Professional Vision: ${percentages.professional_vision || 0}% + Sonstiges: ${percentages.other || 0}% = 100%. Der schwächste Bereich ist ${weakest_component}.` 
-                          : `Your reflection contains ${percentages.description || 0}% description, ${percentages.explanation || 0}% explanation, and ${percentages.prediction || 0}% prediction. Professional Vision: ${percentages.professional_vision || 0}% + Other: ${percentages.other || 0}% = 100%. The weakest component is ${weakest_component}.`}
+                ${isGerman ? `Ihre Reflexion enthält ${percentages.description || 0}% Beschreibung, ${percentages.explanation || 0}% Erklärung und ${percentages.prediction || 0}% Vorhersage. ${weakest_component} kann gestärkt werden.` 
+                          : `Your reflection contains ${percentages.description || 0}% description, ${percentages.explanation || 0}% explanation, and ${percentages.prediction || 0}% prediction. ${weakest_component} can be strengthened.`}
             </p>
         </div>
     `;
@@ -1791,6 +1805,20 @@ function showFinalSubmissionModal(taskId) {
     // Set the taskId data attribute for the modal so handleFinalSubmission can access it
     const modalElement = DOMElements.modals.finalSubmission;
     modalElement.dataset.taskId = taskId;
+    
+    // Update modal text based on task
+    const noteElement = modalElement.querySelector('[data-lang-key="final_submission_note"]');
+    if (noteElement) {
+        if (taskId === 'task1') {
+            noteElement.textContent = currentLanguage === 'de' 
+                ? 'Sie können Ihre Reflexion weiter überarbeiten, bis Sie zufrieden sind, und dann auf diese Schaltfläche klicken, wenn Sie bereit sind, zur nächsten Videoaufgabe zu wechseln.'
+                : 'You can continue revising your reflection until you\'re satisfied, then click this button when you\'re ready to move on to the next video task.';
+        } else if (taskId === 'task2') {
+            noteElement.textContent = currentLanguage === 'de' 
+                ? 'Sie können Ihre Reflexion weiter überarbeiten, bis Sie zufrieden sind, und dann auf diese Schaltfläche klicken, wenn Sie bereit sind, die Studie abzuschließen.'
+                : 'You can continue revising your reflection until you\'re satisfied, then click this button when you\'re ready to move on to finish the study.';
+        }
+    }
     
     logEvent('final_submission_modal_shown', {
         task: taskId,

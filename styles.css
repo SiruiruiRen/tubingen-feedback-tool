@@ -238,6 +238,19 @@ textarea {
   line-height: 1.6;
 }
 
+/* Specific styling for reflection text areas */
+#reflection-text-task1, #reflection-text-task2 {
+  min-height: 500px !important;
+  height: auto;
+  max-height: none;
+  flex-grow: 1;
+}
+
+/* Ensure reflection card bodies expand to match feedback areas */
+#reflection-text-task1.form-control, #reflection-text-task2.form-control {
+  height: 100%;
+}
+
 /* Buttons */
 .btn {
   border-radius: 8px;
