@@ -906,6 +906,9 @@ function formatStructuredFeedback(text, analysisResult) {
     formattedText = formattedText.replace(/<strong class="feedback-keyword">Why\?<\/strong>\s*:/g, '<strong class="feedback-keyword">Why?</strong>');
     formattedText = formattedText.replace(/<strong class="feedback-keyword">Warum\?<\/strong>\s*:/g, '<strong class="feedback-keyword">Warum?</strong>');
     
+    // Split strong tags that include label + sentence
+    formattedText = formattedText.replace(/<strong>\s*(Strength|Strengths|Suggestions|Good|Tip|Tips|Why\?|Stärke|Stärken|Vorschläge|Gut|Tipp|Tipps|Warum\?)\s*:\s*([\s\S]*?)<\/strong>/g, '<strong class="feedback-keyword">$1</strong>: $2');
+    
     return formattedText;
 }
 
