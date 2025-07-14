@@ -606,7 +606,7 @@ function showFinalSubmissionModal(taskId) {
         task: taskId,
         participant_name: elements.nameInput.value.trim(),
         video_id: elements.videoSelect.value,
-            language: currentLanguage,
+                    language: currentLanguage,
         reflection_id: TaskManager[taskId].currentReflectionId,
         total_revisions: TaskManager[taskId].revisionCount || 1,
         final_reflection_length: elements.reflectionText.value.length
@@ -819,8 +819,8 @@ function displayAnalysisDistribution(taskId, analysisResult) {
         <div class="professional-analysis-summary">
             <h6>${isGerman ? 'Analyse Ihrer Reflexion' : 'Analysis of Your Reflection'}</h6>
             <p class="analysis-text">
-                ${isGerman ? `Ihre Reflexion enthält ${percentages.description || 0}% Beschreibung, ${percentages.explanation || 0}% Erklärung und ${percentages.prediction || 0}% Vorhersage. Der schwächste Bereich ist ${weakest_component}.` 
-                          : `Your reflection contains ${percentages.description || 0}% description, ${percentages.explanation || 0}% explanation, and ${percentages.prediction || 0}% prediction. The weakest component is ${weakest_component}.`}
+                ${isGerman ? `Ihre Reflexion enthält ${percentages.description || 0}% Beschreibung, ${percentages.explanation || 0}% Erklärung und ${percentages.prediction || 0}% Vorhersage. Professional Vision: ${percentages.professional_vision || 0}% + Sonstiges: ${percentages.other || 0}% = 100%. Der schwächste Bereich ist ${weakest_component}.` 
+                          : `Your reflection contains ${percentages.description || 0}% description, ${percentages.explanation || 0}% explanation, and ${percentages.prediction || 0}% prediction. Professional Vision: ${percentages.professional_vision || 0}% + Other: ${percentages.other || 0}% = 100%. The weakest component is ${weakest_component}.`}
             </p>
         </div>
     `;
@@ -963,7 +963,7 @@ function copyFeedback(taskId) {
     logEvent('copy_feedback', {
         task: taskId,
         style: taskManager.currentFeedbackType,
-        language: currentLanguage,
+                language: currentLanguage,
         reflection_id: taskManager.currentReflectionId,
         text_length: textToCopy.length
     });
@@ -1133,7 +1133,7 @@ function endFeedbackViewing(taskId, style, language) {
     logEvent('view_feedback_end', {
         task: taskId,
         style: style,
-        language: language,
+                    language: language,
         duration_seconds: duration,
         reflection_id: taskManager.currentReflectionId
     });
@@ -1314,15 +1314,15 @@ TEXT: ${windowText}`;
 
 // Binary classifier API call with validation and retry
 async function callBinaryClassifier(prompt) {
-    const requestData = {
-        model: model,
-        messages: [
-            {
-                role: "system",
+        const requestData = {
+            model: model,
+            messages: [
+                {
+                    role: "system",
                 content: "You are an expert teaching reflection analyst. Respond with ONLY '1' or '0'."
-            },
-            {
-                role: "user",
+                },
+                {
+                    role: "user",
                 content: prompt
             }
         ],
@@ -1367,7 +1367,7 @@ function calculatePercentages(classificationResults) {
     
     if (totalWindows === 0) {
         return {
-            percentages: { description: 0, explanation: 0, prediction: 0, other: 100 },
+            percentages: { description: 0, explanation: 0, prediction: 0, other: 100, professional_vision: 0 },
             weakest_component: "Prediction",
             analysis_summary: "No valid windows for analysis"
         };
@@ -1392,36 +1392,32 @@ function calculatePercentages(classificationResults) {
         }
     });
     
-    // Calculate percentages that add up to exactly 100%
-    const descriptionPct = Math.round((descriptionCount / totalWindows) * 1000) / 10;
-    const explanationPct = Math.round((explanationCount / totalWindows) * 1000) / 10;
-    const predictionPct = Math.round((predictionCount / totalWindows) * 1000) / 10;
-    const otherPct = Math.round((otherCount / totalWindows) * 1000) / 10;
+    // Calculate raw percentages
+    const descriptionPct = (descriptionCount / totalWindows) * 100;
+    const explanationPct = (explanationCount / totalWindows) * 100;
+    const predictionPct = (predictionCount / totalWindows) * 100;
+    const otherPct = (otherCount / totalWindows) * 100;
     
-    // Ensure they add up to exactly 100% by adjusting the largest category if needed
-    const sum = descriptionPct + explanationPct + predictionPct + otherPct;
-    let adjustedPercentages = {
-        description: descriptionPct,
-        explanation: explanationPct,
-        prediction: predictionPct,
-        other: otherPct
+    // Professional Vision% = Description% + Explanation% + Prediction%
+    const professionalVisionPct = descriptionPct + explanationPct + predictionPct;
+    
+    // Ensure Professional Vision% + Others% = 100%
+    const adjustedOtherPct = 100 - professionalVisionPct;
+    
+    // Round all percentages to 1 decimal place
+    const finalPercentages = {
+        description: Math.round(descriptionPct * 10) / 10,
+        explanation: Math.round(explanationPct * 10) / 10,
+        prediction: Math.round(predictionPct * 10) / 10,
+        other: Math.round(adjustedOtherPct * 10) / 10,
+        professional_vision: Math.round(professionalVisionPct * 10) / 10
     };
-    
-    if (sum !== 100) {
-        // Find the largest category and adjust it
-        const largest = Object.keys(adjustedPercentages).reduce((a, b) => 
-            adjustedPercentages[a] > adjustedPercentages[b] ? a : b
-        );
-        adjustedPercentages[largest] += (100 - sum);
-        // Round to 1 decimal place
-        adjustedPercentages[largest] = Math.round(adjustedPercentages[largest] * 10) / 10;
-    }
     
     // Find weakest component (excluding other)
     const components = {
-        'Description': adjustedPercentages.description,
-        'Explanation': adjustedPercentages.explanation,
-        'Prediction': adjustedPercentages.prediction
+        'Description': finalPercentages.description,
+        'Explanation': finalPercentages.explanation,
+        'Prediction': finalPercentages.prediction
     };
     
     const weakestComponent = Object.keys(components).reduce((a, b) => 
@@ -1429,9 +1425,9 @@ function calculatePercentages(classificationResults) {
     );
     
     return {
-        percentages: adjustedPercentages,
+        percentages: finalPercentages,
         weakest_component: weakestComponent,
-        analysis_summary: `Analyzed ${totalWindows} non-overlapping text windows using triple binary classification`
+        analysis_summary: `Analyzed ${totalWindows} non-overlapping text windows. Professional Vision: ${finalPercentages.professional_vision}% (D:${finalPercentages.description}% + E:${finalPercentages.explanation}% + P:${finalPercentages.prediction}%) + Other: ${finalPercentages.other}% = 100%`
     };
 }
 
@@ -1471,204 +1467,180 @@ async function analyzeReflectionDistribution(reflection, language) {
         const analysis = calculatePercentages(classificationResults);
         
         console.log('📊 Analysis result:', analysis);
-        return analysis;
-        
-    } catch (error) {
+            return analysis;
+
+        } catch (error) {
         console.error('❌ Error in 4-step classification:', error);
         // Fallback to default distribution
-        return {
-            percentages: { description: 30, explanation: 35, prediction: 25, other: 10 },
-            weakest_component: "Prediction", 
+            return {
+                percentages: { description: 30, explanation: 35, prediction: 25, other: 10 },
+                weakest_component: "Prediction",
             analysis_summary: "Fallback distribution due to classification error"
-        };
+            };
+        }
     }
-}
 
 // AI Feedback Generation Functions (simplified versions of the original)
-async function generateWeightedFeedback(reflection, language, style, analysisResult) {
-    const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
-    const systemPrompt = getFeedbackPrompt(promptType, analysisResult);
-    
-    const languageInstruction = language === 'en' 
+    async function generateWeightedFeedback(reflection, language, style, analysisResult) {
+        const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
+        const systemPrompt = getFeedbackPrompt(promptType, analysisResult);
+        
+        const languageInstruction = language === 'en' 
     ? "IMPORTANT: You MUST respond in English. The entire feedback MUST be in English only."
     : "WICHTIG: Sie MÜSSEN auf Deutsch antworten. Das gesamte Feedback MUSS ausschließlich auf Deutsch sein.";
-    
-    const enhancedPrompt = languageInstruction + "\n\n" + systemPrompt;
-    
-    const requestData = {
-        model: model,
-        messages: [
-            {
-                role: "system",
-                content: enhancedPrompt
-            },
-            {
-                role: "user",
-            content: `Based on the analysis showing ${analysisResult.percentages.description}% description, ${analysisResult.percentages.explanation}% explanation, ${analysisResult.percentages.prediction}% prediction, provide feedback for this reflection:\n\n${reflection}`
-            }
-        ],
+        
+        const enhancedPrompt = languageInstruction + "\n\n" + systemPrompt;
+        
+        const requestData = {
+            model: model,
+            messages: [
+                {
+                    role: "system",
+                    content: enhancedPrompt
+                },
+                {
+                    role: "user",
+            content: `Based on the analysis showing ${analysisResult.percentages.description}% description, ${analysisResult.percentages.explanation}% explanation, ${analysisResult.percentages.prediction}% prediction (Professional Vision: ${analysisResult.percentages.professional_vision}%) + Other: ${analysisResult.percentages.other}% = 100%, provide feedback for this reflection:\n\n${reflection}`
+                }
+            ],
     temperature: 0.7,
     max_tokens: 2000
-    };
-    
-    try {
-        const response = await fetch(OPENAI_API_URL, {
-            method: 'POST',
+        };
+        
+        try {
+            const response = await fetch(OPENAI_API_URL, {
+                method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
         throw new Error(errorData.error?.message || 'Error generating feedback');
-        }
-        
-        const result = await response.json();
+            }
+            
+            const result = await response.json();
     return result.choices[0].message.content;
-    } catch (error) {
+        } catch (error) {
     console.error('Error in generateWeightedFeedback:', error);
-        throw error;
+            throw error;
+        }
     }
-}
 
 function getFeedbackPrompt(promptType, analysisResult) {
     const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
-    const percentages = analysisResult ? analysisResult.percentages : { description: 30, explanation: 35, prediction: 25, other: 10 };
+    const percentages = analysisResult ? analysisResult.percentages : { description: 30, explanation: 35, prediction: 25, other: 10, professional_vision: 90 };
     
     const prompts = {
-        'academic English': `You are a supportive teaching mentor providing academic feedback on a student teacher's reflection analysis using the professional vision framework.
+        'academic English': `You are a supportive yet rigorous teaching mentor providing feedback on student teacher classroom video analysis using the Professional Vision Framework.
 
-ANALYSIS RESULTS: The student's reflection contains ${percentages.description}% Description, ${percentages.explanation}% Explanation, ${percentages.prediction}% Prediction, and ${percentages.other}% Other content. The weakest component is ${weakestComponent}.
+**Knowledge Base Integration:**
+Base your feedback on the theoretical framework of empirical teaching quality research about effective teaching and learning components, for example according to the process-oriented teaching-learning model of Seidel & Shavelson, 2007 (document knowledge base 1) or the three basic dimensions of teaching quality according to Klieme 2006 (document knowledge base 2). Use references to effective teaching and learning components (document knowledge base 1 and 2) for feedback on description and explanation. To analyze possible consequences for student learning regarding prediction, effective teaching and learning components as superordinate theoretical category can be explained by the self-determination theory of motivation according to Deci & Ryan, 1993 (document knowledge base 3) or the theory of cognitive and constructive learning according to Atkinson & Shiffrin, Craik & Lockhart, Anderson (document knowledge base 4).
 
-PROFESSIONAL VISION FRAMEWORK:
-- **Description**: Accurately noting what happened in the classroom without interpretation
-- **Explanation**: Interpreting classroom events using educational theory and research
-- **Prediction**: Forecasting how teacher actions might affect student learning
+**MANDATORY WEIGHTED FEEDBACK STRUCTURE:**
+1. Description% (${percentages.description}%) + Explanation% (${percentages.explanation}%) + Prediction% (${percentages.prediction}%) = Professional Vision% (${percentages.professional_vision}%), Professional Vision% + Others% (${percentages.other}%) = 100%
+2. **IDENTIFY WEAKEST AREA**: Find the LOWEST percentage among Description, Explanation, Prediction
+3. **MAIN FOCUS**: Write 6-8 detailed sentences ONLY for the weakest area with multiple specific suggestions
+4. **BRIEF SECTIONS**: For the two stronger areas, write exactly 3 sentences each (1 Strength + 1 Suggestion + 1 Why)
+5. **Focus conclusion**: Target advice on improving the weakest area only
 
-FEEDBACK STRUCTURE REQUIREMENTS:
-You MUST provide feedback in exactly these sections with proper headings:
+**Overall Assessment Template:**
+"A large part of your analysis reflects professional analysis. Only about ${percentages.other}% of your text does not follow the steps of a professional lesson analysis. Above all, you are well able to identify and differentiate different teaching events in the video based on professional knowledge about effective teaching and learning processes without making judgments (${percentages.description}% describing). In addition, you relate many of the observed events to the respective theories of effective teaching and learning (explaining: ${percentages.explanation}%). However, you could try to relate the observed and explained events more to possible consequences for student learning (${percentages.prediction}% predicting)."
 
-#### Overall Assessment
-Provide a comprehensive overview using actual percentages: "Your reflection demonstrates ${percentages.description}% description, ${percentages.explanation}% explanation, and ${percentages.prediction}% prediction. The weakest area is ${weakestComponent}."
+**CRITICAL FOCUS REQUIREMENTS:**
+- Focus ONLY on analysis skills, NEVER on teaching practice
+- NO predictions about student behaviors - focus on teacher's analysis abilities
+- Description feedback must emphasize NO evaluation/judgment
+- Target the weakest professional vision component for development
 
-#### Description  
-**Strength:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
-**Suggestions:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]  
-**Why?:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
+**FORMATTING:**
+- Five sections: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
+- Sub-headings: "Strength:", "Suggestions:", "Why?:"
+- Conclusion template: "You show a strong sense of what effective teacher behavior involves and identify key problems in learning process design. To further improve your analysis: [focus on weakest component], refer explicitly to teaching quality components, use clearly named psychological concepts when predicting learning effects."
 
-#### Explanation
-**Strength:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
-**Suggestions:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
-**Why?:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
-
-#### Prediction  
-**Strength:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
-**Suggestions:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
-**Why?:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
-
-#### Conclusion
-Provide specific next steps focusing on improving ${weakestComponent}.
-
-Focus extra attention on ${weakestComponent} as it's the weakest area. Use educational theory references and maintain academic rigor.`,
+**SENTENCE REQUIREMENTS:**
+- ${weakestComponent} section: 6-8 detailed sentences with multiple specific suggestions
+- Other sections: Exactly 3 sentences each (1 Strength + 1 Suggestion + 1 Why)`,
         
         'user-friendly English': `You are a friendly teaching mentor giving practical, easy-to-understand feedback on a student teacher's video analysis.
 
-ANALYSIS RESULTS: The student's reflection has ${percentages.description}% Description, ${percentages.explanation}% Explanation, ${percentages.prediction}% Prediction, and ${percentages.other}% Other content. They need the most help with ${weakestComponent}.
+**Knowledge Base Integration:**
+Base your feedback on teaching quality research and effective teaching components. Use simple references to educational theories for description and explanation feedback. For prediction feedback, mention motivation theories (like student motivation and engagement) and learning theories (like how students process information).
 
-WHAT TO LOOK FOR:
-- **Description**: What exactly happened in the classroom (no judging, just facts)
-- **Explanation**: Why it happened (using teaching theories)  
-- **Prediction**: How it might affect student learning
+**MANDATORY WEIGHTED FEEDBACK STRUCTURE:**
+1. Description% (${percentages.description}%) + Explanation% (${percentages.explanation}%) + Prediction% (${percentages.prediction}%) = Professional Vision% (${percentages.professional_vision}%), Professional Vision% + Others% (${percentages.other}%) = 100%
+2. **MAIN FOCUS**: Write 6-8 detailed sentences ONLY for the weakest area (${weakestComponent}) with multiple specific suggestions
+3. **BRIEF SECTIONS**: For the two stronger areas, write exactly 3 sentences each (1 Good + 1 Tip + 1 Why)
+4. **Focus conclusion**: Target advice on improving the weakest area only
 
-FEEDBACK STRUCTURE REQUIREMENTS:
-You MUST provide feedback in exactly these sections:
+**CRITICAL FOCUS REQUIREMENTS:**
+- Focus ONLY on analysis skills, NEVER on teaching practice
+- NO predictions about student behaviors - focus on teacher's analysis abilities
+- Description feedback must emphasize NO evaluation/judgment
+- Target the weakest professional vision component for development
 
-#### Description
-**Good:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
-**Tip:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
-**Why?:** [2-3 sentences if ${weakestComponent} = Description, otherwise 1 sentence]
+**FORMATTING:**
+- Four sections: "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
+- Sub-headings: "Good:", "Tip:", "Why?:"
 
-#### Explanation  
-**Good:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
-**Tip:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
-**Why?:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
-
-#### Prediction
-**Good:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
-**Tip:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
-**Why?:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
-
-#### Conclusion
-Give simple, practical advice for improving ${weakestComponent}.
-
-Use simple language and focus most on helping with ${weakestComponent} since that's where they need the most support.`,
+**SENTENCE REQUIREMENTS:**
+- ${weakestComponent} section: 6-8 detailed sentences with multiple specific suggestions
+- Other sections: Exactly 3 sentences each (1 Good + 1 Tip + 1 Why)`,
         
-        'academic German': `Sie sind ein unterstützender Mentor, der akademisches Feedback zur Reflexionsanalyse eines Studierenden gibt, basierend auf dem Professional Vision Framework.
+        'academic German': `Sie sind ein unterstützender, aber rigoroser Mentor, der Feedback zur Analyse von Unterrichtsvideos durch Lehramtsstudierende unter Verwendung des Professional Vision Frameworks gibt.
 
-ANALYSEERGEBNISSE: Die Reflexion des Studierenden enthält ${percentages.description}% Beschreibung, ${percentages.explanation}% Erklärung, ${percentages.prediction}% Vorhersage und ${percentages.other}% Sonstiges. Die schwächste Komponente ist ${weakestComponent}.
+**Wissensbasierte Integration:**
+Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrichtsqualitätsforschung über effektive Lehr- und Lernkomponenten, zum Beispiel nach dem prozessorientierten Lehr-Lern-Modell von Seidel & Shavelson, 2007 (Wissensbasis 1) oder den drei Grunddimensionen der Unterrichtsqualität nach Klieme 2006 (Wissensbasis 2). Verwenden Sie Verweise auf effektive Lehr- und Lernkomponenten (Wissensbasis 1 und 2) für Feedback zu Beschreibung und Erklärung. Zur Analyse möglicher Konsequenzen für das Lernen der Schüler bezüglich Vorhersage können effektive Lehr- und Lernkomponenten als übergeordnete theoretische Kategorie durch die Selbstbestimmungstheorie der Motivation nach Deci & Ryan, 1993 (Wissensbasis 3) oder die Theorie des kognitiven und konstruktiven Lernens nach Atkinson & Shiffrin, Craik & Lockhart, Anderson (Wissensbasis 4) erklärt werden.
 
-PROFESSIONAL VISION FRAMEWORK:
-- **Beschreibung**: Genaue Beobachtung ohne Interpretation
-- **Erklärung**: Interpretation mit pädagogischen Theorien
-- **Vorhersage**: Prognose der Auswirkungen auf das Lernen
+**OBLIGATORISCHE GEWICHTETE FEEDBACK-STRUKTUR:**
+1. Beschreibung% (${percentages.description}%) + Erklärung% (${percentages.explanation}%) + Vorhersage% (${percentages.prediction}%) = Professional Vision% (${percentages.professional_vision}%), Professional Vision% + Sonstiges% (${percentages.other}%) = 100%
+2. **SCHWÄCHSTEN BEREICH IDENTIFIZIEREN**: Finden Sie den NIEDRIGSTEN Prozentsatz unter Beschreibung, Erklärung, Vorhersage
+3. **HAUPTFOKUS**: Schreiben Sie 6-8 detaillierte Sätze NUR für den schwächsten Bereich mit mehreren spezifischen Vorschlägen
+4. **KURZE ABSCHNITTE**: Für die beiden stärkeren Bereiche schreiben Sie genau 3 Sätze jeweils (1 Stärke + 1 Vorschlag + 1 Warum)
+5. **Fokussiertes Fazit**: Zielgerichtete Ratschläge nur zur Verbesserung des schwächsten Bereichs
 
-FEEDBACK-STRUKTUR ANFORDERUNGEN:
-Sie MÜSSEN Feedback in genau diesen Abschnitten mit korrekten Überschriften geben:
+**Vorlage für Gesamtbewertung:**
+"Ein großer Teil Ihrer Analyse spiegelt eine professionelle Analyse wider. Nur etwa ${percentages.other}% Ihres Textes folgt nicht den Schritten einer professionellen Stundenanalyse. Vor allem können Sie verschiedene Unterrichtsereignisse im Video basierend auf professionellem Wissen über effektive Lehr- und Lernprozesse identifizieren und differenzieren, ohne Bewertungen zu treffen (${percentages.description}% beschreibend). Darüber hinaus beziehen Sie viele der beobachteten Ereignisse auf die jeweiligen Theorien effektiven Lehrens und Lernens (erklärend: ${percentages.explanation}%). Sie könnten jedoch versuchen, die beobachteten und erklärten Ereignisse mehr auf mögliche Konsequenzen für das Lernen der Schüler zu beziehen (${percentages.prediction}% vorhersagend)."
 
-#### Gesamtbewertung
-Umfassender Überblick mit tatsächlichen Prozentsätzen: "Ihre Reflexion zeigt ${percentages.description}% Beschreibung, ${percentages.explanation}% Erklärung und ${percentages.prediction}% Vorhersage. Der schwächste Bereich ist ${weakestComponent}."
+**KRITISCHE FOKUS-ANFORDERUNGEN:**
+- Fokussieren Sie sich NUR auf Analysefähigkeiten, NIEMALS auf Unterrichtspraxis
+- KEINE Vorhersagen über Schülerverhalten - fokussieren Sie sich auf die Analysefähigkeiten des Lehrers
+- Beschreibungs-Feedback muss KEINE Bewertung/Beurteilung betonen
+- Zielen Sie auf die schwächste Professional Vision-Komponente für die Entwicklung
 
-#### Beschreibung
-**Stärke:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
-**Vorschläge:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
-**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
+**FORMATIERUNG:**
+- Fünf Abschnitte: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
+- Unterüberschriften: "Stärke:", "Vorschläge:", "Warum?:"
+- Fazit-Vorlage: "Sie zeigen ein starkes Gefühl dafür, was effektives Lehrerverhalten beinhaltet, und identifizieren Schlüsselprobleme im Lernprozess-Design. Um Ihre Analyse weiter zu verbessern: [fokussieren Sie sich auf die schwächste Komponente], beziehen Sie sich explizit auf Unterrichtsqualitätskomponenten, verwenden Sie klar benannte psychologische Konzepte bei der Vorhersage von Lerneffekten."
 
-#### Erklärung  
-**Stärke:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
-**Vorschläge:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
-**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
-
-#### Vorhersage
-**Stärke:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]  
-**Vorschläge:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
-**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
-
-#### Fazit
-Spezifische nächste Schritte zur Verbesserung von ${weakestComponent}.
-
-Konzentrieren Sie sich besonders auf ${weakestComponent} als schwächsten Bereich.`,
+**SATZ-ANFORDERUNGEN:**
+- ${weakestComponent} Abschnitt: 6-8 detaillierte Sätze mit mehreren spezifischen Vorschlägen
+- Andere Abschnitte: Genau 3 Sätze jeweils (1 Stärke + 1 Vorschlag + 1 Warum)`,
         
         'user-friendly German': `Sie sind ein freundlicher Mentor, der praktisches, leicht verständliches Feedback zur Videoanalyse eines Studierenden gibt.
 
-ANALYSEERGEBNISSE: Die Reflexion hat ${percentages.description}% Beschreibung, ${percentages.explanation}% Erklärung, ${percentages.prediction}% Vorhersage und ${percentages.other}% Sonstiges. Am meisten Hilfe brauchen sie bei ${weakestComponent}.
+**Wissensbasierte Integration:**
+Basieren Sie Ihr Feedback auf Unterrichtsqualitätsforschung und effektive Unterrichtskomponenten. Verwenden Sie einfache Verweise auf Bildungstheorien für Beschreibung und Erklärung. Für Vorhersage-Feedback erwähnen Sie Motivationstheorien (wie Schülermotivation und Engagement) und Lerntheorien (wie Schüler Informationen verarbeiten).
 
-WORAUF ACHTEN:
-- **Beschreibung**: Was genau passiert ist (keine Bewertung, nur Fakten)
-- **Erklärung**: Warum es passiert ist (mit Lehrtheorien)
-- **Vorhersage**: Wie es das Lernen beeinflussen könnte
+**OBLIGATORISCHE GEWICHTETE FEEDBACK-STRUKTUR:**
+1. Beschreibung% (${percentages.description}%) + Erklärung% (${percentages.explanation}%) + Vorhersage% (${percentages.prediction}%) = Professional Vision% (${percentages.professional_vision}%), Professional Vision% + Sonstiges% (${percentages.other}%) = 100%
+2. **HAUPTFOKUS**: Schreiben Sie 6-8 detaillierte Sätze NUR für den schwächsten Bereich (${weakestComponent}) mit mehreren spezifischen Vorschlägen
+3. **KURZE ABSCHNITTE**: Für die beiden stärkeren Bereiche schreiben Sie genau 3 Sätze jeweils (1 Gut + 1 Tipp + 1 Warum)
+4. **Fokussiertes Fazit**: Zielgerichtete Ratschläge nur zur Verbesserung des schwächsten Bereichs
 
-FEEDBACK-STRUKTUR ANFORDERUNGEN:
-Sie MÜSSEN Feedback in genau diesen Abschnitten geben:
+**KRITISCHE FOKUS-ANFORDERUNGEN:**
+- Fokussieren Sie sich NUR auf Analysefähigkeiten, NIEMALS auf Unterrichtspraxis
+- KEINE Vorhersagen über Schülerverhalten - fokussieren Sie sich auf die Analysefähigkeiten des Lehrers
+- Beschreibungs-Feedback muss KEINE Bewertung/Beurteilung betonen
+- Zielen Sie auf die schwächste Professional Vision-Komponente für die Entwicklung
 
-#### Beschreibung
-**Gut:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
-**Tipp:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]  
-**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Beschreibung, sonst 1 Satz]
+**FORMATIERUNG:**
+- Vier Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
+- Unterüberschriften: "Gut:", "Tipp:", "Warum?:"
 
-#### Erklärung
-**Gut:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
-**Tipp:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
-**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Erklärung, sonst 1 Satz]
-
-#### Vorhersage  
-**Gut:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
-**Tipp:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
-**Warum?:** [2-3 Sätze wenn ${weakestComponent} = Vorhersage, sonst 1 Satz]
-
-#### Fazit
-Einfache, praktische Ratschläge zur Verbesserung von ${weakestComponent}.
-
-Verwenden Sie einfache Sprache und konzentrieren Sie sich auf ${weakestComponent}.`
+**SATZ-ANFORDERUNGEN:**
+- ${weakestComponent} Abschnitt: 6-8 detaillierte Sätze mit mehreren spezifischen Vorschlägen
+- Andere Abschnitte: Genau 3 Sätze jeweils (1 Gut + 1 Tipp + 1 Warum)`
     };
     
     return prompts[promptType] || prompts['academic English'];
