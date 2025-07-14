@@ -1820,40 +1820,68 @@ textarea {
   margin-bottom: 0.35rem !important;
 }
 
-/* Ensure body text not bold and consistent sizing for both versions */
+/* COMPREHENSIVE TEXT FORMATTING OVERRIDES - ENSURE NO BOLD TEXT */
+
+/* Force normal font weight for ALL text content */
+.feedback-content,
+.feedback-content *,
 .feedback-content p,
 .feedback-content span,
 .feedback-content li,
-.feedback-content div {
+.feedback-content div,
+.feedback-content strong:not(.feedback-keyword),
+.feedback-content b:not(.feedback-keyword),
+.feedback-content em,
+.feedback-content i,
+.feedback-content text,
+#feedback-extended .feedback-content,
+#feedback-extended .feedback-content *,
+#feedback-short .feedback-content,
+#feedback-short .feedback-content * {
   font-weight: 400 !important;
   font-size: 0.9rem !important;
   color: #6c757d !important;
   line-height: 1.5 !important;
-} 
-
-.feedback-content strong:not(.feedback-keyword) {
-  font-weight: 400 !important;
-  font-size: 0.9rem !important;
-} 
-
-.feedback-content b:not(.feedback-keyword) {
-  font-weight: 400 !important;
-  font-size: 0.9rem !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
-/* Override any remaining font-size inconsistencies for both versions */
-#feedback-extended .feedback-content *,
-#feedback-short .feedback-content * {
-  font-size: 0.9rem !important;
+/* Extremely specific overrides for both feedback areas */
+#feedback-extended .feedback-content .feedback-section *:not(h4):not(.feedback-keyword),
+#feedback-short .feedback-content .feedback-section *:not(h4):not(.feedback-keyword) {
   font-weight: 400 !important;
+  font-size: 0.9rem !important;
   color: #6c757d !important;
-  line-height: 1.5 !important;
+}
+
+/* Override any Bootstrap or other CSS that might make text bold */
+.feedback-content .fw-bold,
+.feedback-content .font-weight-bold,
+.feedback-content .text-bold {
+  font-weight: 400 !important;
 }
 
 /* Ensure headings are consistent for both versions */
 #feedback-extended .feedback-content h4,
-#feedback-short .feedback-content h4 {
+#feedback-short .feedback-content h4,
+.feedback-content h4,
+.feedback-content h5,
+.feedback-content h6 {
   font-size: 1.1rem !important;
   font-weight: 600 !important;
   color: #1a1a1a !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Make sure only feedback keywords are bold */
+.feedback-content .feedback-keyword {
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+  font-size: 0.9rem !important;
+}
+
+/* Final catch-all to ensure normal text weight */
+[id^="feedback-"] .feedback-content,
+[id^="feedback-"] .feedback-content *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not(.feedback-keyword) {
+  font-weight: 400 !important;
 } 
