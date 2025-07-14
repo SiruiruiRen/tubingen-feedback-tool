@@ -875,38 +875,38 @@ function formatStructuredFeedback(text, analysisResult) {
     });
     
     // Format sub-headings with professional emphasis
-    // First, handle English/German labels and make them bold (colon outside)
+    // Step 1: Handle bold markdown labels first
     formattedText = formattedText.replace(/\*\*(Strength|Strengths|Tip|Tips|Suggestions|Good):\*\*/g, '<strong class="feedback-keyword">$1</strong>:');
-    // Handle "Why?" label (remove colon if present)
-    formattedText = formattedText.replace(/\*\*(Why\\?|Why):?\*\*/g, '<strong class="feedback-keyword">Why?</strong>');
-    // German labels
-    formattedText = formattedText.replace(/\*\*(Stärke|Stärken|Gut|Tipp|Tipps|Vorschläge):\*\*/g, '<strong class="feedback-keyword">$1:</strong>');
-    formattedText = formattedText.replace(/\*\*(Warum\\?):?\*\*/g, '<strong class="feedback-keyword">Warum?</strong>');
+    formattedText = formattedText.replace(/\*\*(Stärke|Stärken|Gut|Tipp|Tipps|Vorschläge):\*\*/g, '<strong class="feedback-keyword">$1</strong>:');
     
-    // Format bold text
+    // Step 2: Handle "Why?" labels (remove colon if present)
+    formattedText = formattedText.replace(/\*\*(Why\?):?\*\*/g, '<strong class="feedback-keyword">Why?</strong>');
+    formattedText = formattedText.replace(/\*\*(Warum\?):?\*\*/g, '<strong class="feedback-keyword">Warum?</strong>');
+    
+    // Step 3: Handle plain (non-bold) labels at start of line or after <br>
+    formattedText = formattedText.replace(/(^|<br>\s*)(Strength|Strengths|Suggestions|Tip|Tips|Good)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
+    formattedText = formattedText.replace(/(^|<br>\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Gut)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
+    
+    // Step 4: Handle plain "Why?" labels (remove colon)
+    formattedText = formattedText.replace(/(^|<br>\s*)Why\?\s*:/gmi, '$1<strong class="feedback-keyword">Why?</strong> ');
+    formattedText = formattedText.replace(/(^|<br>\s*)Warum\?\s*:/gmi, '$1<strong class="feedback-keyword">Warum?</strong> ');
+    
+    // Step 5: Format remaining bold text
     formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     
-    // Format list items
+    // Step 6: Format list items
     formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
     formattedText = formattedText.replace(/(<li>.*?<\/li>\s*)+/g, '<ul>$&</ul>');
     
-    // Replace newlines with <br>
+    // Step 7: Replace newlines with <br>
     formattedText = formattedText.replace(/\n/g, '<br>');
     formattedText = formattedText.replace(/<br>\s*<br>/g, '<br>');
     
-    // After existing bold label replacements add plain label handling
-     // Handle plain (non-bold) labels at start of line
-    formattedText = formattedText.replace(/^(\s*)(Strengths?|Strength|Suggestions|Tip|Tips|Good)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
-    formattedText = formattedText.replace(/^(\s*)Why\?\s*:/gmi, '$1<strong class="feedback-keyword">Why?</strong> ');
-    formattedText = formattedText.replace(/^(\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Gut)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
-    formattedText = formattedText.replace(/^(\s*)Warum\?\s*:/gmi, '$1<strong class="feedback-keyword">Warum?</strong> ');
-    
-    // After label replacements add:
-    // Remove colon after Why keyword
+    // Step 8: Final cleanup - ensure Why? doesn't have colon
     formattedText = formattedText.replace(/<strong class="feedback-keyword">Why\?<\/strong>\s*:/g, '<strong class="feedback-keyword">Why?</strong>');
     formattedText = formattedText.replace(/<strong class="feedback-keyword">Warum\?<\/strong>\s*:/g, '<strong class="feedback-keyword">Warum?</strong>');
     
-    // Split strong tags that include label + sentence
+    // Step 9: Split strong tags that accidentally include label + sentence
     formattedText = formattedText.replace(/<strong>\s*(Strength|Strengths|Suggestions|Good|Tip|Tips|Why\?|Stärke|Stärken|Vorschläge|Gut|Tipp|Tipps|Warum\?)\s*:\s*([\s\S]*?)<\/strong>/g, '<strong class="feedback-keyword">$1</strong>: $2');
     
     return formattedText;
@@ -1319,14 +1319,14 @@ async function callBinaryClassifier(prompt) {
             messages: [
                 {
                     role: "system",
-                content: "You are an expert teaching reflection analyst. Respond with ONLY '1' or '0'."
+                content: "You are an expert teaching reflection analyst. Be conservative in your classifications - only respond '1' if you are clearly certain the criteria are met. Respond with ONLY '1' or '0'."
                 },
                 {
                     role: "user",
                 content: prompt
             }
         ],
-        temperature: 0.1,
+        temperature: 0.0,
         max_tokens: 10
     };
 
@@ -1503,7 +1503,7 @@ async function analyzeReflectionDistribution(reflection, language) {
             content: `Based on the analysis showing ${analysisResult.percentages.description}% description, ${analysisResult.percentages.explanation}% explanation, ${analysisResult.percentages.prediction}% prediction (Professional Vision: ${analysisResult.percentages.professional_vision}%) + Other: ${analysisResult.percentages.other}% = 100%, provide feedback for this reflection:\n\n${reflection}`
                 }
             ],
-    temperature: 0.7,
+    temperature: 0.3,
     max_tokens: 2000
         };
         
@@ -1555,7 +1555,7 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 
 **FORMATTING:**
 - Five sections: "#### Overall Assessment", "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
-- Sub-headings: "Strength:", "Suggestions:", "Why?:"
+- Sub-headings: "Strength:", "Suggestions:", "Why?"
 - Conclusion template: "You show a strong sense of what effective teacher behavior involves and identify key problems in learning process design. To further improve your analysis: [focus on weakest component], refer explicitly to teaching quality components, use clearly named psychological concepts when predicting learning effects."
 
 **SENTENCE REQUIREMENTS:**
@@ -1581,7 +1581,7 @@ Base your feedback on teaching quality research and effective teaching component
 
 **FORMATTING:**
 - Four sections: "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
-- Sub-headings: "Good:", "Tip:", "Why?:"
+- Sub-headings: "Good:", "Tip:", "Why?"
 
 **SENTENCE REQUIREMENTS:**
 - ${weakestComponent} section: 6-8 detailed sentences with multiple specific suggestions
@@ -1610,7 +1610,7 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 
 **FORMATIERUNG:**
 - Fünf Abschnitte: "#### Gesamtbewertung", "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
-- Unterüberschriften: "Stärke:", "Vorschläge:", "Warum?:"
+- Unterüberschriften: "Stärke:", "Vorschläge:", "Warum?"
 - Fazit-Vorlage: "Sie zeigen ein starkes Gefühl dafür, was effektives Lehrerverhalten beinhaltet, und identifizieren Schlüsselprobleme im Lernprozess-Design. Um Ihre Analyse weiter zu verbessern: [fokussieren Sie sich auf die schwächste Komponente], beziehen Sie sich explizit auf Unterrichtsqualitätskomponenten, verwenden Sie klar benannte psychologische Konzepte bei der Vorhersage von Lerneffekten."
 
 **SATZ-ANFORDERUNGEN:**
@@ -1636,7 +1636,7 @@ Basieren Sie Ihr Feedback auf Unterrichtsqualitätsforschung und effektive Unter
 
 **FORMATIERUNG:**
 - Vier Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
-- Unterüberschriften: "Gut:", "Tipp:", "Warum?:"
+- Unterüberschriften: "Gut:", "Tipp:", "Warum?"
 
 **SATZ-ANFORDERUNGEN:**
 - ${weakestComponent} Abschnitt: 6-8 detaillierte Sätze mit mehreren spezifischen Vorschlägen
