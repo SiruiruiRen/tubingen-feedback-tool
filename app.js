@@ -901,6 +901,11 @@ function formatStructuredFeedback(text, analysisResult) {
     formattedText = formattedText.replace(/^(\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Gut)\s*:/gmi, '$1<strong class="feedback-keyword">$2</strong>:');
     formattedText = formattedText.replace(/^(\s*)Warum\?\s*:/gmi, '$1<strong class="feedback-keyword">Warum?</strong> ');
     
+    // After label replacements add:
+    // Remove colon after Why keyword
+    formattedText = formattedText.replace(/<strong class="feedback-keyword">Why\?<\/strong>\s*:/g, '<strong class="feedback-keyword">Why?</strong>');
+    formattedText = formattedText.replace(/<strong class="feedback-keyword">Warum\?<\/strong>\s*:/g, '<strong class="feedback-keyword">Warum?</strong>');
+    
     return formattedText;
 }
 
