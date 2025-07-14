@@ -1733,15 +1733,25 @@ textarea {
 
 /* UNIVERSAL FEEDBACK CONTENT OVERRIDE (works for all tasks) */
 .feedback-content, .feedback-content * {
-  font-size: 0.85rem !important;
+  font-size: 0.9rem !important;
   color: #6c757d !important;
-  line-height: 1.4 !important;
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* Ensure Extended and Short versions have IDENTICAL font styling */
+#feedback-extended .feedback-content, #feedback-short .feedback-content,
+#feedback-extended .feedback-content *, #feedback-short .feedback-content * {
+  font-size: 0.9rem !important;
+  color: #6c757d !important;
+  line-height: 1.5 !important;
   font-weight: 400 !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
 .feedback-content h4, .feedback-content h5, .feedback-content h6 {
-  font-size: 0.95rem !important;
+  font-size: 1.1rem !important;
   font-weight: 600 !important;
   color: #1a1a1a !important;
   margin-top: 0.75rem !important;
@@ -1789,11 +1799,6 @@ textarea {
 .feedback-section-overall {
   border-left: 4px solid #3F51B5 !important;
   padding-left: 1rem !important;
-}
-
-/* Make short-version body text slightly smaller */
-[id^="feedback-short"] .feedback-section * {
-  font-size: 0.8rem !important;
 } 
 
 /* Fixed alert container top-right */
@@ -1815,17 +1820,40 @@ textarea {
   margin-bottom: 0.35rem !important;
 }
 
-/* Ensure body text not bold */
+/* Ensure body text not bold and consistent sizing for both versions */
 .feedback-content p,
 .feedback-content span,
-.feedback-content li {
+.feedback-content li,
+.feedback-content div {
   font-weight: 400 !important;
+  font-size: 0.9rem !important;
+  color: #6c757d !important;
+  line-height: 1.5 !important;
 } 
 
 .feedback-content strong:not(.feedback-keyword) {
   font-weight: 400 !important;
+  font-size: 0.9rem !important;
 } 
 
 .feedback-content b:not(.feedback-keyword) {
   font-weight: 400 !important;
+  font-size: 0.9rem !important;
+}
+
+/* Override any remaining font-size inconsistencies for both versions */
+#feedback-extended .feedback-content *,
+#feedback-short .feedback-content * {
+  font-size: 0.9rem !important;
+  font-weight: 400 !important;
+  color: #6c757d !important;
+  line-height: 1.5 !important;
+}
+
+/* Ensure headings are consistent for both versions */
+#feedback-extended .feedback-content h4,
+#feedback-short .feedback-content h4 {
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
 } 
