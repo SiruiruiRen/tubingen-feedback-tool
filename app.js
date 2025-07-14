@@ -896,8 +896,12 @@ function formatStructuredFeedback(text, analysisResult) {
     formattedText = formattedText.replace(/(^|\n\s*)(Good|Tip|Strength|Suggestions)(\s*:)/gmi, '$1<strong class="feedback-keyword">$2</strong>$3');
     formattedText = formattedText.replace(/(^|\n\s*)(Gut|Tipp|Stärke|Vorschläge)(\s*:)/gmi, '$1<strong class="feedback-keyword">$2</strong>$3');
     
-    // Step 3: Format remaining bold text
-    formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Step 3: Format remaining bold text - only for specific types, not general content
+    // Only bold specific types of content like headings, labels, or key terms
+    formattedText = formattedText.replace(/\*\*(Professional Vision|Description|Explanation|Prediction|Overall Assessment|Conclusion|Important Note|Wichtiger Hinweis|Gesamtbewertung|Beschreibung|Erklärung|Vorhersage|Fazit)\*\*/gi, '<strong>$1</strong>');
+    
+    // Remove remaining bold markdown that shouldn't be bolded (general content)
+    formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '$1');
     
     // Step 4: Format list items
     formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
@@ -1531,18 +1535,28 @@ async function analyzeReflectionDistribution(reflection, language) {
             }
             
             const result = await response.json();
-    return result.choices[0].message.content;
+            let feedback = result.choices[0].message.content;
+            
+            // Add revision suggestion if content is too irrelevant to professional vision
+            if (analysisResult && analysisResult.percentages.other > 50) {
+                const revisionNote = language === 'en' 
+                    ? "\n\n**Important Note:** Your reflection contains a significant amount of content that doesn't follow professional lesson analysis steps. Please revise your reflection to focus more on describing what you observed, explaining why it happened using educational theories, and predicting the effects on student learning."
+                    : "\n\n**Wichtiger Hinweis:** Ihre Reflexion enthält einen erheblichen Anteil an Inhalten, die nicht den Schritten einer professionellen Stundenanalyse folgen. Bitte überarbeiten Sie Ihre Reflexion, um sich mehr auf die Beschreibung Ihrer Beobachtungen, die Erklärung mit Hilfe pädagogischer Theorien und die Vorhersage der Auswirkungen auf das Lernen der Schüler zu konzentrieren.";
+                feedback += revisionNote;
+            }
+            
+            return feedback;
         } catch (error) {
     console.error('Error in generateWeightedFeedback:', error);
             throw error;
         }
     }
 
-function getFeedbackPrompt(promptType, analysisResult) {
-    const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
+    function getFeedbackPrompt(promptType, analysisResult) {
+        const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
     const percentages = analysisResult ? analysisResult.percentages : { description: 30, explanation: 35, prediction: 25, other: 10, professional_vision: 90 };
-    
-    const prompts = {
+
+        const prompts = {
         'academic English': `You are a supportive yet rigorous teaching mentor providing feedback on student teacher classroom video analysis using the Professional Vision Framework.
 
 **Knowledge Base Integration:**
@@ -1665,8 +1679,12 @@ function formatFeedback(text) {
     // Format headings
     formattedText = formattedText.replace(/####\s+([^\n]+)/g, '<h4>$1</h4>');
     
-    // Format bold text
-    formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Format bold text - only for specific types, not general content
+    // Only bold specific types of content like headings, labels, or key terms
+    formattedText = formattedText.replace(/\*\*(Professional Vision|Description|Explanation|Prediction|Overall Assessment|Conclusion|Important Note|Wichtiger Hinweis|Gesamtbewertung|Beschreibung|Erklärung|Vorhersage|Fazit|Strength|Strengths|Suggestions|Good|Tip|Tips|Why\?|Stärke|Stärken|Vorschläge|Gut|Tipp|Tipps|Warum\?)\*\*/gi, '<strong>$1</strong>');
+    
+    // Remove remaining bold markdown that shouldn't be bolded (general content)
+    formattedText = formattedText.replace(/\*\*(.+?)\*\*/g, '$1');
     
     // Format list items
     formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
@@ -1683,8 +1701,8 @@ function formatFeedback(text) {
 async function saveFeedbackToDatabase(taskId, data) {
     if (!supabase) {
         console.log('No database connection - running in demo mode');
-        return;
-    }
+            return;
+        }
 
     try {
         const revisionNumber = TaskManager[taskId].revisionCount || 1;
@@ -1707,15 +1725,15 @@ async function saveFeedbackToDatabase(taskId, data) {
         };
 
         const { data: result, error } = await supabase
-            .from('reflections')
+                .from('reflections')
             .insert([reflectionData])
             .select()
             .single();
 
-        if (error) {
+            if (error) {
             console.error('Database insert error:', error);
-            return;
-        }
+                    return;
+                }
 
         // Update task manager with database ID
         TaskManager[taskId].currentReflectionId = result.id;
@@ -1726,8 +1744,8 @@ async function saveFeedbackToDatabase(taskId, data) {
         }
         
         console.log(`✅ ${taskId} reflection saved to database:`, result.id);
-        
-    } catch (error) {
+            
+        } catch (error) {
         console.error('Error saving to database:', error);
     }
 }
@@ -1817,7 +1835,7 @@ async function logEvent(eventType, eventData = {}) {
         } else {
             console.log(`Event logged: ${eventType}`, eventData);
         }
-    } catch (error) {
+        } catch (error) {
         console.error('Error in logEvent:', error);
     }
 }
@@ -1835,8 +1853,8 @@ function toggleLoading(taskId, isLoading) {
     }
 }
 
-function showAlert(message, type = 'info') {
-    const alertContainer = document.getElementById('alert-container');
+    function showAlert(message, type = 'info') {
+        const alertContainer = document.getElementById('alert-container');
     if (!alertContainer) return;
     
     const icons = {
@@ -1845,23 +1863,23 @@ function showAlert(message, type = 'info') {
         danger: '<i class="bi bi-x-circle-fill me-2"></i>',
         info: '<i class="bi bi-info-circle-fill me-2"></i>'
     };
-    
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.role = 'alert';
-    alert.innerHTML = `
+        
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = 'alert';
+        alert.innerHTML = `
         ${icons[type] || icons.info}${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    alertContainer.appendChild(alert);
-    
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-        alert.classList.remove('show');
-        setTimeout(() => alert.remove(), 300);
-    }, 5000);
-}
+        `;
+        
+        alertContainer.appendChild(alert);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    }
 
     function initSupabase() {
         if (!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
