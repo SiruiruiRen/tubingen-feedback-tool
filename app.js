@@ -735,9 +735,9 @@ async function generateFeedback(taskId) {
         // Step 3: Display analysis distribution
         displayAnalysisDistribution(taskId, analysisResult);
         
-        // Step 4: Display structured feedback
-        elements.feedbackExtended.innerHTML = formatStructuredFeedback(extendedFeedback, analysisResult);
-        elements.feedbackShort.innerHTML = formatStructuredFeedback(shortFeedback, analysisResult);
+        // Step 4: Display structured feedback with proper CSS classes
+        elements.feedbackExtended.innerHTML = `<div class="feedback-content">${formatStructuredFeedback(extendedFeedback, analysisResult)}</div>`;
+        elements.feedbackShort.innerHTML = `<div class="feedback-content">${formatStructuredFeedback(shortFeedback, analysisResult)}</div>`;
         
         // Step 5: Show feedback tabs with user's preferred style first
         elements.feedbackTabs.classList.remove('d-none');
@@ -1569,8 +1569,8 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 4. **BRIEF SECTIONS**: For the two stronger areas, write exactly 3 sentences each (1 Strength + 1 Suggestion + 1 Why)
 5. **Focus conclusion**: Target advice on improving the weakest area only
 
-**Overall Assessment Template:**
-"A large part of your analysis reflects professional analysis. Only about ${percentages.other}% of your text does not follow the steps of a professional lesson analysis. Above all, you are well able to identify and differentiate different teaching events in the video based on professional knowledge about effective teaching and learning processes without making judgments (${percentages.description}% describing). In addition, you relate many of the observed events to the respective theories of effective teaching and learning (explaining: ${percentages.explanation}%). However, you could try to relate the observed and explained events more to possible consequences for student learning (${percentages.prediction}% predicting)."
+**Overall Assessment Template (2-3 sentences max):**
+"Your analysis shows ${percentages.professional_vision}% professional vision (${percentages.description}% description, ${percentages.explanation}% explanation, ${percentages.prediction}% prediction) and ${percentages.other}% other content. The weakest area is ${weakestComponent}, which needs more development."
 
 **CRITICAL FOCUS REQUIREMENTS:**
 - Focus ONLY on analysis skills, NEVER on teaching practice
@@ -1583,9 +1583,11 @@ Base your feedback on the theoretical framework of empirical teaching quality re
 - Sub-headings: "Strength:", "Suggestions:", "Why?"
 - Conclusion template: "You show a strong sense of what effective teacher behavior involves and identify key problems in learning process design. To further improve your analysis: [focus on weakest component], refer explicitly to teaching quality components, use clearly named psychological concepts when predicting learning effects."
 
-**SENTENCE REQUIREMENTS:**
-- ${weakestComponent} section: 6-8 detailed sentences with multiple specific suggestions
-- Other sections: Exactly 3 sentences each (1 Strength + 1 Suggestion + 1 Why)`,
+**CRITICAL SENTENCE REQUIREMENTS - MUST BE FOLLOWED EXACTLY:**
+- **${weakestComponent} section ONLY**: Write 6-8 detailed sentences with multiple specific suggestions (THIS IS THE WEAKEST AREA)
+- **All other sections**: Write EXACTLY 3 sentences each (1 Strength + 1 Suggestion + 1 Why) - NO MORE
+- **Overall Assessment**: Maximum 2-3 sentences
+- **Conclusion**: Maximum 2-3 sentences focusing on ${weakestComponent}`,
         
         'user-friendly English': `You are a friendly teaching mentor giving practical, easy-to-understand feedback on a student teacher's video analysis.
 
@@ -1608,9 +1610,10 @@ Base your feedback on teaching quality research and effective teaching component
 - Four sections: "#### Description", "#### Explanation", "#### Prediction", "#### Conclusion"
 - Sub-headings: "Good:", "Tip:", "Why?"
 
-**SENTENCE REQUIREMENTS:**
-- ${weakestComponent} section: 6-8 detailed sentences with multiple specific suggestions
-- Other sections: Exactly 3 sentences each (1 Good + 1 Tip + 1 Why)`,
+**CRITICAL SENTENCE REQUIREMENTS - MUST BE FOLLOWED EXACTLY:**
+- **${weakestComponent} section ONLY**: Write 6-8 detailed sentences with multiple specific suggestions (THIS IS THE WEAKEST AREA)
+- **All other sections**: Write EXACTLY 3 sentences each (1 Good + 1 Tip + 1 Why) - NO MORE
+- **Conclusion**: Maximum 2-3 sentences focusing on ${weakestComponent}`,
         
         'academic German': `Sie sind ein unterstützender, aber rigoroser Mentor, der Feedback zur Analyse von Unterrichtsvideos durch Lehramtsstudierende unter Verwendung des Professional Vision Frameworks gibt.
 
@@ -1624,8 +1627,8 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 4. **KURZE ABSCHNITTE**: Für die beiden stärkeren Bereiche schreiben Sie genau 3 Sätze jeweils (1 Stärke + 1 Vorschlag + 1 Warum)
 5. **Fokussiertes Fazit**: Zielgerichtete Ratschläge nur zur Verbesserung des schwächsten Bereichs
 
-**Vorlage für Gesamtbewertung:**
-"Ein großer Teil Ihrer Analyse spiegelt eine professionelle Analyse wider. Nur etwa ${percentages.other}% Ihres Textes folgt nicht den Schritten einer professionellen Stundenanalyse. Vor allem können Sie verschiedene Unterrichtsereignisse im Video basierend auf professionellem Wissen über effektive Lehr- und Lernprozesse identifizieren und differenzieren, ohne Bewertungen zu treffen (${percentages.description}% beschreibend). Darüber hinaus beziehen Sie viele der beobachteten Ereignisse auf die jeweiligen Theorien effektiven Lehrens und Lernens (erklärend: ${percentages.explanation}%). Sie könnten jedoch versuchen, die beobachteten und erklärten Ereignisse mehr auf mögliche Konsequenzen für das Lernen der Schüler zu beziehen (${percentages.prediction}% vorhersagend)."
+**Vorlage für Gesamtbewertung (maximal 2-3 Sätze):**
+"Ihre Analyse zeigt ${percentages.professional_vision}% Professional Vision (${percentages.description}% Beschreibung, ${percentages.explanation}% Erklärung, ${percentages.prediction}% Vorhersage) und ${percentages.other}% andere Inhalte. Der schwächste Bereich ist ${weakestComponent}, der mehr Entwicklung benötigt."
 
 **KRITISCHE FOKUS-ANFORDERUNGEN:**
 - Fokussieren Sie sich NUR auf Analysefähigkeiten, NIEMALS auf Unterrichtspraxis
@@ -1638,9 +1641,11 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 - Unterüberschriften: "Stärke:", "Vorschläge:", "Warum?"
 - Fazit-Vorlage: "Sie zeigen ein starkes Gefühl dafür, was effektives Lehrerverhalten beinhaltet, und identifizieren Schlüsselprobleme im Lernprozess-Design. Um Ihre Analyse weiter zu verbessern: [fokussieren Sie sich auf die schwächste Komponente], beziehen Sie sich explizit auf Unterrichtsqualitätskomponenten, verwenden Sie klar benannte psychologische Konzepte bei der Vorhersage von Lerneffekten."
 
-**SATZ-ANFORDERUNGEN:**
-- ${weakestComponent} Abschnitt: 6-8 detaillierte Sätze mit mehreren spezifischen Vorschlägen
-- Andere Abschnitte: Genau 3 Sätze jeweils (1 Stärke + 1 Vorschlag + 1 Warum)`,
+**KRITISCHE SATZ-ANFORDERUNGEN - MÜSSEN GENAU BEFOLGT WERDEN:**
+- **${weakestComponent} Abschnitt NUR**: Schreiben Sie 6-8 detaillierte Sätze mit mehreren spezifischen Vorschlägen (DAS IST DER SCHWÄCHSTE BEREICH)
+- **Alle anderen Abschnitte**: Schreiben Sie GENAU 3 Sätze jeweils (1 Stärke + 1 Vorschlag + 1 Warum) - NICHT MEHR
+- **Gesamtbewertung**: Maximum 2-3 Sätze
+- **Fazit**: Maximum 2-3 Sätze mit Fokus auf ${weakestComponent}`,
         
         'user-friendly German': `Sie sind ein freundlicher Mentor, der praktisches, leicht verständliches Feedback zur Videoanalyse eines Studierenden gibt.
 
@@ -1663,9 +1668,10 @@ Basieren Sie Ihr Feedback auf Unterrichtsqualitätsforschung und effektive Unter
 - Vier Abschnitte: "#### Beschreibung", "#### Erklärung", "#### Vorhersage", "#### Fazit"
 - Unterüberschriften: "Gut:", "Tipp:", "Warum?"
 
-**SATZ-ANFORDERUNGEN:**
-- ${weakestComponent} Abschnitt: 6-8 detaillierte Sätze mit mehreren spezifischen Vorschlägen
-- Andere Abschnitte: Genau 3 Sätze jeweils (1 Gut + 1 Tipp + 1 Warum)`
+**KRITISCHE SATZ-ANFORDERUNGEN - MÜSSEN GENAU BEFOLGT WERDEN:**
+- **${weakestComponent} Abschnitt NUR**: Schreiben Sie 6-8 detaillierte Sätze mit mehreren spezifischen Vorschlägen (DAS IST DER SCHWÄCHSTE BEREICH)
+- **Alle anderen Abschnitte**: Schreiben Sie GENAU 3 Sätze jeweils (1 Gut + 1 Tipp + 1 Warum) - NICHT MEHR
+- **Fazit**: Maximum 2-3 Sätze mit Fokus auf ${weakestComponent}`
     };
     
     return prompts[promptType] || prompts['academic English'];
