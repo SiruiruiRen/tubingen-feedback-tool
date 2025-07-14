@@ -1027,69 +1027,8 @@ function handleFinalSubmission(taskId) {
         return;
     }
     
-    // Check for duplicate submission (same text as previously stored)
-    const storedReflection = sessionStorage.getItem(`reflection-${taskId}`);
-    let warningCount = parseInt(sessionStorage.getItem(`warningCount-${taskId}`)) || 0;
-    
-    // Debug logging for final submission
-    console.log(`Final submission duplicate check for ${taskId}:`, {
-        currentLength: currentReflection.length,
-        storedLength: storedReflection ? storedReflection.length : 0,
-        areEqual: storedReflection === currentReflection,
-        warningCount: warningCount
-    });
-    
-    // Enhanced duplicate check: warn if same text as previously stored
-    if (storedReflection && storedReflection === currentReflection) {
-        warningCount++;
-        sessionStorage.setItem(`warningCount-${taskId}`, warningCount);
-        
-        console.log(`⚠️ Final submission duplicate detected! Warning count: ${warningCount}`);
-        
-        // Log both the warning event and the resubmit_same_text event
-        logEvent('revision_warning_shown', {
-            task: taskId,
-            participant_name: elements.nameInput.value.trim(),
-            video_id: elements.videoSelect.value,
-            reflection_id: taskManager.currentReflectionId,
-            language: currentLanguage,
-            warning_count: warningCount,
-            reflection_length: currentReflection.length,
-            time_since_revise_click: Date.now() - (taskManager.lastReviseClickTime || 0),
-            submission_type: 'final_submission'
-        });
-        
-        logEvent('resubmit_same_text', {
-            task: taskId,
-            participant_name: elements.nameInput.value.trim(),
-            video_id: elements.videoSelect.value,
-            reflection_id: taskManager.currentReflectionId,
-            language: currentLanguage,
-            warning_count: warningCount,
-            reflection_length: currentReflection.length,
-            submission_type: 'final_submission'
-        });
-        
-        const warningMessage = currentLanguage === 'en' 
-            ? `Warning ${warningCount}: You are submitting the same reflection text again. Please make changes to your reflection if you want to improve it, or click "Submit Final Reflection" again if you're satisfied with your current reflection.`
-            : `Warnung ${warningCount}: Sie reichen denselben Reflexionstext erneut ein. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, wenn Sie diese verbessern möchten, oder klicken Sie erneut auf "Endgültige Reflexion einreichen", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.`;
-        
-        showBubbleWarning(warningMessage, elements.reflectionText, 'warning');
-        elements.reflectionText.focus();
-        return;
-    }
-    
-    // Store the current reflection for future duplicate detection
-    sessionStorage.setItem(`reflection-${taskId}`, currentReflection);
-    
-    // Reset warning count for successful submission
-    sessionStorage.setItem(`warningCount-${taskId}`, '0');
-    
-    console.log(`✅ Final submission successful for ${taskId}, reflection stored`);
-    
-    // Mark task as completed
-    taskManager.finalSubmitted = true;
-    TaskManager[taskId].completed = true;
+    // No duplicate detection for final submission – user may submit same text if satisfied
+    console.log('Final submission – duplicate detection skipped.');
     
     // Log successful final submission
     logEvent('final_submission', {
