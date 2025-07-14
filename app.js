@@ -1191,117 +1191,333 @@ function updateWordCountLabels() {
     }
 }
 
-// AI Feedback Generation Functions (simplified versions of the original)
-async function analyzeReflectionDistribution(reflection, language) {
-    const analysisPrompt = language === 'en' 
-        ? `Analyze this teaching reflection and determine the distribution of content across Description, Explanation, and Prediction components. Return ONLY a JSON object: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Prediction", "analysis_summary": "Brief explanation"}`
-        : `Analysieren Sie diese Unterrichtsreflexion und bestimmen Sie die Verteilung auf Beschreibung, Erklärung und Vorhersage. Geben Sie NUR ein JSON-Objekt zurück: {"percentages": {"description": 40, "explanation": 35, "prediction": 20, "other": 5}, "weakest_component": "Vorhersage", "analysis_summary": "Kurze Erklärung"}`;
-
-        const requestData = {
-            model: model,
-            messages: [
-                {
-                    role: "system",
-                content: "You are an expert in analyzing teaching reflections. Return ONLY a valid JSON object."
-                },
-                {
-                    role: "user",
-                content: analysisPrompt + "\n\nReflection:\n" + reflection
-                }
-            ],
-        temperature: 0.3,
-            max_tokens: 300,
-        response_format: { type: "json_object" }
-        };
-
-        try {
-            const response = await fetch(OPENAI_API_URL, {
-                method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
-            });
-
-        if (!response.ok) throw new Error('Error analyzing reflection distribution');
-
-            const result = await response.json();
-        const analysis = JSON.parse(result.choices[0].message.content);
-            
-            // Validate and normalize percentages
-            const { percentages } = analysis;
-                const keys = ['description', 'explanation', 'prediction', 'other'];
-            
-                keys.forEach(key => {
-                if (typeof percentages[key] !== 'number' || isNaN(percentages[key]) || percentages[key] < 0) {
-                        percentages[key] = 0;
-                    }
+// NEW 4-STEP CLASSIFICATION SYSTEM (July 2025)
+// Step 1: Text Preprocessing - Create sentence windows
+function createSentenceWindows(text) {
+    // Split text into sentences using basic sentence detection
+    const sentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
+    const cleanSentences = sentences
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+    
+    const windows = [];
+    let windowId = 1;
+    
+    // Create overlapping 2-sentence and 3-sentence windows
+    for (let i = 0; i < cleanSentences.length; i++) {
+        // 2-sentence windows
+        if (i < cleanSentences.length - 1) {
+            const text2 = cleanSentences.slice(i, i + 2).join(' ');
+            if (text2.length >= 20) {
+                windows.push({
+                    id: `chunk_${String(windowId++).padStart(3, '0')}`,
+                    text: text2,
+                    sentence_count: 2,
+                    start_position: i
                 });
-
-            // Ensure percentages sum to 100
-        const total = Object.values(percentages).reduce((sum, value) => sum + value, 0);
-        if (total > 0) {
-            const scaleFactor = 100 / total;
-            Object.keys(percentages).forEach(key => {
-                percentages[key] = Math.round(percentages[key] * scaleFactor);
-            });
+            }
         }
-
-            return analysis;
-
-        } catch (error) {
-        console.error('Error in analyzeReflectionDistribution:', error);
-            return {
-                percentages: { description: 30, explanation: 35, prediction: 25, other: 10 },
-                weakest_component: "Prediction",
-                analysis_summary: "Default distribution due to analysis error"
-            };
+        
+        // 3-sentence windows
+        if (i < cleanSentences.length - 2) {
+            const text3 = cleanSentences.slice(i, i + 3).join(' ');
+            if (text3.length >= 20) {
+                windows.push({
+                    id: `chunk_${String(windowId++).padStart(3, '0')}`,
+                    text: text3,
+                    sentence_count: 3,
+                    start_position: i
+                });
+            }
         }
     }
+    
+    return windows.length > 0 ? windows : [{ 
+        id: 'chunk_001', 
+        text: text, 
+        sentence_count: 1, 
+        start_position: 0 
+    }];
+}
 
-    async function generateWeightedFeedback(reflection, language, style, analysisResult) {
-        const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
-        const systemPrompt = getFeedbackPrompt(promptType, analysisResult);
-        
-        const languageInstruction = language === 'en' 
-        ? "IMPORTANT: You MUST respond in English. The entire feedback MUST be in English only."
-        : "WICHTIG: Sie MÜSSEN auf Deutsch antworten. Das gesamte Feedback MUSS ausschließlich auf Deutsch sein.";
-        
-        const enhancedPrompt = languageInstruction + "\n\n" + systemPrompt;
-        
-        const requestData = {
-            model: model,
-            messages: [
-                {
-                    role: "system",
-                    content: enhancedPrompt
-                },
-                {
-                    role: "user",
-                content: `Based on the analysis showing ${analysisResult.percentages.description}% description, ${analysisResult.percentages.explanation}% explanation, ${analysisResult.percentages.prediction}% prediction, provide feedback for this reflection:\n\n${reflection}`
-                }
-            ],
-        temperature: 0.7,
-        max_tokens: 2000
-        };
-        
+// Step 2: Binary Classifiers
+async function classifyDescription(windowText) {
+    const prompt = `You are an expert in analyzing teaching reflections. Determine if this text contains descriptions of observable teaching events.
+
+DEFINITION: Descriptions identify and differentiate teaching events based on educational knowledge, WITHOUT making evaluations, interpretations, or speculations.
+
+CRITERIA FOR "1" (Contains Description):
+- Identifies observable teacher or student actions
+- Relates to learning processes, teaching processes, or learning activities
+- Uses neutral, observational language
+- Examples: "The teacher explains", "Students raise hands", "Teacher writes on board"
+
+CRITERIA FOR "0" (No Description):
+- Contains evaluations ("I think", "Good job", "The teacher should have")
+- Contains interpretations ("This probably activates prior knowledge")
+- Contains speculations ("likely", "probably", hypothetical actions)
+- Not about teaching/learning events
+
+INSTRUCTIONS:
+- Respond with ONLY "1" or "0"
+- No explanations, quotes, or other text
+- "1" if ANY part describes observable teaching events
+- "0" if text only contains evaluations, interpretations, or speculation
+
+TEXT: ${windowText}`;
+
+    return await callBinaryClassifier(prompt);
+}
+
+async function classifyExplanation(windowText) {
+    const prompt = `You are an expert in analyzing teaching reflections. Determine if this text contains explanations that connect teaching events to educational theories.
+
+DEFINITION: Explanations relate observable teaching events to theories of effective teaching, focusing on WHY events occur.
+
+CRITERIA FOR "1" (Contains Explanation):
+- Links observable teaching events to educational knowledge
+- References learning theories, teaching principles, or pedagogical concepts
+- Explains WHY a teaching action was used or effective
+- Examples: "Open questions activate students cognitively", "Rules prevent disruptions"
+
+CRITERIA FOR "0" (No Explanation):
+- No connection to educational theories or principles
+- Explains non-observable or hypothetical events
+- No reference to teaching/learning events
+- Pure description without theoretical connection
+
+INSTRUCTIONS:
+- Respond with ONLY "1" or "0"
+- No explanations, quotes, or other text
+- "1" if ANY part connects teaching events to educational knowledge
+- "0" if no theoretical connections present
+
+TEXT: ${windowText}`;
+
+    return await callBinaryClassifier(prompt);
+}
+
+async function classifyPrediction(windowText) {
+    const prompt = `You are an expert in analyzing teaching reflections. Determine if this text contains predictions about effects of teaching events on student learning.
+
+DEFINITION: Predictions estimate potential consequences of teaching events for students based on learning theories.
+
+CRITERIA FOR "1" (Contains Prediction):
+- Predicts effects on student learning, motivation, or understanding
+- Based on educational knowledge about learning
+- Focuses on consequences for students
+- Examples: "This feedback could increase motivation", "Students may feel confused"
+
+CRITERIA FOR "0" (No Prediction):
+- No effects on student learning mentioned
+- Predictions without educational basis
+- No connection to teaching events
+- Predictions about non-learning outcomes
+
+INSTRUCTIONS:
+- Respond with ONLY "1" or "0"
+- No explanations, quotes, or other text
+- "1" if ANY part predicts effects on student learning
+- "0" if no learning consequences mentioned
+
+TEXT: ${windowText}`;
+
+    return await callBinaryClassifier(prompt);
+}
+
+// Binary classifier API call with validation and retry
+async function callBinaryClassifier(prompt) {
+    const requestData = {
+        model: model,
+        messages: [
+            {
+                role: "system",
+                content: "You are an expert teaching reflection analyst. Respond with ONLY '1' or '0'."
+            },
+            {
+                role: "user",
+                content: prompt
+            }
+        ],
+        temperature: 0.1,
+        max_tokens: 10
+    };
+
+    for (let attempt = 0; attempt < 3; attempt++) {
         try {
             const response = await fetch(OPENAI_API_URL, {
                 method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestData)
             });
+
+            if (!response.ok) continue;
+
+            const result = await response.json();
+            const output = result.choices[0].message.content.trim();
             
-            if (!response.ok) {
-                const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Error generating feedback');
+            // Validate binary output
+            if (output === '1' || output === '0') {
+                return parseInt(output);
             }
             
-            const result = await response.json();
-        return result.choices[0].message.content;
+            // Try to extract 1 or 0 from response
+            if (output.includes('1')) return 1;
+            if (output.includes('0')) return 0;
+            
         } catch (error) {
-        console.error('Error in generateWeightedFeedback:', error);
-            throw error;
+            console.warn(`Binary classifier attempt ${attempt + 1} failed:`, error);
         }
     }
+    
+    // Default to 0 if all attempts fail
+    return 0;
+}
+
+// Step 3: Mathematical Aggregation
+function calculatePercentages(classificationResults) {
+    const totalWindows = classificationResults.length;
+    
+    if (totalWindows === 0) {
+        return {
+            percentages: { description: 0, explanation: 0, prediction: 0, other: 100 },
+            weakest_component: "Prediction",
+            analysis_summary: "No valid windows for analysis"
+        };
+    }
+    
+    // Count 1s for each category
+    const descriptionCount = classificationResults.filter(r => r.description === 1).length;
+    const explanationCount = classificationResults.filter(r => r.explanation === 1).length;
+    const predictionCount = classificationResults.filter(r => r.prediction === 1).length;
+    const otherCount = classificationResults.filter(r => 
+        r.description === 0 && r.explanation === 0 && r.prediction === 0
+    ).length;
+    
+    // Calculate percentages (rounded to 1 decimal place)
+    const descriptionPct = Math.round((descriptionCount / totalWindows) * 1000) / 10;
+    const explanationPct = Math.round((explanationCount / totalWindows) * 1000) / 10;
+    const predictionPct = Math.round((predictionCount / totalWindows) * 1000) / 10;
+    const otherPct = Math.round((otherCount / totalWindows) * 1000) / 10;
+    
+    // Find weakest component
+    const components = {
+        'Description': descriptionPct,
+        'Explanation': explanationPct,
+        'Prediction': predictionPct
+    };
+    
+    const weakestComponent = Object.keys(components).reduce((a, b) => 
+        components[a] <= components[b] ? a : b
+    );
+    
+    return {
+        percentages: {
+            description: descriptionPct,
+            explanation: explanationPct,
+            prediction: predictionPct,
+            other: otherPct
+        },
+        weakest_component: weakestComponent,
+        analysis_summary: `Analyzed ${totalWindows} text windows using triple binary classification`
+    };
+}
+
+// Step 4: Main Analysis Function (replaces old analyzeReflectionDistribution)
+async function analyzeReflectionDistribution(reflection, language) {
+    try {
+        console.log('🔄 Starting 4-step classification analysis...');
+        
+        // Step 1: Create sentence windows
+        const windows = createSentenceWindows(reflection);
+        console.log(`📝 Created ${windows.length} sentence windows`);
+        
+        // Step 2: Triple binary classification for each window
+        const classificationResults = [];
+        
+        for (const window of windows) {
+            console.log(`🔍 Analyzing window: ${window.id}`);
+            
+            // Run all three classifiers in parallel for efficiency
+            const [description, explanation, prediction] = await Promise.all([
+                classifyDescription(window.text),
+                classifyExplanation(window.text),
+                classifyPrediction(window.text)
+            ]);
+            
+            classificationResults.push({
+                window_id: window.id,
+                description,
+                explanation,
+                prediction
+            });
+        }
+        
+        console.log('✅ Classification complete, calculating percentages...');
+        
+        // Step 3: Mathematical aggregation
+        const analysis = calculatePercentages(classificationResults);
+        
+        console.log('📊 Analysis result:', analysis);
+        return analysis;
+        
+    } catch (error) {
+        console.error('❌ Error in 4-step classification:', error);
+        // Fallback to default distribution
+        return {
+            percentages: { description: 30, explanation: 35, prediction: 25, other: 10 },
+            weakest_component: "Prediction", 
+            analysis_summary: "Fallback distribution due to classification error"
+        };
+    }
+}
+
+// AI Feedback Generation Functions (simplified versions of the original)
+async function generateWeightedFeedback(reflection, language, style, analysisResult) {
+    const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
+    const systemPrompt = getFeedbackPrompt(promptType, analysisResult);
+    
+    const languageInstruction = language === 'en' 
+    ? "IMPORTANT: You MUST respond in English. The entire feedback MUST be in English only."
+    : "WICHTIG: Sie MÜSSEN auf Deutsch antworten. Das gesamte Feedback MUSS ausschließlich auf Deutsch sein.";
+    
+    const enhancedPrompt = languageInstruction + "\n\n" + systemPrompt;
+    
+    const requestData = {
+        model: model,
+        messages: [
+            {
+                role: "system",
+                content: enhancedPrompt
+            },
+            {
+                role: "user",
+            content: `Based on the analysis showing ${analysisResult.percentages.description}% description, ${analysisResult.percentages.explanation}% explanation, ${analysisResult.percentages.prediction}% prediction, provide feedback for this reflection:\n\n${reflection}`
+            }
+        ],
+    temperature: 0.7,
+    max_tokens: 2000
+    };
+    
+    try {
+        const response = await fetch(OPENAI_API_URL, {
+            method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Error generating feedback');
+        }
+        
+        const result = await response.json();
+    return result.choices[0].message.content;
+    } catch (error) {
+    console.error('Error in generateWeightedFeedback:', error);
+        throw error;
+    }
+}
 
 function getFeedbackPrompt(promptType, analysisResult) {
     const weakestComponent = analysisResult ? analysisResult.weakest_component : 'Prediction';
@@ -1366,7 +1582,7 @@ You MUST provide feedback in exactly these sections:
 **Why?:** [2-3 sentences if ${weakestComponent} = Explanation, otherwise 1 sentence]
 
 #### Prediction
-**Good:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence] 
+**Good:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
 **Tip:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
 **Why?:** [2-3 sentences if ${weakestComponent} = Prediction, otherwise 1 sentence]
 
