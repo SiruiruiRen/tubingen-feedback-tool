@@ -881,8 +881,12 @@ function formatStructuredFeedback(text, analysisResult) {
     
     // Step 3: Format keyword labels (Strength/Good/Tip/Why etc.)
     // Replace any instance of the keyword (optionally followed by a colon) with a bold keyword, single colon and a line break for clarity
-    const keywordRegex = /(^|<br>\s*)(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?)\s*:?\s*/gi;
-    formattedText = formattedText.replace(keywordRegex, '$1<strong class="feedback-keyword">$2</strong>:<br>');
+    const keywordRegex = /(^|<br>\s*)(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?|Why|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?|Warum)\s*:??\s*/gi;
+    formattedText = formattedText.replace(keywordRegex, (match, p1, label) => {
+        // Remove question mark if present and trim
+        const cleanLabel = label.replace(/\?/g, '');
+        return `${p1}<strong class="feedback-keyword">${cleanLabel}</strong>:<br>`;
+    });
 
     // Step 4: Convert list items
     formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
@@ -1708,6 +1712,13 @@ function formatFeedback(text) {
     // Final cleanup for consistent spacing
     formattedText = formattedText.replace(/<strong class="feedback-keyword">([^<]+)<\/strong>\s*:\s*/g, '<strong class="feedback-keyword">$1</strong>: ');
     formattedText = formattedText.replace(/<strong class="feedback-keyword">(Why\?|Warum\?)<\/strong>\s*/g, '<strong class="feedback-keyword">$1</strong> ');
+    
+    // Keyword formatting
+    const kwRegex = /(^|<br>\s*)(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?|Why|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?|Warum)\s*:??\s*/gi;
+    formattedText = formattedText.replace(kwRegex, (m, p1, label) => {
+        const clean = label.replace(/\?/g, '');
+        return `${p1}<strong class="feedback-keyword">${clean}</strong>:<br>`;
+    });
     
     return formattedText;
 }
