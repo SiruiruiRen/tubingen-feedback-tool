@@ -847,72 +847,72 @@ function formatStructuredFeedback(text, analysisResult) {
     let formattedText = text.trim();
     
     // Step 1: Handle section headers (before newline conversion)
-    // English section formatting
-    formattedText = formattedText.replace(/####\s*Overall Assessment.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
+    const sectionMap = {
+        'Overall Assessment': 'overall',
+        'Gesamtbewertung': 'overall',
+        'Description': 'description',
+        'Beschreibung': 'description',
+        'Explanation': 'explanation',
+        'Erklärung': 'explanation',
+        'Prediction': 'prediction',
+        'Vorhersage': 'prediction',
+        'Conclusion': 'overall',
+        'Fazit': 'overall'
+    };
+
+    // Generic replacement for both English & German headings
+    formattedText = formattedText.replace(/####\s*([^\n]+)\n?/g, (match, p1) => {
+        const heading = p1.trim();
+        // Determine section class based on heading map
+        let sectionClass = 'other';
+        for (const key in sectionMap) {
+            if (heading.toLowerCase().startsWith(key.toLowerCase())) {
+                sectionClass = sectionMap[key];
+                break;
+            }
+        }
+        return `<div class="feedback-section feedback-section-${sectionClass}"><h4 class="feedback-heading">${heading}</h4>`;
     });
-    
-    formattedText = formattedText.replace(/####\s*Description.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-description">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
-    formattedText = formattedText.replace(/####\s*Explanation.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-explanation">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
-    formattedText = formattedText.replace(/####\s*Prediction.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-prediction">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
-    formattedText = formattedText.replace(/####\s*Conclusion.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
-    // German section formatting
-    formattedText = formattedText.replace(/####\s*Gesamtbewertung.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
-    formattedText = formattedText.replace(/####\s*Beschreibung.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-description">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
-    formattedText = formattedText.replace(/####\s*Erklärung.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-explanation">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
-    formattedText = formattedText.replace(/####\s*Vorhersage.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-prediction">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
-    formattedText = formattedText.replace(/####\s*Fazit.*?(?=####|$)/gs, (match) => {
-        return `<div class="feedback-section feedback-section-overall">${match.replace(/####\s*/, '<h4 class="feedback-heading">')}</h4></div>`;
-    });
-    
+    // Close any open section divs at the end of the text
+    formattedText += '</div>';
+
     // Step 2: Remove ALL bold markdown first to prevent any text from being bolded
     formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '$1');
     
     // Step 3: Handle sub-headings - only format specific keywords, not their content
-    // English keywords
-    formattedText = formattedText.replace(/(^|\n\s*|<br>\s*)(Strength|Strengths|Suggestions|Suggestion|Tip|Tips|Good)(\s*:)/gmi, '$1<strong class="feedback-keyword">$2</strong>$3');
-    formattedText = formattedText.replace(/(^|\n\s*|<br>\s*)(Why\?)/gmi, '$1<strong class="feedback-keyword">$2</strong>');
-    
-    // German keywords
-    formattedText = formattedText.replace(/(^|\n\s*|<br>\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Vorschlag|Gut)(\s*:)/gmi, '$1<strong class="feedback-keyword">$2</strong>$3');
-    formattedText = formattedText.replace(/(^|\n\s*|<br>\s*)(Warum\?)/gmi, '$1<strong class="feedback-keyword">$2</strong>');
-    
-    // Step 4: Format list items
+    const keywordPatterns = [
+        /(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?)/gi,
+        /(Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?)/gi
+    ];
+    keywordPatterns.forEach((pat) => {
+        formattedText = formattedText.replace(pat, '<strong class="feedback-keyword">$1</strong>');
+    });
+
+    // Ensure keywords end with ':'
+    formattedText = formattedText.replace(/(<strong class="feedback-keyword">[^<]+<\/strong>)(\s*)/g, '$1: ');
+
+    // Step 4: Insert line break after keyword labels for better readability
+    formattedText = formattedText.replace(/(<strong class="feedback-keyword">[^<]+<\/strong>:)/g, '$1<br>');
+
+    // Step 5: Convert list items
     formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
     formattedText = formattedText.replace(/(<li>.*?<\/li>\s*)+/g, '<ul>$&</ul>');
-    
-    // Step 5: Replace newlines with <br> (do this AFTER all other processing)
+
+    // Step 6: Replace newlines with <br>
     formattedText = formattedText.replace(/\n/g, '<br>');
     formattedText = formattedText.replace(/<br>\s*<br>/g, '<br>');
-    
-    // Step 6: Final cleanup - ensure consistent spacing
-    formattedText = formattedText.replace(/<strong class="feedback-keyword">([^<]+)<\/strong>\s*:\s*/g, '<strong class="feedback-keyword">$1</strong>: ');
-    formattedText = formattedText.replace(/<strong class="feedback-keyword">(Why\?|Warum\?)<\/strong>\s*/g, '<strong class="feedback-keyword">$1</strong> ');
-    
+
+    // Close remaining open section divs before next section start
+    formattedText = formattedText.replace(/(<\/h4>)/g, '$1');
+    formattedText = formattedText.replace(/(<div class="feedback-section[\s\S]*?)(<div class="feedback-section|$)/g, (m, p1, p2) => {
+        if (p2 === '') return p1 + '</div>'; // close last section at end
+        return p1 + '</div>' + p2;
+    });
+
+    // Ensure Why? keyword has no colon duplication
+    formattedText = formattedText.replace(/Why\?<br>/gi, 'Why?<br>');
+    formattedText = formattedText.replace(/Warum\?<br>/gi, 'Warum?<br>');
+
     return formattedText;
 }
 
