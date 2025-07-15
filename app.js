@@ -1624,13 +1624,12 @@ You MUST base your feedback on the theoretical framework of empirical teaching q
 
 **Style Guide - MUST BE FOLLOWED:**
 - **Language**: Use simple, direct language. Avoid academic jargon completely.
-- **Formatting**: Use bullet points for tips.
 - **Citations**: Do NOT include any in-text citations like (Author, Year).
 - **Focus**: Give actionable advice. Do NOT explain the theory behind the advice.
 
 **MANDATORY CONCISE FEEDBACK STRUCTURE:**
-1. **Weakest Area Focus**: For the weakest component (${weakestComponent}), provide 2-3 clear, practical tips in a bulleted list.
-2. **Stronger Areas**: For the two stronger components, write EXACTLY 1-2 sentences highlighting a strength and giving a practical tip.
+1. **Weakest Area Focus**: For the weakest component (${weakestComponent}), provide a "Good:" section with 1-2 sentences, and a "Tip:" section with a bulleted list of 2-3 clear, practical tips.
+2. **Stronger Areas**: For the two stronger components, write a "Good:" section with one sentence and a "Tip:" section with one practical tip.
 3. **No Conclusion**: Do not include a "Conclusion" section.
 
 **FORMATTING:**
@@ -1661,13 +1660,12 @@ Basieren Sie Ihr Feedback auf dem theoretischen Rahmen der empirischen Unterrich
 
 **Stilrichtlinie - MUSS BEFOLGT WERDEN:**
 - **Sprache**: Verwenden Sie einfache, direkte Sprache. Vermeiden Sie akademischen Jargon vollständig.
-- **Formatierung**: Verwenden Sie Aufzählungszeichen für Tipps.
 - **Zitate**: Fügen Sie KEINE Zitate wie (Autor, Jahr) ein.
 - **Fokus**: Geben Sie handlungsorientierte Ratschläge. Erklären Sie NICHT die Theorie hinter den Ratschlägen.
 
 **OBLIGATORISCHE PRÄGNANTE FEEDBACK-STRUKTUR:**
-1. **Fokus auf den schwächsten Bereich**: Geben Sie für die schwächste Komponente (${weakestComponent}) 2-3 klare, praktische Tipps in einer Stichpunktliste.
-2. **Stärkere Bereiche**: Schreiben Sie für die beiden stärkeren Komponenten GENAU 1-2 Sätze, die eine Stärke hervorheben und einen praktischen Tipp geben.
+1. **Fokus auf den schwächsten Bereich**: Geben Sie für die schwächste Komponente (${weakestComponent}) einen "Gut:"-Abschnitt mit 1-2 Sätzen und einen "Tipp:"-Abschnitt mit einer Stichpunktliste von 2-3 klaren, praktischen Tipps.
+2. **Stärkere Bereiche**: Schreiben Sie für die beiden stärkeren Komponenten einen "Gut:"-Abschnitt mit einem Satz und einen "Tipp:"-Abschnitt mit einem praktischen Tipp.
 3. **Kein Fazit**: Fügen Sie keinen "Fazit"-Abschnitt hinzu.
 
 **FORMATIERUNG:**
