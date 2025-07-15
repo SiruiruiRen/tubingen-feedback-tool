@@ -882,7 +882,7 @@ function formatStructuredFeedback(text, analysisResult) {
         }
 
         // Step 6: Robustly find and format keyword sub-headings (e.g., "Strength:", "Tip:", "Why?")
-        const keywordRegex = /\b(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?|Why|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?|Warum)\b\s*:?/gi;
+        const keywordRegex = /\b(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum)\b\s*:?\??\s*:?/gi;
         
         body = body.replace(keywordRegex, (match, label) => {
             const cleanLabel = label.replace(/[?:]/g, '').trim();
