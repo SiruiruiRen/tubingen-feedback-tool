@@ -843,10 +843,16 @@ function displayAnalysisDistribution(taskId, analysisResult) {
 // Professional feedback formatting with clean sections
 function formatStructuredFeedback(text, analysisResult) {
     if (!text) return '';
-    
-    let formattedText = text.trim();
-    
-    // Step 1: Handle section headers (before newline conversion)
+
+    // Step 1: Trim whitespace and normalize line breaks
+    let formattedText = text.trim().replace(/\r\n/g, '\n');
+
+    // Step 2: Remove any markdown bolding to prevent unintended bold text
+    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '$1');
+
+    // Step 3: Split the entire text into sections based on '####'
+    const sections = formattedText.split(/####\s*/).filter(s => s.trim().length > 0);
+
     const sectionMap = {
         'Overall Assessment': 'overall',
         'Gesamtbewertung': 'overall',
@@ -860,10 +866,13 @@ function formatStructuredFeedback(text, analysisResult) {
         'Fazit': 'overall'
     };
 
-    // Generic replacement for both English & German headings
-    formattedText = formattedText.replace(/####\s*([^\n]+)\n?/g, (match, p1) => {
-        const heading = p1.trim();
-        // Determine section class based on heading map
+    // Step 4: Process each section individually
+    const processedSections = sections.map(sectionText => {
+        const lines = sectionText.trim().split('\n');
+        const heading = lines.shift().trim();
+        let body = lines.join('\n').trim();
+
+        // Step 5: Determine the section class for styling
         let sectionClass = 'other';
         for (const key in sectionMap) {
             if (heading.toLowerCase().startsWith(key.toLowerCase())) {
@@ -871,47 +880,35 @@ function formatStructuredFeedback(text, analysisResult) {
                 break;
             }
         }
-        return `<div class="feedback-section feedback-section-${sectionClass}"><h4 class="feedback-heading">${heading}</h4>`;
-    });
-    // Close any open section divs at the end of the text
-    formattedText += '</div>';
 
-    // Step 2: Remove ALL bold markdown first to prevent any text from being bolded
-    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '$1');
-    
-    // Step 3: Format keyword labels (Strength/Good/Tip/Why etc.)
-    // Replace any instance of the keyword (optionally followed by a colon) with a bold keyword, single colon and a line break for clarity
-    const keywordRegex = /(^|<br>\s*)(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?|Why|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?|Warum)\s*:??\s*/gi;
-    formattedText = formattedText.replace(keywordRegex, (match, p1, label) => {
-        // Remove question mark if present and trim
-        const cleanLabel = label.replace(/\?/g, '');
-        return `${p1}<strong class="feedback-keyword">${cleanLabel}</strong>:<br>`;
-    });
+        // Step 6: Robustly find and format keyword sub-headings (e.g., "Strength:", "Tip:", "Why?")
+        const keywordRegex = /\b(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?|Why|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?|Warum)\b\s*:?/gi;
+        
+        body = body.replace(keywordRegex, (match, label) => {
+            const cleanLabel = label.replace(/[?:]/g, '').trim();
+            // Use a unique placeholder to avoid being replaced by the newline-to-<br> conversion
+            return `__NEWLINE__<strong class="feedback-keyword">${cleanLabel}</strong>:`;
+        });
+        
+        // Step 7: Convert all remaining newlines to <br> tags
+        let htmlBody = body.replace(/\n/g, '<br>');
 
-    // Step 4: Convert list items
-    formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
-    formattedText = formattedText.replace(/(<li>.*?<\/li>\s*)+/g, '<ul>$&</ul>');
+        // Step 8: Convert the keyword placeholder to a <br> tag
+        htmlBody = htmlBody.replace(/__NEWLINE__/g, '<br>');
 
-    // Step 5: Replace newlines with <br>
-    formattedText = formattedText.replace(/\n/g, '<br>');
-    formattedText = formattedText.replace(/<br>\s*<br>/g, '<br>');
+        // Step 9: Final cleanup of extra line breaks and leading breaks
+        htmlBody = htmlBody.replace(/<br>\s*<br>/g, '<br>');
+        if (htmlBody.startsWith('<br>')) {
+            htmlBody = htmlBody.substring(4);
+        }
 
-    // Step 6: Cleanup potential duplicate colons
-    formattedText = formattedText.replace(/::/g, ':');
-    formattedText = formattedText.replace(/(<br>|^)\s*:/g, '$1');
-
-    // Close remaining open section divs if missing
-    formattedText = formattedText.replace(/(<\/h4>)/g, '$1');
-    formattedText = formattedText.replace(/(<div class="feedback-section[\s\S]*?)(<div class="feedback-section|$)/g, (m, p1, p2) => {
-        if (p2 === '') return p1 + '</div>'; // close last section at end
-        return p1 + '</div>' + p2;
+        return `<div class="feedback-section feedback-section-${sectionClass}">
+                    <h4 class="feedback-heading">${heading}</h4>
+                    <div class="feedback-body">${htmlBody}</div>
+                </div>`;
     });
 
-    // Ensure Why? keyword has no colon duplication
-    formattedText = formattedText.replace(/Why\?<br>/gi, 'Why?<br>');
-    formattedText = formattedText.replace(/Warum\?<br>/gi, 'Warum?<br>');
-
-    return formattedText;
+    return processedSections.join('');
 }
 
 // Utility Functions
@@ -1687,40 +1684,8 @@ Basieren Sie Ihr Feedback auf Unterrichtsqualitätsforschung über effektive Leh
 function formatFeedback(text) {
     if (!text) return '';
     
-    let formattedText = text.trim();
-    
-    // Format headings
-    formattedText = formattedText.replace(/####\s+([^\n]+)/g, '<h4>$1</h4>');
-    
-    // Remove ALL bold markdown first to prevent any text from being bolded
-    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '$1');
-    
-    // Only bold specific feedback keywords
-    formattedText = formattedText.replace(/(^|\n\s*|<br>\s*)(Strength|Strengths|Suggestions|Suggestion|Tip|Tips|Good)(\s*:)/gmi, '$1<strong class="feedback-keyword">$2</strong>$3');
-    formattedText = formattedText.replace(/(^|\n\s*|<br>\s*)(Why\?)/gmi, '$1<strong class="feedback-keyword">$2</strong>');
-    formattedText = formattedText.replace(/(^|\n\s*|<br>\s*)(Stärke|Stärken|Tipp|Tipps|Vorschläge|Vorschlag|Gut)(\s*:)/gmi, '$1<strong class="feedback-keyword">$2</strong>$3');
-    formattedText = formattedText.replace(/(^|\n\s*|<br>\s*)(Warum\?)/gmi, '$1<strong class="feedback-keyword">$2</strong>');
-    
-    // Format list items
-    formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
-    formattedText = formattedText.replace(/(<li>.*?<\/li>\s*)+/g, '<ul>$&</ul>');
-    
-    // Replace newlines with <br>
-    formattedText = formattedText.replace(/\n/g, '<br>');
-    formattedText = formattedText.replace(/<br>\s*<br>/g, '<br>');
-    
-    // Final cleanup for consistent spacing
-    formattedText = formattedText.replace(/<strong class="feedback-keyword">([^<]+)<\/strong>\s*:\s*/g, '<strong class="feedback-keyword">$1</strong>: ');
-    formattedText = formattedText.replace(/<strong class="feedback-keyword">(Why\?|Warum\?)<\/strong>\s*/g, '<strong class="feedback-keyword">$1</strong> ');
-    
-    // Keyword formatting
-    const kwRegex = /(^|<br>\s*)(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?|Why|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?|Warum)\s*:??\s*/gi;
-    formattedText = formattedText.replace(kwRegex, (m, p1, label) => {
-        const clean = label.replace(/\?/g, '');
-        return `${p1}<strong class="feedback-keyword">${clean}</strong>:<br>`;
-    });
-    
-    return formattedText;
+    // Use the same robust formatting logic for consistency
+    return formatStructuredFeedback(text, null);
 }
 
 // Enhanced Database Functions with Task-Specific Logging
