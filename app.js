@@ -94,7 +94,19 @@ const translations = {
         // Tooltips
         extended_tooltip: "Detailed academic feedback with comprehensive analysis and educational theory references",
         short_tooltip: "Concise, easy-to-read feedback with key points and practical tips",
-        generate_error: "Error generating feedback. Please try again."
+        generate_error: "Error generating feedback.",
+        study_progress: "Study Progress:",
+
+        // Survey page text
+        survey1_heading: "Post-Task 1 Survey",
+        survey1_description: "Please share your thoughts about your experience with Task 1. This takes about 3-5 minutes.",
+        survey1_instructions: "Instructions: Complete the survey above, then click \"Continue to Task 2\" below to proceed.",
+        survey2_heading: "Post-Task 2 Survey",
+        survey2_description: "Please share your thoughts about your experience with Task 2. This takes about 3-5 minutes.",
+        survey2_instructions: "Instructions: Complete the survey above, then click \"Continue to Final Survey\" below to proceed.",
+        postsurvey_heading: "Final Survey (SUS)",
+        postsurvey_description: "Please complete this final System Usability Scale (SUS) survey about your overall experience. This takes about 3-5 minutes.",
+        postsurvey_instructions: "Final Step: Complete the survey above, then click \"Complete Study\" below to finish."
     },
     de: {
         title: "Teacher Professional Vision Studie",
@@ -178,7 +190,19 @@ const translations = {
         // Tooltips
         extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse und pädagogischen Theoriereferenzen",
         short_tooltip: "Prägnantes, leicht lesbares Feedback mit Kernpunkten und praktischen Tipps",
-        generate_error: "Fehler beim Generieren von Feedback. Bitte versuchen Sie es erneut."
+        generate_error: "Fehler beim Generieren von Feedback. Bitte versuchen Sie es erneut.",
+        study_progress: "Studienfortschritt:",
+
+        // Survey page text
+        survey1_heading: "Umfrage nach Aufgabe 1",
+        survey1_description: "Bitte teilen Sie Ihre Gedanken zu Ihrer Erfahrung mit Aufgabe 1 mit. Dies dauert ca. 3-5 Minuten.",
+        survey1_instructions: "Anleitung: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Weiter zu Aufgabe 2\", um fortzufahren.",
+        survey2_heading: "Umfrage nach Aufgabe 2",
+        survey2_description: "Bitte teilen Sie Ihre Gedanken zu Ihrer Erfahrung mit Aufgabe 2 mit. Dies dauert ca. 3-5 Minuten.",
+        survey2_instructions: "Anleitung: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Weiter zur Abschlussumfrage\", um fortzufahren.",
+        postsurvey_heading: "Abschlussumfrage (SUS)",
+        postsurvey_description: "Bitte füllen Sie diese abschließende Umfrage zur System-Usability-Skala (SUS) über Ihre Gesamterfahrung aus. Dies dauert ca. 3-5 Minuten.",
+        postsurvey_instructions: "Letzter Schritt: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Studie abschließen\", um fertig zu werden."
     }
 };
 
@@ -352,12 +376,13 @@ const PageNavigator = {
     
     updateProgress: function(pageId) {
         const progress = PROGRESS_VALUES[pageId] || 0;
+        const trans = translations[currentLanguage] || translations.en;
         if (DOMElements.progressBar) {
             DOMElements.progressBar.style.width = progress + '%';
             DOMElements.progressBar.setAttribute('aria-valuenow', progress);
         }
         if (DOMElements.progressText) {
-            DOMElements.progressText.textContent = `Study Progress: ${progress}%`;
+            DOMElements.progressText.textContent = `${trans.study_progress || 'Study Progress:'} ${progress}%`;
         }
         studyProgress = progress;
     },
@@ -398,6 +423,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialize language and translations
+    setupGlobalLanguageSwitcher();
     updateLanguage('en');
     
     // Set up navigation event listeners
@@ -409,6 +435,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up modal event listeners
     setupModalListeners();
+
+    // Set up the language switcher HTML
+    renderLanguageSwitchers();
     
     // Show initial page
     PageNavigator.showPage('presurvey');
@@ -1164,12 +1193,13 @@ function updateLanguage(lang) {
     });
     
     // Update progress text
-    if (DOMElements.progressText) {
-        DOMElements.progressText.textContent = `Study Progress: ${studyProgress}%`;
-    }
+    PageNavigator.updateProgress(currentPage);
     
     // Update word count labels for both tasks
     updateWordCountLabels();
+
+    // Update the active state of all language buttons
+    updateActiveLanguageButton();
 }
 
 function updateWordCountLabels() {
@@ -1188,6 +1218,18 @@ function updateWordCountLabels() {
         const wordSpan = task2Container.querySelector('span:last-child');
         if (wordSpan) wordSpan.textContent = ` ${trans.words}`;
     }
+}
+
+function updateActiveLanguageButton() {
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        if (btn.getAttribute('data-lang') === currentLanguage) {
+            btn.classList.add('active', 'btn-secondary');
+            btn.classList.remove('btn-outline-secondary');
+        } else {
+            btn.classList.remove('active', 'btn-secondary');
+            btn.classList.add('btn-outline-secondary');
+        }
+    });
 }
 
 // NEW 4-STEP CLASSIFICATION SYSTEM (July 2025)
@@ -1516,7 +1558,7 @@ async function analyzeReflectionDistribution(reflection, language) {
             if (!response.ok) {
                 let errorMessage = `HTTP ${response.status}`;
                 try {
-                    const errorData = await response.json();
+                const errorData = await response.json();
                     if (errorData && errorData.error && errorData.error.message) {
                         errorMessage = errorData.error.message;
                     }
@@ -1995,3 +2037,33 @@ function showBubbleWarning(message, element, type = 'warning') {
 }
 
 console.log('Multi-page Teacher Professional Vision Study loaded successfully');
+
+function setupGlobalLanguageSwitcher() {
+    document.body.addEventListener('click', function(e) {
+        const target = e.target.closest('.lang-btn');
+        if (target) {
+            const lang = target.getAttribute('data-lang');
+            if (lang && lang !== currentLanguage) {
+                updateLanguage(lang);
+            }
+        }
+    });
+}
+
+function renderLanguageSwitchers() {
+    const switcherContainers = document.querySelectorAll('.language-switcher-container');
+    const trans = translations[currentLanguage] || translations.en;
+    const switcherHTML = `
+        <div class="d-flex justify-content-center align-items-center">
+            <span class="form-label me-2 mb-0" data-lang-key="language">${trans.language}</span>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="en">English</button>
+                <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="de">Deutsch</button>
+            </div>
+        </div>
+    `;
+    switcherContainers.forEach(container => {
+        container.innerHTML = switcherHTML;
+    });
+    updateActiveLanguageButton();
+}
