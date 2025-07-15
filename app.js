@@ -63,7 +63,7 @@ const translations = {
         concepts_help: "Understanding these three dimensions will help you write more comprehensive teaching reflections",
         description: "Description",
         description_def: "Accurately observing and reporting what happened in the classroom - specific behaviors, interactions, and events without interpretation.",
-        explanation: "Explanation", 
+        explanation: "Explanation",
         explanation_def: "Interpreting observed events using educational theory, research, and pedagogical knowledge - understanding why things happened.",
         prediction: "Prediction",
         prediction_def: "Anticipating future outcomes and effects on student learning based on observed teaching practices and their interpretations.",
@@ -879,30 +879,24 @@ function formatStructuredFeedback(text, analysisResult) {
     // Step 2: Remove ALL bold markdown first to prevent any text from being bolded
     formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '$1');
     
-    // Step 3: Handle sub-headings - only format specific keywords, not their content
-    const keywordPatterns = [
-        /(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?)/gi,
-        /(Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?)/gi
-    ];
-    keywordPatterns.forEach((pat) => {
-        formattedText = formattedText.replace(pat, '<strong class="feedback-keyword">$1</strong>');
-    });
+    // Step 3: Format keyword labels (Strength/Good/Tip/Why etc.)
+    // Replace any instance of the keyword (optionally followed by a colon) with a bold keyword, single colon and a line break for clarity
+    const keywordRegex = /(^|<br>\s*)(Strength|Strengths|Suggestion|Suggestions|Good|Tip|Tips|Why\?|Stärke|Stärken|Vorschlag|Vorschläge|Gut|Tipp|Tipps|Warum\?)\s*:?\s*/gi;
+    formattedText = formattedText.replace(keywordRegex, '$1<strong class="feedback-keyword">$2</strong>:<br>');
 
-    // Ensure keywords end with ':'
-    formattedText = formattedText.replace(/(<strong class="feedback-keyword">[^<]+<\/strong>)(\s*)/g, '$1: ');
-
-    // Step 4: Insert line break after keyword labels for better readability
-    formattedText = formattedText.replace(/(<strong class="feedback-keyword">[^<]+<\/strong>:)/g, '$1<br>');
-
-    // Step 5: Convert list items
+    // Step 4: Convert list items
     formattedText = formattedText.replace(/^[\-\*]\s+(.+)$/gm, '<li>$1</li>');
     formattedText = formattedText.replace(/(<li>.*?<\/li>\s*)+/g, '<ul>$&</ul>');
 
-    // Step 6: Replace newlines with <br>
+    // Step 5: Replace newlines with <br>
     formattedText = formattedText.replace(/\n/g, '<br>');
     formattedText = formattedText.replace(/<br>\s*<br>/g, '<br>');
 
-    // Close remaining open section divs before next section start
+    // Step 6: Cleanup potential duplicate colons
+    formattedText = formattedText.replace(/::/g, ':');
+    formattedText = formattedText.replace(/(<br>|^)\s*:/g, '$1');
+
+    // Close remaining open section divs if missing
     formattedText = formattedText.replace(/(<\/h4>)/g, '$1');
     formattedText = formattedText.replace(/(<div class="feedback-section[\s\S]*?)(<div class="feedback-section|$)/g, (m, p1, p2) => {
         if (p2 === '') return p1 + '</div>'; // close last section at end
@@ -992,7 +986,7 @@ function handleReviseReflectionClick(taskId) {
     logEvent('click_revise', {
         task: taskId,
         from_style: taskManager.currentFeedbackType,
-        language: currentLanguage,
+                language: currentLanguage,
         reflection_id: taskManager.currentReflectionId,
         current_reflection_length: elements.reflectionText.value.length,
         participant_name: elements.nameInput.value.trim(),
@@ -1124,7 +1118,7 @@ function startFeedbackViewing(taskId, style, language) {
     logEvent('view_feedback_start', {
         task: taskId,
         style: style,
-        language: language,
+                        language: language,
         reflection_id: taskManager.currentReflectionId
     });
 }
@@ -1712,7 +1706,7 @@ async function saveFeedbackToDatabase(taskId, data) {
         console.log('No database connection - running in demo mode');
             return;
         }
-
+        
     try {
         const revisionNumber = TaskManager[taskId].revisionCount || 1;
         const parentReflectionId = TaskManager[taskId].parentReflectionId || null;
@@ -1774,7 +1768,7 @@ async function resubmitReflection(taskId) {
         task: taskId,
         participant_name: elements.nameInput.value.trim(),
         video_id: elements.videoSelect.value,
-        language: currentLanguage,
+            language: currentLanguage,
         reflection_id: taskManager.currentReflectionId,
         parent_reflection_id: taskManager.parentReflectionId,
         revision_number: taskManager.revisionCount,
@@ -1852,12 +1846,12 @@ async function logEvent(eventType, eventData = {}) {
                 language: currentLanguage,
                 timestamp_utc: new Date().toISOString()
             }]);
-
+            
             if (error) {
             console.error('Error logging event:', error);
         } else {
             console.log(`Event logged: ${eventType}`, eventData);
-        }
+            }
         } catch (error) {
         console.error('Error in logEvent:', error);
     }
