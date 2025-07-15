@@ -1513,8 +1513,19 @@ async function analyzeReflectionDistribution(reflection, language) {
             });
             
             if (!response.ok) {
-                const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Error generating feedback');
+                let errorMessage = `HTTP ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData && errorData.error && errorData.error.message) {
+                        errorMessage = errorData.error.message;
+                    }
+                } catch (jsonErr) {
+                    // Response body is not JSON (e.g., Cloudflare 520 HTML)
+                    const text = await response.text();
+                    // Extract the first 120 chars for context and strip newlines
+                    errorMessage = text.replace(/\n|\r/g, ' ').substring(0, 120) + '...';
+                }
+                throw new Error(errorMessage || 'Error generating feedback');
             }
             
             const result = await response.json();
@@ -1530,7 +1541,8 @@ async function analyzeReflectionDistribution(reflection, language) {
             
             return feedback;
         } catch (error) {
-    console.error('Error in generateWeightedFeedback:', error);
+            console.error('Error in generateWeightedFeedback:', error);
+            showAlert(`⚠️ ${error.message}`, 'danger');
             throw error;
         }
     }
