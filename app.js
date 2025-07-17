@@ -90,6 +90,9 @@ const translations = {
         
         // Warnings and messages
         no_changes_warning: "You clicked 'Revise Reflection' but haven't made any changes to the text. Please edit your reflection before generating new feedback, or the feedback will be identical to what you already received.",
+        duplicate_submission_warning: "Warning {warningCount}: You are submitting the same reflection text again. Please make changes to your reflection if you want to improve it, or click \"Submit Final Reflection\" again if you're satisfied with your current reflection.",
+        duplicate_generate_warning: "Warning {warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or the feedback will be identical to what you already received.",
+        final_submission_success: "✅ Final reflection submitted successfully!",
         
         // Tooltips
         extended_tooltip: "Detailed academic feedback with comprehensive analysis and educational theory references",
@@ -106,7 +109,16 @@ const translations = {
         survey2_instructions: "Instructions: Complete the survey above, then click \"Continue to Final Survey\" below to proceed.",
         postsurvey_heading: "Final Survey (SUS)",
         postsurvey_description: "Please complete this final System Usability Scale (SUS) survey about your overall experience. This takes about 3-5 minutes.",
-        postsurvey_instructions: "Final Step: Complete the survey above, then click \"Complete Study\" below to finish."
+        postsurvey_instructions: "Final Step: Complete the survey above, then click \"Complete Study\" below to finish.",
+
+        // Funny loading messages
+        loading_messages: [
+            "Please wait while the little elves create your feedback",
+            "Almost there, we promise",
+            "Computing the secret to the universe.",
+            "Still making progress, don't leave yet!",
+            "Grab a coffee and come back in a minute?"
+        ]
     },
     de: {
         title: "Teacher Professional Vision Studie",
@@ -165,9 +177,9 @@ const translations = {
         prediction_def: "Antizipation zukünftiger Ergebnisse und Auswirkungen auf das Lernen der Schüler basierend auf beobachteten Unterrichtspraktiken und deren Interpretationen.",
         
         // Modals
-        think_aloud_title: "Denken-Laut-Erinnerung",
-        think_aloud_message: "Bitte denken Sie **laut** beim Lesen und Verstehen des Feedbacks. Teilen Sie Ihre Gedanken, Reaktionen und Entscheidungsprozesse laut mit.",
-        think_aloud_example: "Zum Beispiel: \"Dieses Feedback ist interessant, weil...\", \"Ich stimme diesem Punkt zu...\", \"Ich sollte mich mehr konzentrieren auf...\"",
+        think_aloud_title: "Erinnerung an lautes Denken",
+        think_aloud_message: "Bitte denken Sie daran, **laut zu denken**, während Sie das Feedback lesen und verstehen. Teilen Sie Ihre Gedanken, Reaktionen und Entscheidungsprozesse laut mit.",
+        think_aloud_example: "Zum Beispiel: „Dieses Feedback ist interessant, weil...“, „Ich stimme diesem Punkt zu...“, „Ich sollte mich mehr auf... konzentrieren".",
         understood: "Verstanden",
         
         choose_feedback_style: "Wählen Sie Ihren bevorzugten Feedback-Stil",
@@ -186,6 +198,9 @@ const translations = {
         
         // Warnings and messages
         no_changes_warning: "Sie haben 'Reflexion überarbeiten' geklickt, aber keine Änderungen am Text vorgenommen. Bitte bearbeiten Sie Ihre Reflexion, bevor Sie neues Feedback generieren, sonst wird das Feedback identisch zu dem bereits erhaltenen sein.",
+        duplicate_submission_warning: "Warnung {warningCount}: Sie reichen denselben Reflexionstext erneut ein. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, wenn Sie diese verbessern möchten, oder klicken Sie erneut auf \"Endgültige Reflexion einreichen\", wenn Sie mit Ihrer aktuellen Reflexion zufrieden sind.",
+        duplicate_generate_warning: "Warnung {warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.",
+        final_submission_success: "✅ Endgültige Reflexion erfolgreich eingereicht!",
         
         // Tooltips
         extended_tooltip: "Detailliertes akademisches Feedback mit umfassender Analyse und pädagogischen Theoriereferenzen",
@@ -202,7 +217,16 @@ const translations = {
         survey2_instructions: "Anleitung: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Weiter zur Abschlussumfrage\", um fortzufahren.",
         postsurvey_heading: "Abschlussumfrage (SUS)",
         postsurvey_description: "Bitte füllen Sie diese abschließende Umfrage zur System-Usability-Skala (SUS) über Ihre Gesamterfahrung aus. Dies dauert ca. 3-5 Minuten.",
-        postsurvey_instructions: "Letzter Schritt: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Studie abschließen\", um fertig zu werden."
+        postsurvey_instructions: "Letzter Schritt: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Studie abschließen\", um fertig zu werden.",
+
+        // Funny loading messages
+        loading_messages: [
+            "Bitte warten Sie, während die kleinen Elfen Ihr Feedback erstellen",
+            "Fast da, wir versprechen es",
+            "Das Geheimnis des Universums wird berechnet.",
+            "Wir machen immer noch Fortschritte, gehen Sie noch nicht!",
+            "Einen Kaffee holen und in einer Minute wiederkommen?"
+        ]
     }
 };
 
@@ -324,6 +348,7 @@ const DOMElements = {
             reviseBtn: document.getElementById('revise-reflection-btn-task1'),
             submitFinalBtn: document.getElementById('submit-final-task1'),
             loadingSpinner: document.getElementById('loading-spinner-task1'),
+            loadingText: document.getElementById('loading-text-task1'),
             feedbackTabs: document.getElementById('feedback-tabs-task1'),
             feedbackExtended: document.getElementById('feedback-extended-task1'),
             feedbackShort: document.getElementById('feedback-short-task1'),
@@ -347,6 +372,7 @@ const DOMElements = {
             reviseBtn: document.getElementById('revise-reflection-btn-task2'),
             submitFinalBtn: document.getElementById('submit-final-task2'),
             loadingSpinner: document.getElementById('loading-spinner-task2'),
+            loadingText: document.getElementById('loading-text-task2'),
             feedbackTabs: document.getElementById('feedback-tabs-task2'),
             feedbackExtended: document.getElementById('feedback-extended-task2'),
             feedbackShort: document.getElementById('feedback-short-task2'),
@@ -1829,7 +1855,7 @@ async function logEvent(eventType, eventData = {}) {
                 language: currentLanguage,
                 timestamp_utc: new Date().toISOString()
             }]);
-            
+
             if (error) {
             console.error('Error logging event:', error);
         } else {
@@ -1842,12 +1868,17 @@ async function logEvent(eventType, eventData = {}) {
 
 function toggleLoading(taskId, isLoading) {
     const elements = DOMElements[taskId];
-    if (!elements) return;
-    
+    if (!elements || !elements.loadingSpinner) return;
+
     if (isLoading) {
+        const messages = translations[currentLanguage].loading_messages || translations.en.loading_messages;
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        if (elements.loadingText) {
+            elements.loadingText.textContent = randomMessage;
+        }
         elements.loadingSpinner.style.display = 'flex';
         elements.generateBtn.disabled = true;
-            } else {
+    } else {
         elements.loadingSpinner.style.display = 'none';
         elements.generateBtn.disabled = false;
     }
