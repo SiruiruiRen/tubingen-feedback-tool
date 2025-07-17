@@ -179,7 +179,7 @@ const translations = {
         // Modals
         think_aloud_title: "Erinnerung an lautes Denken",
         think_aloud_message: "Bitte denken Sie daran, **laut zu denken**, während Sie das Feedback lesen und verstehen. Teilen Sie Ihre Gedanken, Reaktionen und Entscheidungsprozesse laut mit.",
-        think_aloud_example: "Zum Beispiel: „Dieses Feedback ist interessant, weil...“, „Ich stimme diesem Punkt zu...“, „Ich sollte mich mehr auf... konzentrieren".",
+        think_aloud_example: 'Zum Beispiel: "Dieses Feedback ist interessant, weil...", "Ich stimme diesem Punkt zu...", "Ich sollte mich mehr auf... konzentrieren..."',
         understood: "Verstanden",
         
         choose_feedback_style: "Wählen Sie Ihren bevorzugten Feedback-Stil",
