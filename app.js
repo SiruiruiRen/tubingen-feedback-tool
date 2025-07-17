@@ -438,9 +438,7 @@ const PageNavigator = {
 
 // Main application initialization
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing multi-page Teacher Professional Vision Study...');
-    
-    // Initialize DOM elements
+    console.log('Initializing application...');
     DOMElements.init();
     
     // Initialize Supabase
@@ -455,32 +453,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize language and translations
-    setupGlobalLanguageSwitcher();
+    // Initialize all event listeners
+    initializeAllEventListeners();
+    
+    // Initial render
     updateLanguage('en');
+    PageNavigator.showPage('presurvey');
     
-    // Set up navigation event listeners
+    console.log('Application initialized successfully');
+});
+
+function initializeAllEventListeners() {
+    console.log('Attaching all event listeners...');
     setupNavigationListeners();
-    
-    // Set up task-specific event listeners
     setupTaskListeners('task1');
     setupTaskListeners('task2');
-    
-    // Set up modal event listeners
     setupModalListeners();
-
-    // Set up the language switcher HTML
-    renderLanguageSwitchers();
+    setupGlobalLanguageSwitcher(); // Make sure this is called
     
-    // Show initial page
-    PageNavigator.showPage('presurvey');
-
     // Add iframe resizing listener
     window.addEventListener('resize', resizeQualtricsIframes);
     setTimeout(resizeQualtricsIframes, 200); // Initial resize
     
-    console.log('Multi-page application initialized successfully');
-});
+    console.log('All event listeners attached.');
+}
 
 // Navigation Event Listeners
 function setupNavigationListeners() {
@@ -1245,6 +1241,9 @@ function updateLanguage(lang) {
 
     // Update the active state of all language buttons
     updateActiveLanguageButton();
+    
+    // Re-render the language switchers to update the label
+    renderLanguageSwitchers();
 }
 
 function updateWordCountLabels() {
@@ -1897,7 +1896,7 @@ function toggleLoading(taskId, isLoading) {
         }
         elements.loadingSpinner.style.display = 'flex';
         elements.generateBtn.disabled = true;
-    } else {
+            } else {
         elements.loadingSpinner.style.display = 'none';
         elements.generateBtn.disabled = false;
     }
@@ -2055,18 +2054,18 @@ function setupGlobalLanguageSwitcher() {
 
 function renderLanguageSwitchers() {
     const switcherContainers = document.querySelectorAll('.language-switcher-container');
-    
-    switcherContainers.forEach(container => {
-        const trans = translations[currentLanguage] || translations.en;
-        container.innerHTML = `
-            <div class="d-flex justify-content-center align-items-center">
-                <span class="form-label me-2 mb-0" data-lang-key="language">${trans.language}</span>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="en">English</button>
-                    <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="de">Deutsch</button>
-                </div>
+    const trans = translations[currentLanguage] || translations.en;
+    const switcherHTML = `
+        <div class="d-flex justify-content-center align-items-center">
+            <span class="form-label me-2 mb-0" data-lang-key="language">${trans.language}</span>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="en">English</button>
+                <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="de">Deutsch</button>
             </div>
-        `;
+        </div>
+    `;
+    switcherContainers.forEach(container => {
+        container.innerHTML = switcherHTML;
     });
     updateActiveLanguageButton();
 }

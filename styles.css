@@ -1933,3 +1933,12 @@ textarea {
         height: 65vh;
     }
 }
+
+/* Force language switcher to be visible */
+.language-switcher-container {
+    display: block !important;
+    text-align: center;
+    padding: 10px 0;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
