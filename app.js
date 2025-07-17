@@ -326,6 +326,10 @@ const DOMElements = {
             completeStudy: document.getElementById('complete-study')
         };
         
+        // Add language switchers to navButtons for unified handling
+        this.navButtons.langEn = document.querySelectorAll('.lang-btn[data-lang="en"]');
+        this.navButtons.langDe = document.querySelectorAll('.lang-btn[data-lang="de"]');
+        
         // Modals
         this.modals = {
             thinkAloud: document.getElementById('think-aloud-modal'),
@@ -380,6 +384,9 @@ const DOMElements = {
             shortTab: document.getElementById('short-tab-task2'),
             definitionsHeader: document.querySelector('#page-task2 .definitions-header')
         };
+
+        // Qualtrics iframe containers
+        this.qualtricsContainers = document.querySelectorAll('.qualtrics-iframe-container');
     }
 };
 
@@ -467,6 +474,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Show initial page
     PageNavigator.showPage('presurvey');
+
+    // Add iframe resizing listener
+    window.addEventListener('resize', resizeQualtricsIframes);
+    setTimeout(resizeQualtricsIframes, 200); // Initial resize
     
     console.log('Multi-page application initialized successfully');
 });
@@ -517,6 +528,14 @@ function setupNavigationListeners() {
                 window.location.reload(); // Reset for next participant
             }, 3000);
         });
+    }
+
+    // Language switchers
+    if (DOMElements.navButtons.langEn) {
+        DOMElements.navButtons.langEn.forEach(btn => btn.addEventListener('click', () => updateLanguage('en')));
+    }
+    if (DOMElements.navButtons.langDe) {
+        DOMElements.navButtons.langDe.forEach(btn => btn.addEventListener('click', () => updateLanguage('de')));
     }
 }
 
@@ -2036,18 +2055,35 @@ function setupGlobalLanguageSwitcher() {
 
 function renderLanguageSwitchers() {
     const switcherContainers = document.querySelectorAll('.language-switcher-container');
-    const trans = translations[currentLanguage] || translations.en;
-    const switcherHTML = `
-        <div class="d-flex justify-content-center align-items-center">
-            <span class="form-label me-2 mb-0" data-lang-key="language">${trans.language}</span>
-            <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="en">English</button>
-                <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="de">Deutsch</button>
-            </div>
-        </div>
-    `;
+    
     switcherContainers.forEach(container => {
-        container.innerHTML = switcherHTML;
+        const trans = translations[currentLanguage] || translations.en;
+        container.innerHTML = `
+            <div class="d-flex justify-content-center align-items-center">
+                <span class="form-label me-2 mb-0" data-lang-key="language">${trans.language}</span>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="en">English</button>
+                    <button type="button" class="btn btn-outline-secondary lang-btn" data-lang="de">Deutsch</button>
+                </div>
+            </div>
+        `;
     });
     updateActiveLanguageButton();
+}
+
+// NEW: JavaScript-based iframe resizing
+function resizeQualtricsIframes() {
+    DOMElements.qualtricsContainers.forEach(container => {
+        const iframe = container.querySelector('iframe');
+        if (iframe) {
+            const containerWidth = container.offsetWidth;
+            const iframeContentWidth = 1000; // Native width of Qualtrics survey content
+            const scale = containerWidth / iframeContentWidth;
+            
+            iframe.style.transform = `scale(${scale})`;
+            iframe.style.transformOrigin = '0 0';
+            iframe.style.width = `${iframeContentWidth}px`;
+            iframe.style.height = `${(iframeContentWidth * (4/3))}px`; // Maintain aspect ratio
+        }
+    });
 }
