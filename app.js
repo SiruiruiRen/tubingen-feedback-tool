@@ -1894,9 +1894,9 @@ function toggleLoading(taskId, isLoading) {
         if (elements.loadingText) {
             elements.loadingText.textContent = randomMessage;
         }
-        elements.loadingSpinner.style.display = 'flex';
+        elements.loadingSpinner.style.display = 'flex'; // Use flex to enable centering
         elements.generateBtn.disabled = true;
-            } else {
+    } else {
         elements.loadingSpinner.style.display = 'none';
         elements.generateBtn.disabled = false;
     }
