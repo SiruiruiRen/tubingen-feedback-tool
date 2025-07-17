@@ -1902,20 +1902,19 @@ textarea {
 
 /* Replace old iframe container styles with this new rule */
 .qualtrics-iframe-container {
-    height: 80vh; /* Increase height for better visibility */
-    overflow-y: auto;
-    overflow-x: hidden;
+    height: 80vh;
+    overflow: auto; /* Enable both horizontal and vertical scrolling */
     -webkit-overflow-scrolling: touch;
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
     background: #fff;
+    resize: both;
 }
 
 .qualtrics-iframe-container iframe {
-    width: 100%;
-    min-height: 1200px; /* Ensure enough height for long surveys */
+    width: 1200px; /* Set a fixed large width to ensure full matrix is rendered */
+    height: 1800px; /* Set a fixed large height */
     border: none !important;
-    box-shadow: none !important;
 }
 
 /* Make embedded surveys responsive */
