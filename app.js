@@ -2070,19 +2070,25 @@ function renderLanguageSwitchers() {
     updateActiveLanguageButton();
 }
 
-// NEW: JavaScript-based iframe resizing
+// Adjust Qualtrics iframes after page becomes visible.
 function resizeQualtricsIframes() {
+    // Only resize visible containers to avoid zero-width calculations
     DOMElements.qualtricsContainers.forEach(container => {
+        if (container.offsetParent === null) return; // Skip hidden pages
         const iframe = container.querySelector('iframe');
-        if (iframe) {
-            const containerWidth = container.offsetWidth;
-            const iframeContentWidth = 1000; // Native width of Qualtrics survey content
-            const scale = containerWidth / iframeContentWidth;
-            
-            iframe.style.transform = `scale(${scale})`;
-            iframe.style.transformOrigin = '0 0';
-            iframe.style.width = `${iframeContentWidth}px`;
-            iframe.style.height = `${(iframeContentWidth * (4/3))}px`; // Maintain aspect ratio
-        }
+        if (!iframe) return;
+
+        // Ensure iframe uses its native size inside the scroll container (no scaling)
+        iframe.style.transform = 'none';
+        iframe.style.transformOrigin = '0 0';
+        // Width/height are already set via CSS (1200 × 1800) – nothing else needed
     });
 }
+
+// Call resize after every page change so newly visible surveys render correctly
+const originalShowPage = PageNavigator.showPage.bind(PageNavigator);
+PageNavigator.showPage = function(pageId) {
+    originalShowPage(pageId);
+    // Give the browser a tick to lay out the page, then resize
+    setTimeout(resizeQualtricsIframes, 50);
+};
