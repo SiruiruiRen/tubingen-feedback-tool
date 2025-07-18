@@ -1891,12 +1891,14 @@ function toggleLoading(taskId, isLoading) {
     const taskManager = TaskManager[taskId];
     if (!elements || !elements.loadingSpinner) return;
 
+    // Manually get the loading text element since DOMElements is not updating
+    const loadingTextElement = document.getElementById(`loading-text-${taskId}`);
+
     if (isLoading) {
         elements.loadingSpinner.style.display = 'flex';
         elements.generateBtn.disabled = true;
 
         const messages = translations[currentLanguage].loading_messages || translations.en.loading_messages;
-        const loadingTextElement = elements.loadingText;
 
         const updateLoadingMessage = () => {
             if (loadingTextElement) {
@@ -1920,8 +1922,8 @@ function toggleLoading(taskId, isLoading) {
         }
 
         // Clear the text
-        if (elements.loadingText) {
-            elements.loadingText.textContent = '';
+        if (loadingTextElement) {
+            loadingTextElement.textContent = '';
         }
     }
 }
