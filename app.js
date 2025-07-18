@@ -268,7 +268,8 @@ const TaskManager = {
         finalSubmitted: false,
         revisionCount: 0, // New for revision tracking
         parentReflectionId: null, // New for revision tracking
-        firstSubmissionTime: null // New for revision tracking
+        firstSubmissionTime: null, // New for revision tracking
+        loadingIntervalId: null // For flashing loading messages
     },
     task2: {
         currentReflectionId: null,
@@ -279,7 +280,8 @@ const TaskManager = {
         finalSubmitted: false,
         revisionCount: 0, // New for revision tracking
         parentReflectionId: null, // New for revision tracking
-        firstSubmissionTime: null // New for revision tracking
+        firstSubmissionTime: null, // New for revision tracking
+        loadingIntervalId: null // For flashing loading messages
     }
 };
 
@@ -1886,19 +1888,41 @@ async function logEvent(eventType, eventData = {}) {
 
 function toggleLoading(taskId, isLoading) {
     const elements = DOMElements[taskId];
+    const taskManager = TaskManager[taskId];
     if (!elements || !elements.loadingSpinner) return;
 
     if (isLoading) {
-        const messages = translations[currentLanguage].loading_messages || translations.en.loading_messages;
-        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-        if (elements.loadingText) {
-            elements.loadingText.textContent = randomMessage;
-        }
-        elements.loadingSpinner.style.display = 'flex'; // Use flex to enable centering
+        elements.loadingSpinner.style.display = 'flex';
         elements.generateBtn.disabled = true;
+
+        const messages = translations[currentLanguage].loading_messages || translations.en.loading_messages;
+        const loadingTextElement = elements.loadingText;
+
+        const updateLoadingMessage = () => {
+            if (loadingTextElement) {
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                loadingTextElement.textContent = randomMessage;
+            }
+        };
+
+        // Set initial message and then cycle every 2.5 seconds
+        updateLoadingMessage();
+        taskManager.loadingIntervalId = setInterval(updateLoadingMessage, 2500);
+
     } else {
         elements.loadingSpinner.style.display = 'none';
         elements.generateBtn.disabled = false;
+
+        // Clear the interval
+        if (taskManager.loadingIntervalId) {
+            clearInterval(taskManager.loadingIntervalId);
+            taskManager.loadingIntervalId = null;
+        }
+
+        // Clear the text
+        if (elements.loadingText) {
+            elements.loadingText.textContent = '';
+        }
     }
 }
 
