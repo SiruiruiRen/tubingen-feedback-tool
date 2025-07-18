@@ -222,10 +222,10 @@ const translations = {
         // Funny loading messages
         loading_messages: [
             "Bitte warten Sie, während die kleinen Elfen Ihr Feedback erstellen",
-            "Fast da, wir versprechen es",
+            "Fast geschafft, wir versprechen es",
             "Das Geheimnis des Universums wird berechnet.",
-            "Wir machen immer noch Fortschritte, gehen Sie noch nicht!",
-            "Einen Kaffee holen und in einer Minute wiederkommen?"
+            "Immer noch Fortschritte, gehen Sie noch nicht!",
+            "Holen Sie sich einen Kaffee und kommen Sie in einer Minute wieder?"
         ]
     }
 };
