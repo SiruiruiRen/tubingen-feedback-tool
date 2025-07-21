@@ -13,7 +13,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // Enhanced Language translations for multi-page study
 const translations = {
     en: {
-        title: "Teacher Professional Vision Study",
+        title: "(INFER) An intelligent feedback system for observing classroom videos",
         subtitle: "Welcome to our research study on teaching reflection analysis",
         
         // Pre-survey page
@@ -22,9 +22,9 @@ const translations = {
         continue_to_task1: "Continue to Task 1",
         
         // Task pages
-        task1_title: "Task 1: Teaching Reflection Analysis",
+        task1_title: "INFER Task 1: Teaching Reflection Analysis",
         task1_subtitle: "Analyze your teaching reflection and receive feedback",
-        task2_title: "Task 2: Teaching Reflection Analysis", 
+        task2_title: "INFER Task 2: Teaching Reflection Analysis", 
         task2_subtitle: "Analyze your second teaching reflection and receive feedback",
         
         // Survey pages
@@ -121,7 +121,7 @@ const translations = {
         ]
     },
     de: {
-        title: "Teacher Professional Vision Studie",
+        title: "(INFER) Ein intelligentes Feedback-System zur Beobachtung von Unterrichtsvideos",
         subtitle: "Willkommen zu unserer Forschungsstudie über die Analyse von Unterrichtsreflexionen",
         
         // Pre-survey page
@@ -130,9 +130,9 @@ const translations = {
         continue_to_task1: "Weiter zu Aufgabe 1",
         
         // Task pages
-        task1_title: "Aufgabe 1: Analyse der Unterrichtsreflexion",
+        task1_title: "INFER Aufgabe 1: Analyse der Unterrichtsreflexion",
         task1_subtitle: "Analysieren Sie Ihre Unterrichtsreflexion und erhalten Sie Feedback",
-        task2_title: "Aufgabe 2: Analyse der Unterrichtsreflexion",
+        task2_title: "INFER Aufgabe 2: Analyse der Unterrichtsreflexion",
         task2_subtitle: "Analysieren Sie Ihre zweite Unterrichtsreflexion und erhalten Sie Feedback",
         
         // Survey pages
