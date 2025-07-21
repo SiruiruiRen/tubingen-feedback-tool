@@ -29,28 +29,36 @@
             <div class="header text-center">
                 <div class="d-flex align-items-center justify-content-center mb-3">
                     <img src="University-of-Tubingen-01.png" alt="University of Tübingen" style="height: 60px; margin-right: 20px;">
-                    <h1 data-lang-key="title" class="mb-0">(INFER) An intelligent feedback system for observing classroom videos</h1>
+                    <div>
+                        <h1 data-lang-key="title" class="mb-0">INFER</h1>
+                        <p data-lang-key="subtitle" class="mb-0" style="font-size: 1.1rem;">Ein intelligentes Feedback-System zur<br>Beobachtung von Unterricht</p>
+                    </div>
                 </div>
-                <p class="mb-4" data-lang-key="subtitle">Welcome to our research study on teaching reflection analysis</p>
             </div>
             
             <div class="row justify-content-center">
                 <div class="col-md-12">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h3 data-lang-key="welcome_to_infer" class="mb-3">Willkommen zu INFER</h3>
+                            <p data-lang-key="welcome_message">Vielen Dank, dass Sie sich dazu entschieden haben mit unserem intelligenten Feedback-System zur Beobachtung von Unterricht zu arbeiten.</p>
+                        </div>
+                    </div>
+                    
                     <div class="card">
                         <div class="card-header">
-                            <h5 data-lang-key="presurvey_title">Pre-Study Survey</h5>
+                            <h5 data-lang-key="presurvey_title">Vorab-Umfrage</h5>
                         </div>
                         <div class="card-body">
-                            <p data-lang-key="presurvey_intro">Before we begin the main study, please complete this brief survey about your background and expectations.</p>
+                            <p data-lang-key="presurvey_intro">Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen.</p>
+                            
+                            <p class="mb-3">
+                                <span data-lang-key="privacy_info">Alle Informationen zum Datenschutz finden Sie</span>
+                                <a href="#" id="privacy-link" target="_blank" data-lang-key="privacy_link_text">hier</a>.
+                            </p>
                             
                             <!-- Pre-Study Survey -->
                             <div class="qualtrics-survey-section border rounded p-4 mb-4">
-                                <div class="row">
-                                    <div class="col-12">
-                                        <h6 class="mb-2" data-lang-key="presurvey_title"><i class="bi bi-clipboard-data me-2"></i>Pre-Study Survey</h6>
-                                        <p class="text-muted mb-3" data-lang-key="presurvey_intro">Please complete this background survey before starting the main tasks. It takes about 5-10 minutes.</p>
-                                    </div>
-                                </div>
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="qualtrics-iframe-container">
@@ -58,14 +66,18 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="alert alert-info mt-3 mb-0">
-                                    <small data-lang-key="presurvey_instructions"><i class="bi bi-info-circle me-1"></i><strong>Instructions:</strong> 
-                                    Complete the survey above, then click "Continue to Task 1" below to proceed.</small>
-                                </div>
+                            </div>
+                            
+                            <!-- Consent Checkbox -->
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="consent-checkbox">
+                                <label class="form-check-label" for="consent-checkbox" data-lang-key="consent_text">
+                                    Ich stimme der Nutzung meiner Daten zu wissenschaftlichen Zwecken zu.
+                                </label>
                             </div>
                             
                             <div class="text-center">
-                                <button id="continue-to-task1" class="btn btn-primary btn-lg" data-lang-key="continue_to_task1">Continue to Task 1</button>
+                                <button id="continue-to-task1" class="btn btn-primary btn-lg" data-lang-key="continue_to_task1" disabled>Weiter zu INFER</button>
                             </div>
                         </div>
                     </div>

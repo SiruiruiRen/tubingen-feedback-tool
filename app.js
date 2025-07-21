@@ -6,6 +6,9 @@ const CORS_PROXY_URL = isProduction
 const OPENAI_API_URL = `${CORS_PROXY_URL}/api/openai/v1/chat/completions`;
 const model = 'gpt-4o';
 
+// Privacy policy link - update this when you have the actual link
+const PRIVACY_POLICY_URL = '#'; // TODO: Update with actual privacy policy URL
+
 // Supabase configuration
 const SUPABASE_URL = 'https://immrkllzjvhdnzesmaat.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltbXJrbGx6anZoZG56ZXNtYWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzk2MzgsImV4cCI6MjA2Mjc1NTYzOH0.glhn-u4mNpKHsH6qiwdecXyYOWhdxDrTVDIvNivKVf8';
@@ -13,13 +16,20 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // Enhanced Language translations for multi-page study
 const translations = {
     en: {
-        title: "(INFER) An intelligent feedback system for observing classroom videos",
-        subtitle: "Welcome to our research study on teaching reflection analysis",
+        title: "INFER",
+        subtitle: "An intelligent feedback system for observing classroom videos",
         
         // Pre-survey page
         presurvey_title: "Pre-Study Survey",
         presurvey_intro: "Before we begin the main study, please complete this brief survey about your background and expectations.",
-        continue_to_task1: "Continue to Task 1",
+        continue_to_task1: "Continue to INFER",
+        
+        // New translations for welcome section
+        welcome_to_infer: "Welcome to INFER",
+        welcome_message: "Thank you for choosing to work with our intelligent feedback system for classroom observation.",
+        consent_text: "I consent to the use of my data for scientific purposes.",
+        privacy_info: "All information about data protection can be found",
+        privacy_link_text: "here",
         
         // Task pages
         task1_title: "INFER Task 1: Teaching Reflection Analysis",
@@ -121,13 +131,20 @@ const translations = {
         ]
     },
     de: {
-        title: "(INFER) Ein intelligentes Feedback-System zur Beobachtung von Unterrichtsvideos",
-        subtitle: "Willkommen zu unserer Forschungsstudie über die Analyse von Unterrichtsreflexionen",
+        title: "INFER",
+        subtitle: "Ein intelligentes Feedback-System zur Beobachtung von Unterricht",
         
         // Pre-survey page
         presurvey_title: "Vorab-Umfrage",
-        presurvey_intro: "Bevor wir mit der Hauptstudie beginnen, füllen Sie bitte diese kurze Umfrage zu Ihrem Hintergrund und Ihren Erwartungen aus.",
-        continue_to_task1: "Weiter zu Aufgabe 1",
+        presurvey_intro: "Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen.",
+        continue_to_task1: "Weiter zu INFER",
+        
+        // New translations for welcome section
+        welcome_to_infer: "Willkommen zu INFER",
+        welcome_message: "Vielen Dank, dass Sie sich dazu entschieden haben mit unserem intelligenten Feedback-System zur Beobachtung von Unterricht zu arbeiten.",
+        consent_text: "Ich stimme der Nutzung meiner Daten zu wissenschaftlichen Zwecken zu.",
+        privacy_info: "Alle Informationen zum Datenschutz finden Sie",
+        privacy_link_text: "hier",
         
         // Task pages
         task1_title: "INFER Aufgabe 1: Analyse der Unterrichtsreflexion",
@@ -448,11 +465,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (supabase) {
         verifySupabaseConnection(supabase);
         currentSessionId = getOrCreateSessionId();
-        logEvent('session_start', {
-            user_agent: navigator.userAgent,
-            language: currentLanguage,
-            timestamp: new Date().toISOString()
-        });
+    }
+    
+    // Set privacy policy link
+    const privacyLink = document.getElementById('privacy-link');
+    if (privacyLink) {
+        privacyLink.href = PRIVACY_POLICY_URL;
     }
 
     // Initialize all event listeners
@@ -482,6 +500,16 @@ function initializeAllEventListeners() {
 
 // Navigation Event Listeners
 function setupNavigationListeners() {
+    // Consent checkbox handler
+    const consentCheckbox = document.getElementById('consent-checkbox');
+    const continueButton = document.getElementById('continue-to-task1');
+    
+    if (consentCheckbox && continueButton) {
+        consentCheckbox.addEventListener('change', function() {
+            continueButton.disabled = !this.checked;
+        });
+    }
+    
     // Pre-survey to Task 1
     if (DOMElements.navButtons.continueToTask1) {
         DOMElements.navButtons.continueToTask1.addEventListener('click', () => {
