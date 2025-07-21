@@ -70,6 +70,10 @@ body {
   min-height: 120px;
 }
 
+.header .position-relative {
+  min-height: 140px;
+}
+
 .header::before {
   content: '';
   position: absolute;
