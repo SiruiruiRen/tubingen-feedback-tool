@@ -21,7 +21,7 @@ const translations = {
         
         // Pre-survey page
         presurvey_title: "Pre-Study Survey",
-        presurvey_intro: "Before we begin the main study, please complete this brief survey about your background and expectations.",
+        presurvey_intro: "Before you work with the feedback system, we ask you to participate in a short survey about your background and expectations. Afterwards, you will proceed to the feedback system. There you will also be asked to participate in a short survey after each sub-step. We ask you to fill out the questions conscientiously, as you help us to continuously improve the feedback system. Your data will be stored completely anonymously and used only for scientific purposes if you consent.",
         continue_to_task1: "Continue to INFER",
         
         // New translations for welcome section
@@ -706,7 +706,7 @@ function showFinalSubmissionModal(taskId) {
         task: taskId,
         participant_name: elements.nameInput.value.trim(),
         video_id: elements.videoSelect.value,
-                    language: currentLanguage,
+            language: currentLanguage,
         reflection_id: TaskManager[taskId].currentReflectionId,
         total_revisions: TaskManager[taskId].revisionCount || 1,
         final_reflection_length: elements.reflectionText.value.length
@@ -1299,7 +1299,7 @@ function updateActiveLanguageButton() {
         if (btn.getAttribute('data-lang') === currentLanguage) {
             btn.classList.add('active', 'btn-secondary');
             btn.classList.remove('btn-outline-secondary');
-        } else {
+            } else {
             btn.classList.remove('active', 'btn-secondary');
             btn.classList.add('btn-outline-secondary');
         }
@@ -1439,12 +1439,12 @@ async function callBinaryClassifier(prompt) {
                 {
                     role: "user",
                 content: prompt
-            }
-        ],
+                }
+            ],
         temperature: 0.0,
         max_tokens: 10
-    };
-
+        };
+        
     for (let attempt = 0; attempt < 3; attempt++) {
         try {
             const response = await fetch(OPENAI_API_URL, {
@@ -1452,9 +1452,9 @@ async function callBinaryClassifier(prompt) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestData)
             });
-
+            
             if (!response.ok) continue;
-
+            
             const result = await response.json();
             const output = result.choices[0].message.content.trim();
             
@@ -1939,7 +1939,7 @@ function toggleLoading(taskId, isLoading) {
         updateLoadingMessage();
         taskManager.loadingIntervalId = setInterval(updateLoadingMessage, 2500);
 
-    } else {
+            } else {
         elements.loadingSpinner.style.display = 'none';
         elements.generateBtn.disabled = false;
 
