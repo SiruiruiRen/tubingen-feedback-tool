@@ -32,9 +32,9 @@ const translations = {
         privacy_link_text: "here",
         
         // Task pages
-        task1_title: "INFER Task 1: Teaching Reflection Analysis",
+        task1_title: "INFER Task 1",
         task1_subtitle: "Analyze your teaching reflection and receive feedback",
-        task2_title: "INFER Task 2: Teaching Reflection Analysis", 
+        task2_title: "INFER Task 2",
         task2_subtitle: "Analyze your second teaching reflection and receive feedback",
         
         // Survey pages
@@ -147,9 +147,9 @@ const translations = {
         privacy_link_text: "hier",
         
         // Task pages
-        task1_title: "INFER Aufgabe 1: Analyse der Unterrichtsreflexion",
+        task1_title: "INFER Aufgabe 1",
         task1_subtitle: "Analysieren Sie Ihre Unterrichtsreflexion und erhalten Sie Feedback",
-        task2_title: "INFER Aufgabe 2: Analyse der Unterrichtsreflexion",
+        task2_title: "INFER Aufgabe 2",
         task2_subtitle: "Analysieren Sie Ihre zweite Unterrichtsreflexion und erhalten Sie Feedback",
         
         // Survey pages

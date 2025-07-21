@@ -71,7 +71,7 @@ body {
 }
 
 .header .position-relative {
-  min-height: 140px;
+  min-height: 120px;
 }
 
 .header::before {
