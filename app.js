@@ -27,9 +27,18 @@ const translations = {
         // New translations for welcome section
         welcome_to_infer: "Welcome to INFER",
         welcome_message: "Thank you for choosing to work with our intelligent feedback system for classroom observation.",
-        consent_text: "I consent to the use of my data for scientific purposes.",
-        privacy_info: "All information about data protection can be found",
-        privacy_link_text: "here",
+        
+        // Consent form translations
+        participant_info_header: "General Participant Information",
+        participant_info_text: "Please read the general participant information and data protection notice:",
+        participant_info_link: "Participant Information and Data Protection (PDF)",
+        participant_info_consent: "I have read and understood the participant information.",
+        data_consent_header: "Data Protection Consent Form",
+        data_consent_text: "Detailed information about data usage can be found here:",
+        consent_form_link: "Consent Form (PDF)",
+        data_consent_agree: "I agree to the use of the data for scientific purposes.",
+        data_consent_disagree: "I don't agree to the use of the data for scientific purposes.",
+        consent_disagreement_message: "Unfortunately, you cannot participate in the study without consent to data usage. Thank you for your interest.",
         
         // Task pages
         task1_title: "INFER Task 1",
@@ -142,9 +151,18 @@ const translations = {
         // New translations for welcome section
         welcome_to_infer: "Willkommen zu INFER",
         welcome_message: "Vielen Dank, dass Sie sich dazu entschieden haben mit unserem intelligenten Feedback-System zur Beobachtung von Unterricht zu arbeiten.",
-        consent_text: "Ich stimme der Nutzung meiner Daten zu wissenschaftlichen Zwecken zu.",
-        privacy_info: "Alle Informationen zum Datenschutz finden Sie",
-        privacy_link_text: "hier",
+        
+        // Consent form translations
+        participant_info_header: "Allgemeine Teilnehmerinformationen",
+        participant_info_text: "Bitte lesen Sie die allgemeinen Teilnehmerinformationen und Datenschutzhinweise:",
+        participant_info_link: "Teilnehmerinformationen und Datenschutz (PDF)",
+        participant_info_consent: "Ich habe die Teilnehmerinformationen gelesen und verstanden.",
+        data_consent_header: "Einverständniserklärung Datenschutz",
+        data_consent_text: "Detaillierte Informationen zur Datennutzung finden Sie hier:",
+        consent_form_link: "Einverständniserklärung (PDF)",
+        data_consent_agree: "Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke zu.",
+        data_consent_disagree: "Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke nicht zu.",
+        consent_disagreement_message: "Leider können Sie ohne Zustimmung zur Datennutzung nicht an der Studie teilnehmen. Vielen Dank für Ihr Interesse.",
         
         // Task pages
         task1_title: "INFER Aufgabe 1",
@@ -500,13 +518,57 @@ function initializeAllEventListeners() {
 
 // Navigation Event Listeners
 function setupNavigationListeners() {
-    // Consent checkbox handler
-    const consentCheckbox = document.getElementById('consent-checkbox');
+    // Enhanced consent form handlers
+    const participantInfoCheckbox = document.getElementById('participant-info-checkbox');
+    const dataConsentAgree = document.getElementById('data-consent-agree');
+    const dataConsentDisagree = document.getElementById('data-consent-disagree');
     const continueButton = document.getElementById('continue-to-task1');
+    const disagreementMessage = document.getElementById('consent-disagreement-message');
     
-    if (consentCheckbox && continueButton) {
-        consentCheckbox.addEventListener('change', function() {
-            continueButton.disabled = !this.checked;
+    function validateConsent() {
+        const participantInfoChecked = participantInfoCheckbox && participantInfoCheckbox.checked;
+        const dataConsentSelected = dataConsentAgree && dataConsentAgree.checked;
+        
+        if (continueButton) {
+            continueButton.disabled = !(participantInfoChecked && dataConsentSelected);
+        }
+    }
+    
+    // Participant info checkbox handler
+    if (participantInfoCheckbox) {
+        participantInfoCheckbox.addEventListener('change', function() {
+            logEvent('consent_interaction', { 
+                type: 'participant_info_checkbox',
+                checked: this.checked 
+            });
+            validateConsent();
+        });
+    }
+    
+    // Data consent radio button handlers
+    if (dataConsentAgree) {
+        dataConsentAgree.addEventListener('change', function() {
+            logEvent('consent_interaction', { 
+                type: 'data_consent',
+                choice: 'agree' 
+            });
+            if (disagreementMessage) {
+                disagreementMessage.classList.add('d-none');
+            }
+            validateConsent();
+        });
+    }
+    
+    if (dataConsentDisagree) {
+        dataConsentDisagree.addEventListener('change', function() {
+            logEvent('consent_interaction', { 
+                type: 'data_consent',
+                choice: 'disagree' 
+            });
+            if (disagreementMessage) {
+                disagreementMessage.classList.remove('d-none');
+            }
+            validateConsent();
         });
     }
     

@@ -55,17 +55,67 @@
                         <div class="card-body">
                             <p data-lang-key="presurvey_intro">Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen.</p>
                             
-                            <p class="mb-2">
-                                <span data-lang-key="privacy_info">Alle Informationen zum Datenschutz finden Sie</span>
-                                <a href="#" id="privacy-link" target="_blank" data-lang-key="privacy_link_text">hier</a>.
-                            </p>
-                            
-                            <!-- Consent Checkbox -->
-                            <div class="form-check mb-4">
-                                <input class="form-check-input" type="checkbox" id="consent-checkbox">
-                                <label class="form-check-label" for="consent-checkbox" data-lang-key="consent_text">
-                                    Ich stimme der Nutzung meiner Daten zu wissenschaftlichen Zwecken zu.
-                                </label>
+                            <!-- Required Consent Forms -->
+                            <div class="consent-forms-section mb-4">
+                                <!-- General Participant Information -->
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6 data-lang-key="participant_info_header">Allgemeine Teilnehmerinformationen</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-3">
+                                            <span data-lang-key="participant_info_text">Bitte lesen Sie die allgemeinen Teilnehmerinformationen und Datenschutzhinweise:</span>
+                                            <br>
+                                            <a href="04_general_participant_information_and_information_on_data_protection_participants.pdf" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                                <span data-lang-key="participant_info_link">Teilnehmerinformationen und Datenschutz (PDF)</span>
+                                            </a>
+                                        </p>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="participant-info-checkbox" required>
+                                            <label class="form-check-label" for="participant-info-checkbox" data-lang-key="participant_info_consent">
+                                                Ich habe die Teilnehmerinformationen gelesen und verstanden.
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Data Protection Consent Form -->
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6 data-lang-key="data_consent_header">Einverständniserklärung Datenschutz</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-3">
+                                            <span data-lang-key="data_consent_text">Detaillierte Informationen zur Datennutzung finden Sie hier:</span>
+                                            <br>
+                                            <a href="https://unitc-my.sharepoint.com/:b:/g/personal/sebft01_cloud_uni-tuebingen_de/EUMutSXDgWxOjIG3A6nscr8BSe0HCN73YaQdEqn5uq295A?e=df3uPs" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                                <span data-lang-key="consent_form_link">Einverständniserklärung (PDF)</span>
+                                            </a>
+                                        </p>
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="data-consent" id="data-consent-agree" value="agree" required>
+                                                <label class="form-check-label" for="data-consent-agree" data-lang-key="data_consent_agree">
+                                                    Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke zu.
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="data-consent" id="data-consent-disagree" value="disagree">
+                                                <label class="form-check-label" for="data-consent-disagree" data-lang-key="data_consent_disagree">
+                                                    Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke nicht zu.
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div id="consent-disagreement-message" class="alert alert-warning d-none" role="alert">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            <span data-lang-key="consent_disagreement_message">
+                                                Leider können Sie ohne Zustimmung zur Datennutzung nicht an der Studie teilnehmen. Vielen Dank für Ihr Interesse.
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- Pre-Study Survey -->
@@ -104,7 +154,7 @@
                         <p class="mb-0" data-lang-key="task1_subtitle">Analyze your teaching reflection and receive feedback</p>
                     </div>
                 </div>
-            </div>
+        </div>
 
         <div class="row">
             <!-- Settings Panel -->
