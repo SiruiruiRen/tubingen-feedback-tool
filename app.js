@@ -27,6 +27,11 @@ const translations = {
         // New translations for welcome section
         welcome_to_infer: "Welcome to INFER",
         welcome_message: "Thank you for choosing to work with our intelligent feedback system for classroom observation.",
+        browser_recommendation: "For the best experience, we recommend using <strong>Google Chrome</strong>.",
+        consent_forms_title: "Consent Forms",
+        consent_intro: "Before starting the study, please read the following information and provide your consent.",
+        proceed_to_presurvey: "Proceed to Pre-Survey",
+        video_recording_reminder: "Please start video recording now.",
         
         // Consent form translations
         participant_info_header: "General Participant Information",
@@ -155,6 +160,11 @@ const translations = {
         // New translations for welcome section
         welcome_to_infer: "Willkommen zu INFER",
         welcome_message: "Vielen Dank, dass Sie sich dazu entschieden haben mit unserem intelligenten Feedback-System zur Beobachtung von Unterricht zu arbeiten.",
+        browser_recommendation: "Für die beste Erfahrung empfehlen wir die Verwendung von <strong>Google Chrome</strong>.",
+        consent_forms_title: "Einverständniserklärungen",
+        consent_intro: "Bevor Sie mit der Studie beginnen, lesen Sie bitte die folgenden Informationen und geben Sie Ihr Einverständnis.",
+        proceed_to_presurvey: "Weiter zur Vorab-Umfrage",
+        video_recording_reminder: "Bitte starten Sie jetzt die Videoaufzeichnung.",
         
         // Consent form translations
         participant_info_header: "Allgemeine Teilnehmerinformationen",
@@ -274,7 +284,7 @@ const translations = {
 };
 
 // Multi-page Application State
-let currentPage = 'presurvey';
+let currentPage = 'welcome';
 let studyProgress = 0;
 let currentLanguage = 'en';
 let currentSessionId = null;
@@ -292,11 +302,12 @@ const STUDY_PAGES = [
 ];
 
 const PROGRESS_VALUES = {
-    'presurvey': 0,
-    'task1': 20,
-    'survey1': 40,
-    'task2': 60,
-    'survey2': 80,
+    'welcome': 0,
+    'presurvey': 14,
+    'task1': 28,
+    'survey1': 42,
+    'task2': 56,
+    'survey2': 70,
     'postsurvey': 100
 };
 
@@ -355,6 +366,7 @@ const DOMElements = {
         
         // Pages
         this.pages = {
+            welcome: document.getElementById('page-welcome'),
             presurvey: document.getElementById('page-presurvey'),
             task1: document.getElementById('page-task1'),
             survey1: document.getElementById('page-survey1'),
@@ -378,6 +390,7 @@ const DOMElements = {
         // Modals
         this.modals = {
             thinkAloud: document.getElementById('think-aloud-modal'),
+            videoRecording: document.getElementById('video-recording-modal'),
             feedbackPreference: document.getElementById('feedback-preference-modal'),
             finalSubmission: document.getElementById('final-submission-modal')
         };
@@ -530,6 +543,7 @@ function setupNavigationListeners() {
     const participantInfoCheckbox = document.getElementById('participant-info-checkbox');
     const dataConsentAgree = document.getElementById('data-consent-agree');
     const dataConsentDisagree = document.getElementById('data-consent-disagree');
+    const proceedButton = document.getElementById('proceed-to-presurvey');
     const continueButton = document.getElementById('continue-to-task1');
     const disagreementMessage = document.getElementById('consent-disagreement-message');
     
@@ -537,8 +551,8 @@ function setupNavigationListeners() {
         const participantInfoChecked = participantInfoCheckbox && participantInfoCheckbox.checked;
         const dataConsentSelected = dataConsentAgree && dataConsentAgree.checked;
         
-        if (continueButton) {
-            continueButton.disabled = !(participantInfoChecked && dataConsentSelected);
+        if (proceedButton) {
+            proceedButton.disabled = !(participantInfoChecked && dataConsentSelected);
         }
     }
     
@@ -577,6 +591,17 @@ function setupNavigationListeners() {
                 disagreementMessage.classList.remove('d-none');
             }
             validateConsent();
+        });
+    }
+    
+    // Welcome to Pre-survey
+    if (proceedButton) {
+        proceedButton.addEventListener('click', () => {
+            logEvent('navigation', { from: 'welcome', to: 'presurvey' });
+            PageNavigator.showPage('presurvey');
+            
+            // Show video recording reminder modal
+            showVideoRecordingModal();
         });
     }
     
@@ -760,6 +785,16 @@ function showFeedbackPreferenceModal() {
 function showThinkAloudModal() {
     if (DOMElements.modals.thinkAloud) {
         const modal = new bootstrap.Modal(DOMElements.modals.thinkAloud);
+        modal.show();
+    }
+}
+
+function showVideoRecordingModal() {
+    if (DOMElements.modals.videoRecording) {
+        const modal = new bootstrap.Modal(DOMElements.modals.videoRecording, {
+            backdrop: 'static',
+            keyboard: false
+        });
         modal.show();
     }
 }

@@ -22,8 +22,8 @@
         </div>
     </div>
 
-    <!-- Page 1: Pre-Survey -->
-    <div id="page-presurvey" class="page-container">
+    <!-- Page 1: Welcome & Consent -->
+    <div id="page-welcome" class="page-container">
         <div class="language-switcher-container my-3"></div>
         <div class="main-container">
             <div class="header text-center">
@@ -45,15 +45,21 @@
                         <div class="card-body">
                             <h3 data-lang-key="welcome_to_infer" class="mb-3">Willkommen zu INFER</h3>
                             <p data-lang-key="welcome_message">Vielen Dank, dass Sie sich dazu entschieden haben mit unserem intelligenten Feedback-System zur Beobachtung von Unterricht zu arbeiten.</p>
+                            
+                            <!-- Browser Recommendation -->
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <span data-lang-key="browser_recommendation">Für die beste Erfahrung empfehlen wir die Verwendung von <strong>Google Chrome</strong>.</span>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="card">
                         <div class="card-header">
-                            <h5 data-lang-key="presurvey_title">Vorab-Umfrage</h5>
+                            <h5 data-lang-key="consent_forms_title">Einverständniserklärungen</h5>
                         </div>
                         <div class="card-body">
-                            <p data-lang-key="presurvey_intro">Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen.</p>
+                            <p data-lang-key="consent_intro">Bevor Sie mit der Studie beginnen, lesen Sie bitte die folgenden Informationen und geben Sie Ihr Einverständnis.</p>
                             
                             <!-- Required Consent Forms -->
                             <div class="consent-forms-section mb-4">
@@ -130,7 +136,7 @@
                             </div>
                             
                             <div class="text-center">
-                                <button id="continue-to-task1" class="btn btn-primary btn-lg" data-lang-key="continue_to_task1" disabled>Weiter zu INFER</button>
+                                <button id="proceed-to-presurvey" class="btn btn-primary btn-lg" data-lang-key="proceed_to_presurvey" disabled>Weiter zur Vorab-Umfrage</button>
                             </div>
                         </div>
                     </div>
@@ -139,7 +145,54 @@
         </div>
     </div>
 
-    <!-- Page 2: Task 1 (Modified Feedback Page) -->
+    <!-- Page 2: Pre-Survey -->
+    <div id="page-presurvey" class="page-container d-none">
+        <div class="language-switcher-container my-3"></div>
+        <div class="main-container">
+            <div class="header text-center">
+                <div class="position-relative">
+                    <div class="d-flex align-items-center position-absolute" style="top: 10px; left: 20px;">
+                        <img src="University-of-Tubingen-01.png" alt="University of Tübingen" style="height: 100px; margin-right: 15px;">
+                        <img src="UNC_logo.avif" alt="UNC Logo" style="height: 45px;">
+                    </div>
+                    <div class="text-center pt-5">
+                        <h1 data-lang-key="title" class="mb-0">INFER</h1>
+                        <p data-lang-key="subtitle" class="mb-0" style="font-size: 1.1rem;">Ein intelligentes Feedback-System zur<br>Beobachtung von Unterricht</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 data-lang-key="presurvey_title">Vorab-Umfrage</h5>
+                        </div>
+                        <div class="card-body">
+                            <p data-lang-key="presurvey_intro">Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen.</p>
+                            
+                            <!-- Pre-Study Survey -->
+                            <div class="qualtrics-survey-section border rounded p-4 mb-4">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="qualtrics-iframe-container">
+                                            <iframe src="https://unc.az1.qualtrics.com/jfe/form/SV_510vlbDcrUuly8m" width="100%" height="1600px" style="border:none;"></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button id="continue-to-task1" class="btn btn-primary btn-lg" data-lang-key="continue_to_task1">Weiter zu INFER</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 3: Task 1 (Modified Feedback Page) -->
     <div id="page-task1" class="page-container d-none">
         <div class="language-switcher-container my-3"></div>
     <div class="main-container">
@@ -302,7 +355,7 @@
         </div>
     </div>
 
-    <!-- Page 3: Post-Task 1 Survey -->
+    <!-- Page 4: Post-Task 1 Survey -->
     <div id="page-survey1" class="page-container d-none">
         <div class="language-switcher-container my-3"></div>
         <div class="main-container">
@@ -354,7 +407,7 @@
         </div>
     </div>
 
-    <!-- Page 4: Task 2 (Duplicate of Task 1 with different IDs) -->
+    <!-- Page 5: Task 2 (Duplicate of Task 1 with different IDs) -->
     <div id="page-task2" class="page-container d-none">
         <div class="language-switcher-container my-3"></div>
         <div class="main-container">
@@ -517,7 +570,7 @@
         </div>
     </div>
 
-    <!-- Page 5: Post-Task 2 Survey -->
+    <!-- Page 6: Post-Task 2 Survey -->
     <div id="page-survey2" class="page-container d-none">
         <div class="language-switcher-container my-3"></div>
         <div class="main-container">
@@ -569,7 +622,7 @@
         </div>
     </div>
 
-    <!-- Page 6: Post-Survey -->
+    <!-- Page 7: Post-Survey -->
     <div id="page-postsurvey" class="page-container d-none">
         <div class="language-switcher-container my-3"></div>
         <div class="main-container">
@@ -650,6 +703,29 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-lang-key="understood">Understood</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Recording Reminder Modal -->
+    <div class="modal fade" id="video-recording-modal" tabindex="-1" aria-labelledby="video-recording-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="video-recording-modal-label" data-lang-key="video_recording_reminder">Video Recording Reminder</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-camera-video-fill text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center lead" data-lang-key="video_recording_reminder">
+                        <strong>Bitte starten Sie jetzt die Videoaufzeichnung.</strong>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-lang-key="understood">Verstanden</button>
                 </div>
             </div>
         </div>
