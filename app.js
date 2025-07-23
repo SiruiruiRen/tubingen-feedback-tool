@@ -129,6 +129,10 @@ const translations = {
         postsurvey_heading: "Final Survey (SUS)",
         postsurvey_description: "Please complete this final System Usability Scale (SUS) survey about your overall experience. This takes about 3-5 minutes.",
         postsurvey_instructions: "Final Step: Complete the survey above, then click \"Complete Study\" below to finish.",
+        
+        // Citation
+        citation_header: "Citation",
+        apa_citation: "Fütterer, T., Nguyen, H., Ren, S., & Stürmer, K. (2025). INFER - An intelligent feedback system for classroom observation [Computer software]. University of Tübingen & University of North Carolina.",
 
         // Funny loading messages
         loading_messages: [
@@ -253,6 +257,10 @@ const translations = {
         postsurvey_heading: "Abschlussumfrage (SUS)",
         postsurvey_description: "Bitte füllen Sie diese abschließende Umfrage zur System-Usability-Skala (SUS) über Ihre Gesamterfahrung aus. Dies dauert ca. 3-5 Minuten.",
         postsurvey_instructions: "Letzter Schritt: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Studie abschließen\", um fertig zu werden.",
+        
+        // Citation
+        citation_header: "Zitation",
+        apa_citation: "Fütterer, T., Nguyen, H., Ren, S., & Stürmer, K. (2025). INFER - An intelligent feedback system for classroom observation [Computer software]. University of Tübingen & University of North Carolina.",
 
         // Funny loading messages
         loading_messages: [
