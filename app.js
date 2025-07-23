@@ -1356,7 +1356,12 @@ function updateLanguage(lang) {
     document.querySelectorAll('[data-lang-key]').forEach(element => {
         const key = element.getAttribute('data-lang-key');
         if (trans[key]) {
-            element.textContent = trans[key];
+            // Use innerHTML for elements that need HTML rendering (like browser recommendation)
+            if (key === 'browser_recommendation') {
+                element.innerHTML = trans[key];
+            } else {
+                element.textContent = trans[key];
+            }
         }
     });
     
