@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial render
     updateLanguage('en');
-    PageNavigator.showPage('presurvey');
+    PageNavigator.showPage('welcome');
     
     console.log('Application initialized successfully');
 });
