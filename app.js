@@ -44,7 +44,7 @@ const translations = {
         consent_form_link: "Consent Form (PDF)",
         data_consent_agree: "I agree to the use of the data for scientific purposes.",
         data_consent_disagree: "I don't agree to the use of the data for scientific purposes.",
-        consent_disagreement_message: "Unfortunately, you cannot participate in the study without consent to data usage. Thank you for your interest.",
+        consent_disagreement_message: "Thank you for your choice. Your data will not be used for scientific purposes, but you can still complete the survey.",
         
         // Task pages
         task1_title: "INFER Task 1",
@@ -178,7 +178,7 @@ const translations = {
         consent_form_link: "Einverständniserklärung (PDF)",
         data_consent_agree: "Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke zu.",
         data_consent_disagree: "Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke nicht zu.",
-        consent_disagreement_message: "Leider können Sie ohne Zustimmung zur Datennutzung nicht an der Studie teilnehmen. Vielen Dank für Ihr Interesse.",
+        consent_disagreement_message: "Vielen Dank für Ihre Entscheidung. Ihre Daten werden nicht für wissenschaftliche Zwecke verwendet, aber Sie können trotzdem die Umfrage ausfüllen.",
         
         // Task pages
         task1_title: "INFER Aufgabe 1",
