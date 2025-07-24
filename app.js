@@ -138,7 +138,7 @@ const translations = {
         
         // Citation
         citation_header: "Citation",
-        apa_citation: "Fütterer, T., Nguyen, H., Ren, S., & Stürmer, K. (2025). INFER - An intelligent feedback system for classroom observation [Computer software]. University of Tübingen & University of North Carolina.",
+        apa_citation: "Fütterer, T., Nguyen, H., Ren, S., & Stürmer, K. (2025). INFER - An intelligent feedback system for classroom observation [Computer software]. University of Tübingen & University of North Carolina, Chapel Hill.",
 
         // Funny loading messages
         loading_messages: [
@@ -272,7 +272,7 @@ const translations = {
         
         // Citation
         citation_header: "Zitation",
-        apa_citation: "Fütterer, T., Nguyen, H., Ren, S., & Stürmer, K. (2025). INFER - An intelligent feedback system for classroom observation [Computer software]. University of Tübingen & University of North Carolina.",
+        apa_citation: "Fütterer, T., Nguyen, H., Ren, S., & Stürmer, K. (2025). INFER - An intelligent feedback system for classroom observation [Computer software]. University of Tübingen & University of North Carolina, Chapel Hill.",
 
         // Funny loading messages
         loading_messages: [
