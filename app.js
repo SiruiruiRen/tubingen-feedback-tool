@@ -23,6 +23,7 @@ const translations = {
         presurvey_title: "Pre-Study Survey",
         presurvey_intro: "Before you work with the feedback system, we ask you to participate in a short survey about your background and expectations. Afterwards, you will proceed to the feedback system. There you will also be asked to participate in a short survey after each sub-step. We ask you to fill out the questions conscientiously, as you help us to continuously improve the feedback system. Your data will be stored completely anonymously and used only for scientific purposes if you consent.",
         continue_to_task1: "Continue to INFER",
+        presurvey_completed_confirmation: "I have completely filled out and submitted the survey above.",
         
         // New translations for welcome section
         welcome_to_infer: "Welcome to INFER",
@@ -156,6 +157,7 @@ const translations = {
         presurvey_title: "Vorab-Umfrage",
         presurvey_intro: "Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen.",
         continue_to_task1: "Weiter zu INFER",
+        presurvey_completed_confirmation: "Ich habe die Umfrage oben vollständig ausgefüllt und abgeschickt.",
         
         // New translations for welcome section
         welcome_to_infer: "Willkommen zu INFER",
@@ -546,13 +548,15 @@ function setupNavigationListeners() {
     const proceedButton = document.getElementById('proceed-to-presurvey');
     const continueButton = document.getElementById('continue-to-task1');
     const disagreementMessage = document.getElementById('consent-disagreement-message');
+    const presurveyCompletedCheckbox = document.getElementById('presurvey-completed-checkbox');
     
     function validateConsent() {
         const participantInfoChecked = participantInfoCheckbox && participantInfoCheckbox.checked;
-        const dataConsentSelected = dataConsentAgree && dataConsentAgree.checked;
+        // Note: Data consent choice is optional for survey access
+        // Users can choose agree/disagree but must complete the survey either way
         
         if (proceedButton) {
-            proceedButton.disabled = !(participantInfoChecked && dataConsentSelected);
+            proceedButton.disabled = !participantInfoChecked;
         }
     }
     
@@ -594,14 +598,33 @@ function setupNavigationListeners() {
         });
     }
     
+    // Pre-survey completion validation
+    function validatePresurveyCompletion() {
+        const presurveyCompleted = presurveyCompletedCheckbox && presurveyCompletedCheckbox.checked;
+        
+        if (continueButton) {
+            continueButton.disabled = !presurveyCompleted;
+        }
+    }
+    
+    // Pre-survey completion checkbox handler
+    if (presurveyCompletedCheckbox) {
+        presurveyCompletedCheckbox.addEventListener('change', function() {
+            logEvent('presurvey_completion_confirmed', { 
+                completed: this.checked 
+            });
+            validatePresurveyCompletion();
+        });
+    }
+    
+    // Initialize presurvey validation
+    validatePresurveyCompletion();
+    
     // Welcome to Pre-survey
     if (proceedButton) {
         proceedButton.addEventListener('click', () => {
             logEvent('navigation', { from: 'welcome', to: 'presurvey' });
             PageNavigator.showPage('presurvey');
-            
-            // Show video recording reminder modal
-            showVideoRecordingModal();
         });
     }
     
@@ -610,6 +633,9 @@ function setupNavigationListeners() {
         DOMElements.navButtons.continueToTask1.addEventListener('click', () => {
             logEvent('navigation', { from: 'presurvey', to: 'task1' });
             PageNavigator.showPage('task1');
+            
+            // Show video recording reminder modal when entering INFER tasks
+            showVideoRecordingModal();
             
             // Show feedback style preference modal on first task
             showFeedbackPreferenceModal();
