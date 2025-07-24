@@ -23,7 +23,7 @@ const translations = {
         presurvey_title: "Pre-Study Survey",
         presurvey_intro: "Before you work with the feedback system, we ask you to participate in a short survey about your background and expectations. Afterwards, you will proceed to the feedback system. There you will also be asked to participate in a short survey after each sub-step. We ask you to fill out the questions conscientiously, as you help us to continuously improve the feedback system. Your data will be stored completely anonymously and used only for scientific purposes if you consent. <strong>You need to complete the survey to receive the links to the video tasks. Please open the video links in a new tab and watch the Task 1 video before proceeding.</strong>",
         continue_to_task1: "Continue to INFER",
-        presurvey_completed_confirmation: "I have completely filled out and submitted the survey above.",
+        presurvey_completed_confirmation: "I have completely filled out and submitted the survey above. <strong>Please open the video links in a new tab and watch the Task 1 video before proceeding.</strong>",
         
         // New translations for welcome section
         welcome_to_infer: "Welcome to INFER",
@@ -157,7 +157,7 @@ const translations = {
         presurvey_title: "Vorab-Umfrage",
         presurvey_intro: "Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen. <strong>Sie müssen die Umfrage abschließen, um die Links zu den Videoaufgaben zu erhalten. Bitte öffnen Sie die Video-Links in einem neuen Tab und schauen Sie sich das Video zu Aufgabe 1 an, bevor Sie fortfahren.</strong>",
         continue_to_task1: "Weiter zu INFER",
-        presurvey_completed_confirmation: "Ich habe die Umfrage oben vollständig ausgefüllt und abgeschickt.",
+        presurvey_completed_confirmation: "Ich habe die Umfrage oben vollständig ausgefüllt und abgeschickt. <strong>Bitte öffnen Sie die Video-Links in einem neuen Tab und schauen Sie sich das Video zu Aufgabe 1 an, bevor Sie fortfahren.</strong>",
         
         // New translations for welcome section
         welcome_to_infer: "Willkommen zu INFER",
@@ -1382,8 +1382,8 @@ function updateLanguage(lang) {
     document.querySelectorAll('[data-lang-key]').forEach(element => {
         const key = element.getAttribute('data-lang-key');
         if (trans[key]) {
-            // Use innerHTML for elements that need HTML rendering (like browser recommendation and presurvey intro)
-            if (key === 'browser_recommendation' || key === 'presurvey_intro') {
+            // Use innerHTML for elements that need HTML rendering (like browser recommendation, presurvey intro, and checkbox confirmation)
+            if (key === 'browser_recommendation' || key === 'presurvey_intro' || key === 'presurvey_completed_confirmation') {
                 element.innerHTML = trans[key];
             } else {
                 element.textContent = trans[key];
