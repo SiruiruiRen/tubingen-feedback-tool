@@ -21,7 +21,7 @@ const translations = {
         
         // Pre-survey page
         presurvey_title: "Pre-Study Survey",
-        presurvey_intro: "Before you work with the feedback system, we ask you to participate in a short survey about your background and expectations. Afterwards, you will proceed to the feedback system. There you will also be asked to participate in a short survey after each sub-step. We ask you to fill out the questions conscientiously, as you help us to continuously improve the feedback system. Your data will be stored completely anonymously and used only for scientific purposes if you consent.",
+        presurvey_intro: "Before you work with the feedback system, we ask you to participate in a short survey about your background and expectations. Afterwards, you will proceed to the feedback system. There you will also be asked to participate in a short survey after each sub-step. We ask you to fill out the questions conscientiously, as you help us to continuously improve the feedback system. Your data will be stored completely anonymously and used only for scientific purposes if you consent. <strong>You need to complete the survey to receive the links to the video tasks.</strong>",
         continue_to_task1: "Continue to INFER",
         presurvey_completed_confirmation: "I have completely filled out and submitted the survey above.",
         
@@ -155,7 +155,7 @@ const translations = {
         
         // Pre-survey page
         presurvey_title: "Vorab-Umfrage",
-        presurvey_intro: "Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen.",
+        presurvey_intro: "Bevor Sie mit dem Feedbacksystem arbeiten, bitten wir Sie an einer kurzen Umfrage zu Ihrem Hintergrund und Ihren Erwartungen teilzunehmen. Anschließend gelangen Sie zum Feedbacksystem. Dort werden Sie ebenfalls nach jedem Teilschritt gebeten, an einer kurzen Umfrage teilzunehmen. Wir bitten Sie die Fragen gewissenhaft auszufüllen, da Sie uns helfen, das Feedbacksystem stetig zu verbessern. Ihre Daten werden völlig anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet, wenn Sie zustimmen. <strong>Sie müssen die Umfrage abschließen, um die Links zu den Videoaufgaben zu erhalten.</strong>",
         continue_to_task1: "Weiter zu INFER",
         presurvey_completed_confirmation: "Ich habe die Umfrage oben vollständig ausgefüllt und abgeschickt.",
         
