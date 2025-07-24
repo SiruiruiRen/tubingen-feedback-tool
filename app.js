@@ -128,7 +128,7 @@ const translations = {
         // Survey page text
         survey1_heading: "Post-Task 1 Survey",
         survey1_description: "Please share your thoughts about your experience with Task 1. This takes about 3-5 minutes.",
-        survey1_instructions: "Instructions: Complete the survey above, then click \"Continue to Task 2\" below to proceed.",
+        survey1_instructions: "Instructions: Complete the survey above, then open the Task 2 video links in a new tab and watch the Task 2 video, then click \"Continue to Task 2\" below to proceed.",
         survey2_heading: "Post-Task 2 Survey",
         survey2_description: "Please share your thoughts about your experience with Task 2. This takes about 3-5 minutes.",
         survey2_instructions: "Instructions: Complete the survey above, then click \"Continue to Final Survey\" below to proceed.",
@@ -262,7 +262,7 @@ const translations = {
         // Survey page text
         survey1_heading: "Umfrage nach Aufgabe 1",
         survey1_description: "Bitte teilen Sie Ihre Gedanken zu Ihrer Erfahrung mit Aufgabe 1 mit. Dies dauert ca. 3-5 Minuten.",
-        survey1_instructions: "Anleitung: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Weiter zu Aufgabe 2\", um fortzufahren.",
+        survey1_instructions: "Anleitung: Füllen Sie die Umfrage oben aus, öffnen Sie dann die Video-Links zu Aufgabe 2 in einem neuen Tab und schauen Sie sich das Video zu Aufgabe 2 an, bevor Sie unten auf \"Weiter zu Aufgabe 2\" klicken, um fortzufahren.",
         survey2_heading: "Umfrage nach Aufgabe 2",
         survey2_description: "Bitte teilen Sie Ihre Gedanken zu Ihrer Erfahrung mit Aufgabe 2 mit. Dies dauert ca. 3-5 Minuten.",
         survey2_instructions: "Anleitung: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Weiter zur Abschlussumfrage\", um fortzufahren.",
