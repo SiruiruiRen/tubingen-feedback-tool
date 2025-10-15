@@ -1,0 +1,26 @@
+plugins = []
+headers = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/Users/sirui/Desktop/tubigen/infer-task-survey-version"
+publishOrigin = "default"
+base = "/Users/sirui/Desktop/tubigen/infer-task-survey-version"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]

@@ -21,6 +21,85 @@
         </div>
     </div>
 
+    <!-- Page 0: Video Instructions -->
+    <div id="page-video-intro" class="page-container">
+        <div class="main-container">
+            <div class="header text-center">
+                <div class="position-relative">
+                    <div class="d-flex align-items-center position-absolute" style="top: 10px; left: 20px;">
+                        <img src="University-of-Tubingen-01.png" alt="University of Tübingen" style="height: 90px; margin-right: 15px;">
+                        <img src="UNC_logo.avif" alt="UNC Logo" style="height: 35px;">
+                    </div>
+                    <div class="text-center pt-3">
+                        <h1 class="mb-0" style="font-size: 2rem;">Welcome to INFER</h1>
+                        <p class="mb-0">Please watch the video before starting</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <i class="bi bi-play-circle text-primary" style="font-size: 4rem;"></i>
+                            </div>
+                            
+                            <h3 class="text-center mb-4">Step 1: Watch the Teaching Video</h3>
+                            
+                            <div class="alert alert-info mb-4">
+                                <h5><i class="bi bi-info-circle me-2"></i>Instructions:</h5>
+                                <ol class="mb-0">
+                                    <li class="mb-2">Click the link below to open the video in a <strong>new tab</strong></li>
+                                    <li class="mb-2">Enter the password when prompted: <code class="bg-warning px-2 py-1 rounded">M52025</code></li>
+                                    <li class="mb-2">Watch the entire video carefully</li>
+                                    <li class="mb-2">Return to this page when finished</li>
+                                    <li>Click "Continue to Task 1" below to start analyzing the video</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="card border-primary mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="bi bi-camera-video me-2"></i>Video Link</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-3">Click the button below to open the video in a new tab:</p>
+                                    <a href="https://unitc-my.sharepoint.com/:v:/g/personal/sebft01_cloud_uni-tuebingen_de/EdqXt9FXti9In4hW4WMp4gYBZTY5r91MWEv05dXMHddwPQ?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=IrYVzF" 
+                                       target="_blank" 
+                                       class="btn btn-primary btn-lg w-100">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Open Teaching Video (New Tab)
+                                    </a>
+                                    
+                                    <div class="alert alert-warning mt-3 mb-0">
+                                        <strong><i class="bi bi-key-fill me-2"></i>Password:</strong> 
+                                        <span class="fs-4 fw-bold">M52025</span>
+                                        <button class="btn btn-sm btn-outline-dark ms-3" onclick="navigator.clipboard.writeText('M52025')">
+                                            <i class="bi bi-clipboard"></i> Copy Password
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check mb-4 p-3 bg-light rounded">
+                                <input class="form-check-input" type="checkbox" id="video-watched-checkbox">
+                                <label class="form-check-label fw-bold" for="video-watched-checkbox">
+                                    <i class="bi bi-check-circle me-2"></i>I have watched the video and I am ready to continue
+                                </label>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button id="continue-to-task1-from-video" class="btn btn-success btn-lg px-5" disabled>
+                                    <i class="bi bi-arrow-right-circle me-2"></i>Continue to Task 1
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Page 1: Task 1 -->
     <div id="page-task1" class="page-container">
         <div class="main-container">

@@ -11,16 +11,17 @@ const OPENAI_API_URL = `${CORS_PROXY_URL}/api/openai/v1/chat/completions`;
 const model = 'gpt-4o';
 
 // Page flow configuration
-const STUDY_PAGES = ['task1', 'survey1', 'task2', 'survey2', 'thankyou'];
+const STUDY_PAGES = ['video-intro', 'task1', 'survey1', 'task2', 'survey2', 'thankyou'];
 const PROGRESS_VALUES = {
-    'task1': 0,
-    'survey1': 25,
+    'video-intro': 0,
+    'task1': 16,
+    'survey1': 33,
     'task2': 50,
-    'survey2': 75,
+    'survey2': 66,
     'thankyou': 100
 };
 
-let currentPage = 'task1';
+let currentPage = 'video-intro';
 let currentLanguage = 'en';
 let userPreferredFeedbackStyle = 'extended';
 
@@ -177,8 +178,9 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeApp() {
     setupEventListeners();
     applyTranslations();
-    updateProgress('task1');
+    updateProgress('video-intro');
     updateWordCounts();
+    showPage('video-intro');
 }
 
 // Page Navigation
@@ -222,6 +224,20 @@ function nextPage() {
 
 // Event Listeners Setup
 function setupEventListeners() {
+    // Video intro page listeners
+    const videoCheckbox = document.getElementById('video-watched-checkbox');
+    const continueFromVideoBtn = document.getElementById('continue-to-task1-from-video');
+    
+    if (videoCheckbox && continueFromVideoBtn) {
+        videoCheckbox.addEventListener('change', (e) => {
+            continueFromVideoBtn.disabled = !e.target.checked;
+        });
+        
+        continueFromVideoBtn.addEventListener('click', () => {
+            showPage('task1');
+        });
+    }
+    
     // Task 1 listeners
     setupTaskListeners('task1');
     
