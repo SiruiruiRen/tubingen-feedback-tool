@@ -1,5 +1,5 @@
 services:
-  # Single web service that handles both CORS proxy AND serves the frontend
+  # CORS proxy service (original)
   - type: web
     name: tubingen-feedback-cors-proxy
     runtime: node
@@ -9,4 +9,15 @@ services:
       - key: NODE_VERSION
         value: 18.x
       - key: OPENAI_API_KEY
-        sync: false 
+        sync: false
+  
+  # Simplified version - Task→Survey→Task→Survey flow (NEW)
+  - type: web
+    name: infer-task-survey
+    runtime: static
+    buildCommand: echo "No build needed for static site"
+    staticPublishPath: ./infer-task-survey-version
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html 
