@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFER - Intelligent Feedback System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="alert-container"></div>
+    
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-primary" role="progressbar" id="study-progress" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="progress-text text-center mt-2">
+            <small class="text-muted" id="progress-text">Study Progress</small>
+        </div>
+    </div>
+
+    <!-- Page 1: Task 1 -->
+    <div id="page-task1" class="page-container">
+        <div class="main-container">
+            <div class="header text-center">
+                <div class="position-relative">
+                    <div class="d-flex align-items-center position-absolute" style="top: 10px; left: 20px;">
+                        <img src="University-of-Tubingen-01.png" alt="University of Tübingen" style="height: 90px; margin-right: 15px;">
+                        <img src="UNC_logo.avif" alt="UNC Logo" style="height: 35px;">
+                    </div>
+                    <div class="text-center pt-3">
+                        <h1 data-lang-key="task1_title" class="mb-0" style="font-size: 2rem;">INFER Task 1</h1>
+                        <p class="mb-0" data-lang-key="task1_subtitle">Analyze your teaching reflection and receive feedback</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Settings Panel -->
+                <div class="col-md-2">
+                    <div class="card">
+                        <div class="card-header" data-lang-key="settings">Settings</div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="student-name-task1" class="form-label" data-lang-key="your_name">Your Name:</label>
+                                <input type="text" class="form-control" id="student-name-task1" placeholder="Enter your name" data-lang-key-placeholder="enter_name">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="video-select-task1" class="form-label" data-lang-key="video_watched">Video Watched:</label>
+                                <select class="form-select" id="video-select-task1">
+                                    <option value="" data-lang-key="select_video">Select a video...</option>
+                                    <option value="spider">Task1-Spinne fangt Fliege (Spider Catches Fly)</option>
+                                    <option value="height">Höhendifferenz (Height Difference)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="language-toggle mb-3">
+                                <label data-lang-key="language">Language:</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="language-task1" id="lang-en-task1" checked>
+                                    <label class="form-check-label" for="lang-en-task1">English</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="language-task1" id="lang-de-task1">
+                                    <label class="form-check-label" for="lang-de-task1">Deutsch</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Panel -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header" data-lang-key="reflection_input">Student Teacher Reflection</div>
+                        <div class="card-body d-flex flex-column position-relative">
+                            <textarea id="reflection-text-task1" class="form-control flex-grow-1 mb-3" placeholder="Paste the student teacher's reflection here..." data-lang-key-placeholder="paste_reflection" spellcheck="false"></textarea>
+                            
+                            <div class="input-actions mt-auto">
+                                <button id="clear-btn-task1" class="btn btn-secondary" data-lang-key="clear">Clear</button>
+                                <div id="word-count-container-task1" class="text-muted">
+                                    <span id="word-count-task1">0</span><span data-lang-key="words"> words</span>
+                                </div>
+                                <button id="generate-btn-task1" class="btn btn-primary" data-lang-key="generate_feedback">Generate Feedback</button>
+                                <button id="submit-final-task1" class="btn btn-success btn-lg mt-2" data-lang-key="submit_final">
+                                    <i class="bi bi-check-circle"></i> Submit Final Reflection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Panel -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <span data-lang-key="generated_feedback">Generated Feedback</span>
+                        </div>
+                        <div class="card-body d-flex flex-column position-relative">
+                            <div id="loading-spinner-task1" class="loading-spinner">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div id="loading-text-task1" class="loading-message mt-3 small text-muted"></div>
+                            </div>
+                            <div id="feedback-display-task1" class="form-control h-100 flex-grow-1 mb-3">
+                                <ul class="nav nav-tabs feedback-tabs d-none" id="feedback-tabs-task1" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="extended-tab-task1" data-bs-toggle="tab" data-bs-target="#feedback-extended-pane-task1" type="button" role="tab" data-lang-key="extended">Extended</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="short-tab-task1" data-bs-toggle="tab" data-bs-target="#feedback-short-pane-task1" type="button" role="tab" data-lang-key="short">Short</button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="feedback-tab-content-task1">
+                                    <div class="tab-pane fade show active" id="feedback-extended-pane-task1" role="tabpanel">
+                                        <div id="feedback-extended-task1" class="feedback-content">
+                                            <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="feedback-short-pane-task1" role="tabpanel">
+                                        <div id="feedback-short-task1" class="feedback-content">
+                                            <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <div class="feedback-options">
+                                    <button id="copy-btn-task1" class="btn btn-outline-secondary" data-lang-key="copy">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                    <button id="revise-reflection-btn-task1" class="btn btn-outline-info" style="display: none;" data-lang-key="revise_reflection">
+                                        <i class="bi bi-pencil-square"></i> Revise Reflection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Definitions Section -->
+            <div class="definitions-section mt-4">
+                <div class="definitions-header" data-bs-toggle="collapse" data-bs-target="#definitionsContent-task1" aria-expanded="false" role="button">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="mb-2">
+                                <i class="bi bi-lightbulb-fill text-warning me-2"></i>
+                                <span data-lang-key="learn_key_concepts">Learn the Key Concepts for Better Reflection</span>
+                            </h5>
+                            <p class="mb-0 text-muted" data-lang-key="concepts_help">Understanding these three dimensions will help you write more comprehensive teaching reflections</p>
+                        </div>
+                        <div class="expand-indicator">
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="collapse" id="definitionsContent-task1">
+                    <div class="definitions-grid">
+                        <div class="definition-card description-card">
+                            <div class="definition-icon">📝</div>
+                            <h6 data-lang-key="description">Description</h6>
+                            <p data-lang-key="description_def">Accurately observing and reporting what happened in the classroom - specific behaviors, interactions, and events without interpretation.</p>
+                        </div>
+                        <div class="definition-card explanation-card">
+                            <div class="definition-icon">🔍</div>
+                            <h6 data-lang-key="explanation">Explanation</h6>
+                            <p data-lang-key="explanation_def">Interpreting observed events using educational theory, research, and pedagogical knowledge - understanding why things happened.</p>
+                        </div>
+                        <div class="definition-card prediction-card">
+                            <div class="definition-icon">🔮</div>
+                            <h6 data-lang-key="prediction">Prediction</h6>
+                            <p data-lang-key="prediction_def">Anticipating future outcomes and effects on student learning based on observed teaching practices and their interpretations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 2: Post-Task 1 Survey -->
+    <div id="page-survey1" class="page-container d-none">
+        <div class="main-container">
+            <div class="header text-center">
+                <div class="position-relative">
+                    <div class="d-flex align-items-center position-absolute" style="top: 10px; left: 20px;">
+                        <img src="University-of-Tubingen-01.png" alt="University of Tübingen" style="height: 90px; margin-right: 15px;">
+                        <img src="UNC_logo.avif" alt="UNC Logo" style="height: 35px;">
+                    </div>
+                    <div class="text-center pt-3">
+                        <h1 data-lang-key="survey1_title">Post-Task 1 Survey</h1>
+                        <p class="mb-4" data-lang-key="survey1_subtitle">Please share your thoughts about the first task</p>
+                    </div>
+                </div>
+            </div>
+                            
+            <div class="row justify-content-center">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Post-Task 1 Survey -->
+                            <div class="qualtrics-survey-section border rounded p-4 mb-4">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <h6 class="mb-2" data-lang-key="survey1_heading"><i class="bi bi-chat-square-text me-2"></i>Post-Task 1 Survey</h6>
+                                        <p class="text-muted mb-3" data-lang-key="survey1_description">Please share your thoughts about your experience with Task 1. This takes about 3-5 minutes.</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="qualtrics-iframe-container">
+                                            <iframe src="https://unc.az1.qualtrics.com/jfe/form/SV_eh9QGc1SrGFCl5s" width="100%" height="1600px" style="border:none;"></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info mt-3 mb-0">
+                                    <small data-lang-key="survey1_instructions"><i class="bi bi-info-circle me-1"></i><strong>Instructions:</strong> 
+                                    Complete the survey above, then click "Continue to Task 2" below to proceed.</small>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button id="continue-to-task2" class="btn btn-primary btn-lg" data-lang-key="continue_to_task2">Continue to Task 2</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 3: Task 2 -->
+    <div id="page-task2" class="page-container d-none">
+        <div class="main-container">
+            <div class="header text-center">
+                <div class="position-relative">
+                    <div class="d-flex align-items-center position-absolute" style="top: 10px; left: 20px;">
+                        <img src="University-of-Tubingen-01.png" alt="University of Tübingen" style="height: 90px; margin-right: 15px;">
+                        <img src="UNC_logo.avif" alt="UNC Logo" style="height: 35px;">
+                    </div>
+                    <div class="text-center pt-3">
+                        <h1 data-lang-key="task2_title" class="mb-0" style="font-size: 2rem;">INFER Task 2</h1>
+                        <p class="mb-0" data-lang-key="task2_subtitle">Analyze your second teaching reflection and receive feedback</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Settings Panel -->
+                <div class="col-md-2">
+                    <div class="card">
+                        <div class="card-header" data-lang-key="settings">Settings</div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="student-name-task2" class="form-label" data-lang-key="your_name">Your Name:</label>
+                                <input type="text" class="form-control" id="student-name-task2" placeholder="Enter your name" data-lang-key-placeholder="enter_name">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="video-select-task2" class="form-label" data-lang-key="video_watched">Video Watched:</label>
+                                <select class="form-select" id="video-select-task2">
+                                    <option value="" data-lang-key="select_video">Select a video...</option>
+                                    <option value="spider">Spinne fängt Fliege (Spider Catches Fly)</option>
+                                    <option value="height">Task2-Hohendifferenz (Height Difference)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="language-toggle mb-3">
+                                <label data-lang-key="language">Language:</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="language-task2" id="lang-en-task2" checked>
+                                    <label class="form-check-label" for="lang-en-task2">English</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="language-task2" id="lang-de-task2">
+                                    <label class="form-check-label" for="lang-de-task2">Deutsch</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Panel -->
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header" data-lang-key="reflection_input">Student Teacher Reflection</div>
+                        <div class="card-body d-flex flex-column position-relative">
+                            <textarea id="reflection-text-task2" class="form-control flex-grow-1 mb-3" placeholder="Paste the student teacher's reflection here..." data-lang-key-placeholder="paste_reflection" spellcheck="false"></textarea>
+                            
+                            <div class="input-actions mt-auto">
+                                <button id="clear-btn-task2" class="btn btn-secondary" data-lang-key="clear">Clear</button>
+                                <div id="word-count-container-task2" class="text-muted">
+                                    <span id="word-count-task2">0</span><span data-lang-key="words"> words</span>
+                                </div>
+                                <button id="generate-btn-task2" class="btn btn-primary" data-lang-key="generate_feedback">Generate Feedback</button>
+                                <button id="submit-final-task2" class="btn btn-success btn-lg mt-2" data-lang-key="submit_final">
+                                    <i class="bi bi-check-circle"></i> Submit Final Reflection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Panel -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <span data-lang-key="generated_feedback">Generated Feedback</span>
+                        </div>
+                        <div class="card-body d-flex flex-column position-relative">
+                            <div id="loading-spinner-task2" class="loading-spinner">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div id="loading-text-task2" class="loading-message mt-3 small text-muted"></div>
+                            </div>
+                            <div id="feedback-display-task2" class="form-control h-100 flex-grow-1 mb-3">
+                                <ul class="nav nav-tabs feedback-tabs d-none" id="feedback-tabs-task2" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="extended-tab-task2" data-bs-toggle="tab" data-bs-target="#feedback-extended-pane-task2" type="button" role="tab" data-lang-key="extended">Extended</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="short-tab-task2" data-bs-toggle="tab" data-bs-target="#feedback-short-pane-task2" type="button" role="tab" data-lang-key="short">Short</button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="feedback-tab-content-task2">
+                                    <div class="tab-pane fade show active" id="feedback-extended-pane-task2" role="tabpanel">
+                                        <div id="feedback-extended-task2" class="feedback-content">
+                                            <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="feedback-short-pane-task2" role="tabpanel">
+                                        <div id="feedback-short-task2" class="feedback-content">
+                                            <p class="text-muted" data-lang-key="feedback_placeholder">Feedback will appear here after generation...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <div class="feedback-options">
+                                    <button id="copy-btn-task2" class="btn btn-outline-secondary" data-lang-key="copy">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
+                                    <button id="revise-reflection-btn-task2" class="btn btn-outline-info" style="display: none;" data-lang-key="revise_reflection">
+                                        <i class="bi bi-pencil-square"></i> Revise Reflection
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Definitions Section -->
+            <div class="definitions-section mt-4">
+                <div class="definitions-header" data-bs-toggle="collapse" data-bs-target="#definitionsContent-task2" aria-expanded="false" role="button">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="mb-2">
+                                <i class="bi bi-lightbulb-fill text-warning me-2"></i>
+                                <span data-lang-key="learn_key_concepts">Learn the Key Concepts for Better Reflection</span>
+                            </h5>
+                        </div>
+                        <div class="expand-indicator">
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="collapse" id="definitionsContent-task2">
+                    <div class="definitions-grid">
+                        <div class="definition-card description-card">
+                            <div class="definition-icon">📝</div>
+                            <h6 data-lang-key="description">Description</h6>
+                            <p data-lang-key="description_def">Accurately observing and reporting what happened in the classroom - specific behaviors, interactions, and events without interpretation.</p>
+                        </div>
+                        <div class="definition-card explanation-card">
+                            <div class="definition-icon">🔍</div>
+                            <h6 data-lang-key="explanation">Explanation</h6>
+                            <p data-lang-key="explanation_def">Interpreting observed events using educational theory, research, and pedagogical knowledge - understanding why things happened.</p>
+                        </div>
+                        <div class="definition-card prediction-card">
+                            <div class="definition-icon">🔮</div>
+                            <h6 data-lang-key="prediction">Prediction</h6>
+                            <p data-lang-key="prediction_def">Anticipating future outcomes and effects on student learning based on observed teaching practices and their interpretations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 4: Post-Task 2 Survey -->
+    <div id="page-survey2" class="page-container d-none">
+        <div class="main-container">
+            <div class="header text-center">
+                <div class="position-relative">
+                    <div class="d-flex align-items-center position-absolute" style="top: 10px; left: 20px;">
+                        <img src="University-of-Tubingen-01.png" alt="University of Tübingen" style="height: 90px; margin-right: 15px;">
+                        <img src="UNC_logo.avif" alt="UNC Logo" style="height: 35px;">
+                    </div>
+                    <div class="text-center pt-3">
+                        <h1 data-lang-key="survey2_title">Post-Task 2 Survey</h1>
+                        <p class="mb-4" data-lang-key="survey2_subtitle">Please share your thoughts about the second task</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Post-Task 2 Survey -->
+                            <div class="qualtrics-survey-section border rounded p-4 mb-4">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <h6 class="mb-2" data-lang-key="survey2_heading"><i class="bi bi-chat-square-text me-2"></i>Post-Task 2 Survey</h6>
+                                        <p class="text-muted mb-3" data-lang-key="survey2_description">Please share your thoughts about your experience with Task 2. This takes about 3-5 minutes.</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="qualtrics-iframe-container">
+                                            <iframe src="https://unc.az1.qualtrics.com/jfe/form/SV_2o83No2bgQoDMLs" width="100%" height="1600px" style="border:none;"></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-success mt-3 mb-0">
+                                    <small data-lang-key="survey2_instructions"><i class="bi bi-check-circle me-1"></i><strong>Final Step:</strong> 
+                                    Complete the survey above, then click "Complete Study" below to finish.</small>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button id="complete-study" class="btn btn-success btn-lg" data-lang-key="complete_study">Complete Study</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 5: Thank You -->
+    <div id="page-thankyou" class="page-container d-none">
+        <div class="main-container">
+            <div class="header text-center">
+                <div class="position-relative">
+                    <div class="d-flex align-items-center position-absolute" style="top: 10px; left: 20px;">
+                        <img src="University-of-Tubingen-01.png" alt="University of Tübingen" style="height: 90px; margin-right: 15px;">
+                        <img src="UNC_logo.avif" alt="UNC Logo" style="height: 35px;">
+                    </div>
+                    <div class="text-center pt-3">
+                        <h1 class="mb-0" style="font-size: 2rem;">Thank You!</h1>
+                        <p class="mb-0">Your participation is complete</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                            <h3 class="mt-4 mb-3">Study Complete!</h3>
+                            <p class="lead">Thank you for your time and thoughtful reflections.</p>
+                            <p>Your contributions help improve teacher education and feedback systems.</p>
+                            
+                            <!-- APA Citation -->
+                            <div class="mt-5 pt-3 border-top">
+                                <h6 class="text-muted mb-2" data-lang-key="citation_header">Citation</h6>
+                                <div class="citation-text p-3 bg-light rounded">
+                                    <small class="text-muted">
+                                        Fütterer, T., Nguyen, H., Ren, S., & Stürmer, K. (2025). INFER - An intelligent feedback system for classroom observation [Computer software]. University of Tübingen & University of North Carolina, Chapel Hill.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Feedback Style Preference Modal -->
+    <div class="modal fade" id="feedback-preference-modal" tabindex="-1" aria-labelledby="feedback-preference-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="feedback-preference-modal-label" data-lang-key="choose_feedback_style">Choose Your Preferred Feedback Style</h5>
+                </div>
+                <div class="modal-body">
+                    <p data-lang-key="feedback_style_intro">We generate two types of feedback. Which would you like to see first?</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card h-100 feedback-option-card" data-style="extended">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-journal-text text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h6 data-lang-key="extended">Extended Feedback</h6>
+                                    <p class="small text-muted" data-lang-key="extended_description">Detailed academic feedback with comprehensive analysis and educational theory references</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 feedback-option-card" data-style="short">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-card-text text-success mb-3" style="font-size: 2.5rem;"></i>
+                                    <h6 data-lang-key="short">Short Feedback</h6>
+                                    <p class="small text-muted" data-lang-key="short_description">Concise, easy-to-read feedback with key points and practical tips</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-3" data-lang-key="can_switch_later">You can switch between both styles anytime using the tabs after feedback is generated.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" id="select-extended-first" data-lang-key="select_extended">Start with Extended</button>
+                    <button type="button" class="btn btn-outline-success" id="select-short-first" data-lang-key="select_short">Start with Short</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Submission Confirmation Modal -->
+    <div class="modal fade" id="final-submission-modal" tabindex="-1" aria-labelledby="final-submission-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="final-submission-modal-label" data-lang-key="confirm_final_submission">Confirm Final Submission</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <p data-lang-key="final_submission_warning">Are you sure you want to submit your final reflection? After submission, you won't be able to make any more changes to this task.</p>
+                    <p class="text-muted" data-lang-key="final_submission_note">You can continue revising your reflection until you're satisfied, then click this button when you're ready to move on.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-lang-key="continue_editing">Continue Editing</button>
+                    <button type="button" class="btn btn-success" id="confirm-final-submission" data-lang-key="confirm_submit">Yes, Submit Final</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+    
+</body>
+</html>

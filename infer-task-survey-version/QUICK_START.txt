@@ -1,0 +1,151 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║   INFER - Simplified Version - Quick Start Guide              ║
+║   No Consent Forms • No Surveys • Direct to Task              ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+📁 WHAT'S IN THIS FOLDER?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ index.html              - Main webpage
+✓ app.js                  - All functionality (same prompts & API)
+✓ styles.css              - Styling
+✓ University logos        - Header images
+✓ README.md               - Detailed documentation
+✓ DEPLOYMENT.md           - Hosting guide
+✓ QUICK_START.txt         - This file
+
+🚀 FASTEST WAY TO USE (3 steps)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Double-click "index.html" to open in your browser
+
+2. Fill out the form:
+   • Your name
+   • Select video
+   • Paste reflection text
+   
+3. Click "Generate Feedback"
+   • Choose Extended or Short style
+   • Wait 30-60 seconds
+   • Read your personalized feedback!
+
+⚠️  IMPORTANT: The CORS proxy must be running
+    (It's already deployed on Render and working!)
+
+📖 STUDY FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Task 1 → Survey 1 → Task 2 → Survey 2 → Complete
+  0%       25%        50%       75%       100%
+
+REMOVED:
+❌ Welcome/consent page
+❌ Participant information forms
+❌ Pre-study survey
+❌ Final survey (SUS)
+❌ Database logging
+
+KEPT (100% SAME + SURVEYS):
+✅ Task 1 - Full feedback generation
+✅ Survey 1 - Post-Task 1 survey
+✅ Task 2 - Full feedback generation
+✅ Survey 2 - Post-Task 2 survey
+✅ AI feedback generation
+✅ Professional vision analysis
+✅ Extended & Short feedback styles
+✅ English & German languages
+✅ Same prompts and LLM model
+✅ Same quality of feedback
+
+💡 USE CASES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Quick demos and presentations
+• Teacher workshops and training
+• Personal reflection practice
+• Non-research classroom use
+• Testing and development
+
+🌐 TO HOST ONLINE (Choose one)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Option A: GitHub Pages (Free, Easy)
+   → See DEPLOYMENT.md for full instructions
+   → Takes 5 minutes to set up
+   → Get a URL like: yourusername.github.io/infer
+
+Option B: Netlify (Free, Super Fast)
+   → Just drag & drop this folder to netlify.com
+   → Instant deployment
+   → Get a URL like: random-name.netlify.app
+
+Option C: Vercel (Free, Professional)
+   → Install: npm install -g vercel
+   → Run: vercel --prod
+   → Done!
+
+🔧 TECHNICAL DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Pure HTML/CSS/JavaScript (no build step)
+• Uses Bootstrap 5 for UI
+• Calls OpenAI GPT-4o via CORS proxy
+• No database, all processing client-side
+• Works on any modern browser
+• Mobile-friendly responsive design
+
+🆘 TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem: "Failed to fetch" or CORS error
+→ Wait 30 seconds for Render proxy to wake up
+→ Try again
+
+Problem: No feedback appears
+→ Check browser console (F12) for errors
+→ Make sure you filled in name and video
+→ Reflection should be at least 20 characters
+
+Problem: Wrong language
+→ Click language toggle in Settings panel
+→ Regenerate feedback if needed
+
+Problem: Page looks broken
+→ Clear browser cache (Ctrl+Shift+R)
+→ Make sure all files are in same folder
+
+📞 NEED HELP?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Read README.md for detailed info
+2. Read DEPLOYMENT.md for hosting help
+3. Check the main INFER repository
+4. Contact the development team
+
+✨ QUICK TEST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Open index.html
+2. Name: "Test User"
+3. Video: Select any
+4. Reflection: Paste a sample teaching reflection
+5. Generate → Choose Extended
+6. Wait for feedback!
+
+Sample reflection you can use for testing:
+"The teacher asked open-ended questions to activate 
+students' prior knowledge. This approach likely helped 
+students connect new information to what they already 
+knew. By using this strategy, students may develop 
+deeper understanding and better retain the material."
+
+🎯 NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+☐ Test locally by opening index.html
+☐ Deploy to hosting platform (optional)
+☐ Share with colleagues or students
+☐ Use for your own teaching reflections
+☐ Provide feedback to the development team
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+University of Tübingen & University of North Carolina
+INFER Team © 2025
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
