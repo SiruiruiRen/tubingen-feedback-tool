@@ -1411,11 +1411,10 @@ function showBubbleWarning(message, element, type = 'warning') {
         </div>
     `;
     
-    // Position bubble near the element
-    const rect = element.getBoundingClientRect();
+    // Position bubble in top-right corner, below other bubbles
     bubble.style.position = 'fixed';
-    bubble.style.top = `${rect.top - 60}px`;
-    bubble.style.left = `${rect.left}px`;
+    bubble.style.top = '20px';
+    bubble.style.right = '20px';
     bubble.style.zIndex = '9999';
     bubble.style.maxWidth = '400px';
     bubble.style.backgroundColor = '#fff3cd';
