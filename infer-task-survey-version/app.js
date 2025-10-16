@@ -281,8 +281,9 @@ function setupEventListeners() {
         videoCheckbox.addEventListener('change', (e) => {
             continueFromVideoBtn.disabled = !e.target.checked;
             
-            // Log checkbox interaction
-            logEvent('video_watched_confirmation', {
+            // Log checkbox interaction (using consent_interaction as it's an allowed event_type)
+            logEvent('consent_interaction', {
+                type: 'video_watched_checkbox',
                 checked: e.target.checked,
                 timestamp: new Date().toISOString()
             });
