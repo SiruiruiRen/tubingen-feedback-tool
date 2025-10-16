@@ -946,12 +946,19 @@ CRITERIA FOR "1" (Contains Explanation):
 - Links observable teaching events to educational knowledge
 - References learning theories, teaching principles, or pedagogical concepts
 - Explains WHY a teaching action was used or effective
+- Examples: "Open questions activate students cognitively", "Rules prevent disruptions"
 
 CRITERIA FOR "0" (No Explanation):
 - No connection to educational theories or principles
+- Explains non-observable or hypothetical events
+- No reference to teaching/learning events
 - Pure description without theoretical connection
 
-INSTRUCTIONS: Respond with ONLY "1" or "0"
+INSTRUCTIONS:
+- Respond with ONLY "1" or "0"
+- No explanations, quotes, or other text
+- "1" if ANY part connects teaching events to educational knowledge
+- "0" if no theoretical connections present
 
 TEXT: ${windowText}`;
 
@@ -967,12 +974,19 @@ CRITERIA FOR "1" (Contains Prediction):
 - Predicts effects on student learning, motivation, or understanding
 - Based on educational knowledge about learning
 - Focuses on consequences for students
+- Examples: "This feedback could increase motivation", "Students may feel confused"
 
 CRITERIA FOR "0" (No Prediction):
 - No effects on student learning mentioned
 - Predictions without educational basis
+- No connection to teaching events
+- Predictions about non-learning outcomes
 
-INSTRUCTIONS: Respond with ONLY "1" or "0"
+INSTRUCTIONS:
+- Respond with ONLY "1" or "0"
+- No explanations, quotes, or other text
+- "1" if ANY part predicts effects on student learning
+- "0" if no learning consequences mentioned
 
 TEXT: ${windowText}`;
 
