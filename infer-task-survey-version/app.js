@@ -982,29 +982,55 @@ async function callBinaryClassifier(prompt) {
     const requestData = {
         model: model,
         messages: [
-            { role: "system", content: "You are an expert teaching reflection analyst. Respond with ONLY '1' or '0'." },
-            { role: "user", content: prompt }
+            {
+                role: "system",
+                content: "You are an expert teaching reflection analyst. Be conservative in your classifications - only respond '1' if you are clearly certain the criteria are met. Respond with ONLY '1' or '0'."
+            },
+            {
+                role: "user",
+                content: prompt
+            }
         ],
         temperature: 0.0,
-        max_tokens: 5
+        max_tokens: 10
     };
     
-    try {
-        const response = await fetch(OPENAI_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData)
-        });
-        
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const result = await response.json();
-        const content = result.choices[0].message.content.trim();
-        return content === '1' ? 1 : 0;
-    } catch (error) {
-        console.error('Error in binary classifier:', error);
-        return 0;
+    // Retry up to 3 times for robustness
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            const response = await fetch(OPENAI_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                console.warn(`Binary classifier attempt ${attempt + 1} failed: HTTP ${response.status}`);
+                continue;
+            }
+            
+            const result = await response.json();
+            const output = result.choices[0].message.content.trim();
+            
+            // Validate binary output
+            if (output === '1' || output === '0') {
+                return parseInt(output);
+            }
+            
+            // Try to extract 1 or 0 from response if not exact
+            if (output.includes('1')) return 1;
+            if (output.includes('0')) return 0;
+            
+            console.warn(`Binary classifier attempt ${attempt + 1}: Unexpected output: "${output}"`);
+            
+        } catch (error) {
+            console.warn(`Binary classifier attempt ${attempt + 1} failed:`, error);
+        }
     }
+    
+    // Default to 0 if all attempts fail
+    console.error('All binary classifier attempts failed, defaulting to 0');
+    return 0;
 }
 
 function calculatePercentages(classificationResults) {
