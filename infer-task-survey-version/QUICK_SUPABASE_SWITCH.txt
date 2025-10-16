@@ -1,0 +1,153 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║   Quick Guide: Switch to New Supabase Database                  ║
+║   (Keep simplified version data separate)                       ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📋 STEP-BY-STEP (15 minutes)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: Create New Supabase Project
+────────────────────────────────────────────────────────────────
+1. Go to: https://supabase.com/dashboard
+2. Click: "New Project"
+3. Fill in:
+   • Name: infer-task-survey
+   • Database Password: (create strong password - save it!)
+   • Region: (choose closest to you)
+4. Click: "Create new project"
+5. Wait: 2-3 minutes
+
+
+STEP 2: Get Your New Credentials
+────────────────────────────────────────────────────────────────
+1. In new project, go to: Settings → API
+2. Copy BOTH:
+   
+   📍 Project URL:
+   https://xxxxx.supabase.co
+   
+   🔑 anon public key:
+   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+
+STEP 3: Create Database Tables
+────────────────────────────────────────────────────────────────
+1. Go to: SQL Editor
+2. Click: "New Query"
+3. Open file: NEW_SUPABASE_SETUP.md
+4. Copy the entire SQL script (starts with "CREATE TABLE...")
+5. Paste into SQL Editor
+6. Click: "Run"
+7. Should see: "Database schema created successfully!"
+
+
+STEP 4: Update App Credentials
+────────────────────────────────────────────────────────────────
+Edit this file:
+/Users/sirui/Desktop/tubigen/infer-task-survey-version/app.js
+
+Find lines 25-26 and replace:
+
+FROM (current - shared with main version):
+──────────────────────────────────────────
+const SUPABASE_URL = 'https://immrkllzjvhdnzesmaat.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3M...';
+
+TO (your new separate database):
+──────────────────────────────────────────
+const SUPABASE_URL = 'https://YOUR-NEW-PROJECT.supabase.co';
+const SUPABASE_KEY = 'YOUR-NEW-ANON-KEY';
+
+
+STEP 5: Deploy Updated Version
+────────────────────────────────────────────────────────────────
+cd /Users/sirui/Desktop/tubigen
+git add infer-task-survey-version/app.js
+git commit -m "Switch to separate Supabase database"
+git push origin clean-branch:main
+
+cd infer-task-survey-version
+netlify deploy --prod --dir=.
+
+
+✅ DONE! Your simplified version now uses its own database!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+🔍 VERIFY IT WORKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Open: https://infer-task-survey.netlify.app
+2. Open browser console (F12)
+3. Look for: "✅ Supabase client initialized successfully"
+4. Generate test feedback
+5. Check new Supabase dashboard → Table Editor
+6. Should see data in:
+   • reflections
+   • binary_classifications
+   • user_events
+
+
+📊 TWO SEPARATE DATABASES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Database 1: Original (immrkllzjvhdnzesmaat.supabase.co)
+├─ Used by: Main research version
+├─ URL: https://tubingen-feedback-tool.onrender.com
+└─ Data: Your formal study participants
+
+Database 2: New (YOUR-NEW-PROJECT.supabase.co)
+├─ Used by: Simplified task-survey version
+├─ URL: https://infer-task-survey.netlify.app
+└─ Data: Task-survey participants (separate!)
+
+
+💡 BENEFITS OF SEPARATE DATABASE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ No data mixing between versions
+✅ Can delete/reset simplified version data without affecting main study
+✅ Independent backups
+✅ Clearer data organization
+✅ Experiment freely without risk
+
+
+⚠️  IMPORTANT NOTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Currently, both versions use THE SAME database.
+
+This is OKAY if you want all data together.
+
+To SEPARATE the data:
+→ Follow steps above to create new Supabase project
+→ Update credentials in app.js
+→ Redeploy
+
+
+🆘 NEED HELP?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Option 1: Share your new Supabase credentials with me
+        → I'll update the code for you
+
+Option 2: Follow the steps above
+        → Edit app.js lines 25-26
+        → Deploy
+
+Option 3: Keep using shared database
+        → Do nothing - already works!
+        → Data includes task_id to distinguish versions
+
+
+📁 REFERENCE FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEW_SUPABASE_SETUP.md         ← Complete setup guide with SQL
+DATA_COLLECTION_SUMMARY.md    ← What data gets collected
+QUICK_SUPABASE_SWITCH.txt     ← This file
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
