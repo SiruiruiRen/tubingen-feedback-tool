@@ -317,6 +317,9 @@ function setupEventListeners() {
     // Task 1 listeners
     setupTaskListeners('task1');
     
+    // Tab switching listeners for feedback viewing tracking
+    setupTabListeners('task1');
+    
     // Survey navigation
     document.getElementById('complete-study')?.addEventListener('click', () => {
         logEvent('navigation', { from: 'survey1', to: 'thankyou' });
@@ -348,6 +351,50 @@ function setupTaskListeners(taskId) {
     
     // Word count
     elements.reflectionText?.addEventListener('input', () => updateWordCount(taskId));
+}
+
+function setupTabListeners(taskId) {
+    // Extended tab click
+    document.getElementById(`extended-tab-${taskId}`)?.addEventListener('click', () => {
+        console.log('📊 Extended tab clicked');
+        
+        // End current feedback viewing session if active
+        if (TaskState[taskId].currentFeedbackType && TaskState[taskId].currentFeedbackStartTime) {
+            endFeedbackViewing(taskId, TaskState[taskId].currentFeedbackType, currentLanguage);
+        }
+        
+        // Start new feedback viewing session
+        startFeedbackViewing(taskId, 'extended', currentLanguage);
+        
+        // Log tab switch
+        logEvent('select_feedback_style', {
+            task: taskId,
+            preferred_style: 'extended',
+            language: currentLanguage,
+            timestamp: new Date().toISOString()
+        });
+    });
+    
+    // Short tab click
+    document.getElementById(`short-tab-${taskId}`)?.addEventListener('click', () => {
+        console.log('📊 Short tab clicked');
+        
+        // End current feedback viewing session if active
+        if (TaskState[taskId].currentFeedbackType && TaskState[taskId].currentFeedbackStartTime) {
+            endFeedbackViewing(taskId, TaskState[taskId].currentFeedbackType, currentLanguage);
+        }
+        
+        // Start new feedback viewing session
+        startFeedbackViewing(taskId, 'short', currentLanguage);
+        
+        // Log tab switch
+        logEvent('select_feedback_style', {
+            task: taskId,
+            preferred_style: 'short',
+            language: currentLanguage,
+            timestamp: new Date().toISOString()
+        });
+    });
 }
 
 function getTaskElements(taskId) {
@@ -693,6 +740,12 @@ function handleCopy(taskId) {
 
 function handleRevise(taskId) {
     const elements = getTaskElements(taskId);
+    
+    // End any active feedback viewing session
+    if (TaskState[taskId].currentFeedbackType && TaskState[taskId].currentFeedbackStartTime) {
+        endFeedbackViewing(taskId, TaskState[taskId].currentFeedbackType, currentLanguage);
+    }
+    
     elements.reflectionText?.focus();
     showAlert('You can now revise your reflection and generate new feedback.', 'info');
     
@@ -705,7 +758,8 @@ function handleRevise(taskId) {
         participant_name: elements.nameInput?.value.trim(),
         video_id: elements.videoSelect?.value,
         reflection_id: TaskState[taskId].currentReflectionId,
-        revision_number: TaskState[taskId].revisionCount
+        revision_number: TaskState[taskId].revisionCount,
+        timestamp: new Date().toISOString()
     });
 }
 
