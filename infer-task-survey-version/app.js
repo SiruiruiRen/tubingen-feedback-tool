@@ -3,9 +3,10 @@
 // Keeps: Video Intro → Task 1 → Survey 1 → Task 2 → Survey 2 → Complete
 //
 // DATA COLLECTION:
-// - All binary classification results are stored in localStorage
-// - To export all data, open browser console and run: exportAllClassificationData()
-// - This will download a JSON file with all classification results
+// - All binary classification results stored in Supabase database
+// - All user interactions (clicks, navigations) logged to Supabase
+// - Reflection data and feedback stored in Supabase
+// - Backup: Also stored in localStorage for redundancy
 
 // Constants and configuration
 const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
@@ -14,6 +15,10 @@ const CORS_PROXY_URL = isProduction
     : 'http://localhost:3000';
 const OPENAI_API_URL = `${CORS_PROXY_URL}/api/openai/v1/chat/completions`;
 const model = 'gpt-4o';
+
+// Supabase configuration
+const SUPABASE_URL = 'https://immrkllzjvhdnzesmaat.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltbXJrbGx6anZoZG56ZXNtYWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzk2MzgsImV4cCI6MjA2Mjc1NTYzOH0.glhn-u4mNpKHsH6qiwdecXyYOWhdxDrTVDIvNivKVf8';
 
 // Page flow configuration
 const STUDY_PAGES = ['video-intro', 'task1', 'survey1', 'task2', 'survey2', 'thankyou'];
@@ -29,16 +34,24 @@ const PROGRESS_VALUES = {
 let currentPage = 'video-intro';
 let currentLanguage = 'en';
 let userPreferredFeedbackStyle = 'extended';
+let currentSessionId = null;
+let supabase = null;
 
 // Task state management
 const TaskState = {
     task1: {
         feedbackGenerated: false,
-        submitted: false
+        submitted: false,
+        currentReflectionId: null,
+        parentReflectionId: null,
+        revisionCount: 0
     },
     task2: {
         feedbackGenerated: false,
-        submitted: false
+        submitted: false,
+        currentReflectionId: null,
+        parentReflectionId: null,
+        revisionCount: 0
     }
 };
 
@@ -177,6 +190,14 @@ const translations = {
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing INFER simplified version...');
+    
+    // Initialize Supabase
+    supabase = initSupabase();
+    if (supabase) {
+        verifySupabaseConnection(supabase);
+        currentSessionId = getOrCreateSessionId();
+    }
+    
     initializeApp();
 });
 
@@ -186,6 +207,14 @@ function initializeApp() {
     updateProgress('video-intro');
     updateWordCounts();
     showPage('video-intro');
+    
+    // Log session start
+    logEvent('session_start', {
+        entry_page: 'video-intro',
+        user_agent: navigator.userAgent,
+        screen_width: window.screen.width,
+        screen_height: window.screen.height
+    });
 }
 
 // Page Navigation
@@ -199,9 +228,18 @@ function showPage(pageId) {
     const targetPage = document.getElementById(`page-${pageId}`);
     if (targetPage) {
         targetPage.classList.remove('d-none');
+        const previousPage = currentPage;
         currentPage = pageId;
         updateProgress(pageId);
         console.log(`Navigated to page: ${pageId}`);
+        
+        // Log page view
+        logEvent('page_view', {
+            page: pageId,
+            from_page: previousPage,
+            progress: PROGRESS_VALUES[pageId] || 0,
+            timestamp: new Date().toISOString()
+        });
     }
 }
 
@@ -236,9 +274,20 @@ function setupEventListeners() {
     if (videoCheckbox && continueFromVideoBtn) {
         videoCheckbox.addEventListener('change', (e) => {
             continueFromVideoBtn.disabled = !e.target.checked;
+            
+            // Log checkbox interaction
+            logEvent('video_watched_confirmation', {
+                checked: e.target.checked,
+                timestamp: new Date().toISOString()
+            });
         });
         
         continueFromVideoBtn.addEventListener('click', () => {
+            logEvent('navigation', {
+                from: 'video-intro',
+                to: 'task1',
+                action: 'continue_from_video'
+            });
             showPage('task1');
         });
     }
@@ -250,8 +299,20 @@ function setupEventListeners() {
     setupTaskListeners('task2');
     
     // Survey navigation
-    document.getElementById('continue-to-task2')?.addEventListener('click', () => showPage('task2'));
-    document.getElementById('complete-study')?.addEventListener('click', () => showPage('thankyou'));
+    document.getElementById('continue-to-task2')?.addEventListener('click', () => {
+        logEvent('navigation', { from: 'survey1', to: 'task2' });
+        showPage('task2');
+    });
+    
+    document.getElementById('complete-study')?.addEventListener('click', () => {
+        logEvent('navigation', { from: 'survey2', to: 'thankyou' });
+        logEvent('study_completed', {
+            session_id: currentSessionId,
+            final_page: 'thankyou',
+            timestamp: new Date().toISOString()
+        });
+        showPage('thankyou');
+    });
     
     // Modal listeners
     setupModalListeners();
@@ -298,12 +359,26 @@ function getTaskElements(taskId) {
 function setupModalListeners() {
     document.getElementById('select-extended-first')?.addEventListener('click', () => {
         userPreferredFeedbackStyle = 'extended';
+        
+        // Log preference
+        logEvent('feedback_style_preference', {
+            preferred_style: 'extended',
+            timestamp: new Date().toISOString()
+        });
+        
         const modal = bootstrap.Modal.getInstance(document.getElementById('feedback-preference-modal'));
         modal?.hide();
     });
     
     document.getElementById('select-short-first')?.addEventListener('click', () => {
         userPreferredFeedbackStyle = 'short';
+        
+        // Log preference
+        logEvent('feedback_style_preference', {
+            preferred_style: 'short',
+            timestamp: new Date().toISOString()
+        });
+        
         const modal = bootstrap.Modal.getInstance(document.getElementById('feedback-preference-modal'));
         modal?.hide();
     });
@@ -438,7 +513,20 @@ async function generateFeedback(taskId, reflection) {
             generateWeightedFeedback(reflection, currentLanguage, 'user-friendly', analysisResult)
         ]);
         
-        // Step 4: Display feedback
+        // Step 4: Save to database (before displaying)
+        const studentName = elements.nameInput?.value.trim();
+        const videoSelected = elements.videoSelect?.value;
+        
+        await saveFeedbackToDatabase(taskId, {
+            studentName,
+            videoSelected,
+            reflectionText: reflection,
+            analysisResult,
+            extendedFeedback,
+            shortFeedback
+        });
+        
+        // Step 5: Display feedback
         if (elements.feedbackExtended) {
             elements.feedbackExtended.innerHTML = formatStructuredFeedback(extendedFeedback, analysisResult);
         }
@@ -446,7 +534,7 @@ async function generateFeedback(taskId, reflection) {
             elements.feedbackShort.innerHTML = formatStructuredFeedback(shortFeedback, analysisResult);
         }
         
-        // Step 5: Show tabs and switch to preferred style
+        // Step 6: Show tabs and switch to preferred style
         if (elements.feedbackTabs) {
             elements.feedbackTabs.classList.remove('d-none');
         }
@@ -457,11 +545,24 @@ async function generateFeedback(taskId, reflection) {
             document.getElementById(`extended-tab-${taskId}`)?.click();
         }
         
-        // Step 6: Show revise and submit buttons
+        // Step 7: Show revise and submit buttons
         if (elements.reviseBtn) elements.reviseBtn.style.display = 'inline-block';
         if (elements.submitBtn) elements.submitBtn.style.display = 'block';
         
         TaskState[taskId].feedbackGenerated = true;
+        
+        // Log feedback generation event
+        logEvent('submit_reflection', {
+            task: taskId,
+            participant_name: studentName,
+            video_id: videoSelected,
+            language: currentLanguage,
+            reflection_id: TaskState[taskId].currentReflectionId,
+            reflection_length: reflection.length,
+            analysis_percentages: analysisResult.percentages,
+            weakest_component: analysisResult.weakest_component
+        });
+        
         showAlert('✅ Feedback generated successfully!', 'success');
         
     } catch (error) {
@@ -487,13 +588,23 @@ function handleClear(taskId) {
 function handleCopy(taskId) {
     const activeTab = document.querySelector(`#feedback-tabs-${taskId} .nav-link.active`);
     const elements = getTaskElements(taskId);
-    const feedbackContent = activeTab?.id.includes('extended')
+    const feedbackType = activeTab?.id.includes('extended') ? 'extended' : 'short';
+    const feedbackContent = feedbackType === 'extended'
         ? elements.feedbackExtended?.textContent
         : elements.feedbackShort?.textContent;
     
     if (feedbackContent) {
         navigator.clipboard.writeText(feedbackContent).then(() => {
             showAlert('✅ Feedback copied to clipboard!', 'success');
+            
+            // Log copy event
+            logEvent('copy_feedback', {
+                task: taskId,
+                participant_name: elements.nameInput?.value.trim(),
+                video_id: elements.videoSelect?.value,
+                feedback_type: feedbackType,
+                reflection_id: TaskState[taskId].currentReflectionId
+            });
         });
     }
 }
@@ -502,6 +613,18 @@ function handleRevise(taskId) {
     const elements = getTaskElements(taskId);
     elements.reflectionText?.focus();
     showAlert('You can now revise your reflection and generate new feedback.', 'info');
+    
+    // Increment revision count
+    TaskState[taskId].revisionCount = (TaskState[taskId].revisionCount || 0) + 1;
+    
+    // Log revise click
+    logEvent('click_revise', {
+        task: taskId,
+        participant_name: elements.nameInput?.value.trim(),
+        video_id: elements.videoSelect?.value,
+        reflection_id: TaskState[taskId].currentReflectionId,
+        revision_number: TaskState[taskId].revisionCount
+    });
 }
 
 function handleFinalSubmission(taskId) {
@@ -519,7 +642,21 @@ function handleFinalSubmission(taskId) {
 }
 
 function confirmFinalSubmission(taskId) {
+    const elements = getTaskElements(taskId);
+    
     TaskState[taskId].submitted = true;
+    
+    // Log final submission
+    logEvent('final_submission', {
+        task: taskId,
+        participant_name: elements.nameInput?.value.trim(),
+        video_id: elements.videoSelect?.value,
+        language: currentLanguage,
+        reflection_id: TaskState[taskId].currentReflectionId,
+        total_revisions: TaskState[taskId].revisionCount || 1,
+        final_reflection_length: elements.reflectionText?.value.length
+    });
+    
     showAlert('✅ Final reflection submitted successfully!', 'success');
     
     // Move to next page
@@ -594,7 +731,7 @@ function displayAnalysisDistribution(taskId, analysisResult) {
     `;
 }
 
-function storeBinaryClassificationResults(taskId, analysisResult) {
+async function storeBinaryClassificationResults(taskId, analysisResult) {
     const timestamp = new Date().toISOString();
     const elements = getTaskElements(taskId);
     const studentName = elements.nameInput?.value.trim() || 'Unknown';
@@ -616,23 +753,57 @@ function storeBinaryClassificationResults(taskId, analysisResult) {
         windows: analysisResult.windows || []
     };
     
-    // Store in localStorage for persistence
+    // Store in localStorage for backup
     const storageKey = `${taskId}_classifications_${timestamp}`;
     try {
         localStorage.setItem(storageKey, JSON.stringify(dataToStore));
-        console.log(`✅ Binary classification results stored:`, storageKey);
-        console.log('📊 Classification data:', dataToStore);
+        console.log(`✅ Binary classification results stored in localStorage:`, storageKey);
         
-        // Also keep a list of all classification keys for easy retrieval
         const allKeys = JSON.parse(localStorage.getItem('all_classification_keys') || '[]');
         allKeys.push(storageKey);
         localStorage.setItem('all_classification_keys', JSON.stringify(allKeys));
-        
     } catch (error) {
-        console.error('Error storing classification results:', error);
+        console.error('Error storing to localStorage:', error);
     }
     
-    // Also log to console for debugging
+    // Store each binary classification to Supabase
+    if (supabase && currentSessionId) {
+        try {
+            const reflectionId = TaskState[taskId].currentReflectionId;
+            
+            // Prepare binary classification records for batch insert
+            const classificationRecords = analysisResult.classificationResults.map(result => ({
+                session_id: currentSessionId,
+                reflection_id: reflectionId,
+                task_id: taskId,
+                participant_name: studentName,
+                video_id: videoId,
+                language: currentLanguage,
+                window_id: result.window_id,
+                window_text: result.window_text,
+                description_score: result.description,
+                explanation_score: result.explanation,
+                prediction_score: result.prediction,
+                created_at: timestamp
+            }));
+            
+            if (classificationRecords.length > 0) {
+                const { data, error } = await supabase
+                    .from('binary_classifications')
+                    .insert(classificationRecords);
+                
+                if (error) {
+                    console.error('Error storing binary classifications to Supabase:', error);
+                } else {
+                    console.log(`✅ ${classificationRecords.length} binary classifications stored to Supabase`);
+                }
+            }
+        } catch (error) {
+            console.error('Error in Supabase binary classification storage:', error);
+        }
+    }
+    
+    // Log to console for debugging
     console.table(analysisResult.classificationResults);
 }
 
@@ -1039,4 +1210,160 @@ function formatStructuredFeedback(text, analysisResult) {
     }).join('');
 
     return processedSections;
+}
+
+// ============================================================================
+// Supabase Database Functions
+// ============================================================================
+
+function initSupabase() {
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+        console.warn('Supabase credentials not set. Running in demo mode.');
+        showAlert('Running in demo mode - feedback works, but data won\'t be saved to database.', 'info');
+        return null;
+    }
+    
+    try {
+        console.log('Initializing Supabase client...');
+        
+        if (typeof window.supabase === 'undefined' || !window.supabase) {
+            throw new Error('Supabase library not loaded from CDN.');
+        }
+        
+        if (typeof window.supabase.createClient !== 'function') {
+            throw new Error('Supabase createClient function not available.');
+        }
+        
+        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        if (!client) {
+            throw new Error('Failed to create Supabase client instance.');
+        }
+        
+        console.log('✅ Supabase client initialized successfully');
+        return client;
+    } catch (error) {
+        console.error('Error initializing Supabase client:', error);
+        showAlert('Database connection failed - running in demo mode. Feedback generation still works!', 'warning');
+        return null;
+    }
+}
+
+async function verifySupabaseConnection(client) {
+    if (!client) {
+        console.log('No database client - running in demo mode');
+        return;
+    }
+    
+    try {
+        const { data, error } = await client
+            .from('reflections')
+            .select('count')
+            .limit(1);
+        
+        if (error) {
+            console.error('Database connection test failed:', error);
+            showAlert('Database connection issue - data may not be saved.', 'warning');
+        } else {
+            console.log('✅ Supabase connection verified');
+        }
+    } catch (error) {
+        console.error('Error verifying Supabase connection:', error);
+    }
+}
+
+function getOrCreateSessionId() {
+    let sessionId = sessionStorage.getItem('session_id');
+    
+    if (!sessionId) {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        sessionStorage.setItem('session_id', sessionId);
+        console.log('✅ New session created:', sessionId);
+    } else {
+        console.log('✅ Existing session found:', sessionId);
+    }
+    
+    return sessionId;
+}
+
+// Event logging function
+async function logEvent(eventType, eventData = {}) {
+    if (!supabase || !currentSessionId) {
+        console.log(`Event (no DB): ${eventType}`, eventData);
+        return;
+    }
+    
+    try {
+        const { error } = await supabase
+            .from('user_events')
+            .insert([{
+                session_id: currentSessionId,
+                reflection_id: eventData.reflection_id || null,
+                event_type: eventType,
+                event_data: eventData,
+                user_agent: navigator.userAgent,
+                language: currentLanguage,
+                timestamp_utc: new Date().toISOString()
+            }]);
+
+        if (error) {
+            console.error('Error logging event:', error);
+        } else {
+            console.log(`📝 Event logged: ${eventType}`, eventData);
+        }
+    } catch (error) {
+        console.error('Error in logEvent:', error);
+    }
+}
+
+// Save reflection and feedback to database
+async function saveFeedbackToDatabase(taskId, data) {
+    if (!supabase) {
+        console.log('No database connection - running in demo mode');
+        return;
+    }
+    
+    try {
+        const revisionNumber = TaskState[taskId].revisionCount || 1;
+        const parentReflectionId = TaskState[taskId].parentReflectionId || null;
+
+        const reflectionData = {
+            session_id: currentSessionId,
+            participant_name: data.studentName,
+            video_id: data.videoSelected,
+            language: currentLanguage,
+            task_id: taskId,
+            reflection_text: data.reflectionText,
+            analysis_percentages: data.analysisResult.percentages,
+            weakest_component: data.analysisResult.weakest_component,
+            feedback_extended: data.extendedFeedback,
+            feedback_short: data.shortFeedback,
+            revision_number: revisionNumber,
+            parent_reflection_id: parentReflectionId,
+            created_at: new Date().toISOString()
+        };
+
+        const { data: result, error } = await supabase
+            .from('reflections')
+            .insert([reflectionData])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Database insert error:', error);
+            return;
+        }
+
+        // Update task state with database ID
+        TaskState[taskId].currentReflectionId = result.id;
+        
+        // If this is the first submission, store as parent for revisions
+        if (revisionNumber === 1) {
+            TaskState[taskId].parentReflectionId = result.id;
+        }
+        
+        console.log(`✅ ${taskId} reflection saved to database:`, result.id);
+        
+    } catch (error) {
+        console.error('Error saving to database:', error);
+    }
 }
