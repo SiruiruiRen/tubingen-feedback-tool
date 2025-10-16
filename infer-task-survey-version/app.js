@@ -207,6 +207,24 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 
+// Session end tracking on page unload
+window.addEventListener('beforeunload', () => {
+    // End any active feedback viewing sessions
+    Object.keys(TaskState).forEach(taskId => {
+        if (TaskState[taskId].currentFeedbackType && TaskState[taskId].currentFeedbackStartTime) {
+            endFeedbackViewing(taskId, TaskState[taskId].currentFeedbackType, currentLanguage);
+        }
+    });
+    
+    // Log session end
+    logEvent('session_end', {
+        session_duration: Date.now() - performance.timing.navigationStart,
+        language: currentLanguage,
+        final_page: currentPage,
+        final_progress: studyProgress
+    });
+});
+
 function initializeApp() {
     setupEventListeners();
     applyTranslations();
@@ -298,6 +316,17 @@ function setupEventListeners() {
             showPage('task1');
         });
     }
+    
+    // Key concepts tracking
+    document.querySelectorAll('.concepts-card').forEach(card => {
+        card.addEventListener('click', () => {
+            logEvent('learn_concepts_interaction', {
+                task: 'both', // Available on both tasks
+                language: currentLanguage,
+                timestamp: new Date().toISOString()
+            });
+        });
+    });
     
     // Task 1 listeners
     setupTaskListeners('task1');
@@ -487,6 +516,58 @@ async function handleGenerateFeedback(taskId) {
 async function generateFeedback(taskId, reflection) {
     const elements = getTaskElements(taskId);
     
+    // Enhanced duplicate submission check with counter
+    const currentReflection = reflection.trim();
+    const storedReflection = sessionStorage.getItem(`reflection-${taskId}`);
+    let warningCount = parseInt(sessionStorage.getItem(`warningCount-${taskId}`)) || 0;
+    
+    // Check for duplicate: same text AND feedback was already generated
+    if (storedReflection && storedReflection === currentReflection && TaskState[taskId].feedbackGenerated) {
+        warningCount++;
+        sessionStorage.setItem(`warningCount-${taskId}`, warningCount);
+        
+        console.log(`⚠️ Duplicate submission detected! Warning count: ${warningCount}`);
+        
+        const studentName = elements.nameInput?.value.trim();
+        const videoSelected = elements.videoSelect?.value;
+        
+        // Log both the warning event and the resubmit_same_text event
+        logEvent('revision_warning_shown', {
+            task: taskId,
+            participant_name: studentName,
+            video_id: videoSelected,
+            reflection_id: TaskState[taskId].currentReflectionId,
+            language: currentLanguage,
+            warning_count: warningCount,
+            reflection_length: currentReflection.length,
+            time_since_revise_click: Date.now() - (TaskState[taskId].lastReviseClickTime || 0),
+            submission_type: 'generate_feedback'
+        });
+        
+        logEvent('resubmit_same_text', {
+            task: taskId,
+            participant_name: studentName,
+            video_id: videoSelected,
+            reflection_id: TaskState[taskId].currentReflectionId,
+            language: currentLanguage,
+            warning_count: warningCount,
+            reflection_length: currentReflection.length
+        });
+        
+        const warningMessage = currentLanguage === 'en' 
+            ? `Warning ${warningCount}: You submitted the same reflection text again. Please make changes to your reflection before generating new feedback, or the feedback will be identical to what you already received.`
+            : `Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.`;
+        
+        showBubbleWarning(warningMessage, elements.reflectionText, 'warning');
+        elements.reflectionText.focus();
+        return;
+    }
+
+    // Reset warning count for new/modified reflections
+    if (storedReflection !== currentReflection) {
+        sessionStorage.setItem(`warningCount-${taskId}`, '0');
+    }
+    
     // Show loading
     if (elements.loadingSpinner) elements.loadingSpinner.style.display = 'flex';
     if (elements.generateBtn) elements.generateBtn.disabled = true;
@@ -520,6 +601,15 @@ async function generateFeedback(taskId, reflection) {
             generateWeightedFeedback(reflection, currentLanguage, 'user-friendly', analysisResult)
         ]);
         
+        // Step 3.5: Add revision suggestion for random/irrelevant submissions
+        let finalShortFeedback = shortFeedback;
+        if (analysisResult && analysisResult.percentages.other > 50) {
+            const revisionNote = currentLanguage === 'en' 
+                ? "\n\n**Important Note:** Your reflection contains a significant amount of content that doesn't follow professional lesson analysis steps. Please revise your reflection to focus more on describing what you observed, explaining why it happened using educational theories, and predicting the effects on student learning."
+                : "\n\n**Wichtiger Hinweis:** Ihre Reflexion enthält einen erheblichen Anteil an Inhalten, die nicht den Schritten einer professionellen Stundenanalyse folgen. Bitte überarbeiten Sie Ihre Reflexion, um sich mehr auf die Beschreibung Ihrer Beobachtungen, die Erklärung mit Hilfe pädagogischer Theorien und die Vorhersage der Auswirkungen auf das Lernen der Schüler zu konzentrieren.";
+            finalShortFeedback += revisionNote;
+        }
+        
         // Step 4: Save to database (before displaying)
         const studentName = elements.nameInput?.value.trim();
         const videoSelected = elements.videoSelect?.value;
@@ -530,7 +620,7 @@ async function generateFeedback(taskId, reflection) {
             reflectionText: reflection,
             analysisResult,
             extendedFeedback,
-            shortFeedback
+            shortFeedback: finalShortFeedback
         });
         
         // Step 5: Display feedback
@@ -538,7 +628,7 @@ async function generateFeedback(taskId, reflection) {
             elements.feedbackExtended.innerHTML = formatStructuredFeedback(extendedFeedback, analysisResult);
         }
         if (elements.feedbackShort) {
-            elements.feedbackShort.innerHTML = formatStructuredFeedback(shortFeedback, analysisResult);
+            elements.feedbackShort.innerHTML = formatStructuredFeedback(finalShortFeedback, analysisResult);
         }
         
         // Step 6: Show tabs and switch to preferred style
@@ -552,11 +642,17 @@ async function generateFeedback(taskId, reflection) {
             document.getElementById(`extended-tab-${taskId}`)?.click();
         }
         
+        // Start feedback viewing tracking
+        startFeedbackViewing(taskId, userPreferredFeedbackStyle, currentLanguage);
+        
         // Step 7: Show revise and submit buttons
         if (elements.reviseBtn) elements.reviseBtn.style.display = 'inline-block';
         if (elements.submitBtn) elements.submitBtn.style.display = 'block';
         
         TaskState[taskId].feedbackGenerated = true;
+        
+        // Store reflection immediately after first successful generation
+        sessionStorage.setItem(`reflection-${taskId}`, reflection.trim());
         
         // Log feedback generation event
         logEvent('submit_reflection', {
@@ -1298,6 +1394,39 @@ function formatStructuredFeedback(text, analysisResult) {
 // ============================================================================
 // Supabase Database Functions
 // ============================================================================
+
+// Feedback viewing duration tracking
+function startFeedbackViewing(taskId, style, language) {
+    if (!TaskState[taskId]) {
+        TaskState[taskId] = {};
+    }
+    
+    TaskState[taskId].currentFeedbackStartTime = Date.now();
+    TaskState[taskId].currentFeedbackType = style;
+    
+    logEvent('view_feedback_start', {
+        task: taskId,
+        style: style,
+        language: language,
+        reflection_id: TaskState[taskId].currentReflectionId
+    });
+}
+
+function endFeedbackViewing(taskId, style, language) {
+    if (!TaskState[taskId] || !TaskState[taskId].currentFeedbackStartTime) return;
+    
+    const duration = (Date.now() - TaskState[taskId].currentFeedbackStartTime) / 1000;
+    logEvent('view_feedback_end', {
+        task: taskId,
+        style: style,
+        language: language,
+        duration_seconds: duration,
+        reflection_id: TaskState[taskId].currentReflectionId
+    });
+    
+    TaskState[taskId].currentFeedbackStartTime = null;
+    TaskState[taskId].currentFeedbackType = null;
+}
 
 function initSupabase() {
     if (!SUPABASE_URL || !SUPABASE_KEY) {
