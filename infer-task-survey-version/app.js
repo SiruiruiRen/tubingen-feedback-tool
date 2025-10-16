@@ -16,9 +16,15 @@ const CORS_PROXY_URL = isProduction
 const OPENAI_API_URL = `${CORS_PROXY_URL}/api/openai/v1/chat/completions`;
 const model = 'gpt-4o';
 
-// Supabase configuration
+// ============================================================================
+// Supabase Configuration - UPDATE THESE FOR SEPARATE DATABASE
+// ============================================================================
+// CURRENTLY USING: Same database as main research version
+// TO USE SEPARATE DATABASE: Replace with new project credentials (see NEW_SUPABASE_SETUP.md)
+//
 const SUPABASE_URL = 'https://immrkllzjvhdnzesmaat.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltbXJrbGx6anZoZG56ZXNtYWF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNzk2MzgsImV4cCI6MjA2Mjc1NTYzOH0.glhn-u4mNpKHsH6qiwdecXyYOWhdxDrTVDIvNivKVf8';
+// ============================================================================
 
 // Page flow configuration
 const STUDY_PAGES = ['video-intro', 'task1', 'survey1', 'task2', 'survey2', 'thankyou'];
