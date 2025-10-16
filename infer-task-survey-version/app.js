@@ -559,6 +559,7 @@ async function generateFeedback(taskId, reflection) {
             : `Warnung ${warningCount}: Sie haben denselben Reflexionstext erneut eingereicht. Bitte nehmen Sie Änderungen an Ihrer Reflexion vor, bevor Sie neues Feedback generieren, oder das Feedback wird identisch zu dem bereits erhaltenen sein.`;
         
         showBubbleWarning(warningMessage, elements.reflectionText, 'warning');
+        console.log('🚨 Warning bubble should be displayed:', warningMessage);
         elements.reflectionText.focus();
         return;
     }
@@ -897,6 +898,8 @@ async function storeBinaryClassificationResults(taskId, analysisResult) {
                 
                 if (error) {
                     console.error('Error storing binary classifications to Supabase:', error);
+                    console.log('⚠️ This is likely because the binary_classifications table does not exist.');
+                    console.log('💡 Please create the table using the SQL in CREATE_NEW_DATABASE.md');
                 } else {
                     console.log(`✅ ${classificationRecords.length} binary classifications stored to Supabase`);
                 }
@@ -1397,8 +1400,11 @@ function formatStructuredFeedback(text, analysisResult) {
 
 // Enhanced bubble alert for duplicate warnings (more noticeable)
 function showBubbleWarning(message, element, type = 'warning') {
+    console.log('🔍 showBubbleWarning called with:', { message, element, type });
+    
     // Remove any existing bubbles
     const existingBubbles = document.querySelectorAll('.bubble-warning');
+    console.log('🗑️ Removing existing bubbles:', existingBubbles.length);
     existingBubbles.forEach(bubble => bubble.remove());
     
     // Create bubble element
@@ -1425,13 +1431,22 @@ function showBubbleWarning(message, element, type = 'warning') {
     bubble.style.fontSize = '14px';
     bubble.style.color = '#856404';
     
+    console.log('🎈 Bubble created with styles:', {
+        position: bubble.style.position,
+        top: bubble.style.top,
+        right: bubble.style.right,
+        zIndex: bubble.style.zIndex
+    });
+    
     // Add to document
     document.body.appendChild(bubble);
+    console.log('✅ Bubble added to document.body');
     
     // Auto-remove after 8 seconds
     setTimeout(() => {
         if (bubble.parentNode) {
             bubble.remove();
+            console.log('⏰ Bubble auto-removed after 8 seconds');
         }
     }, 8000);
 }
