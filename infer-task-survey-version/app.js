@@ -1392,6 +1392,52 @@ function formatStructuredFeedback(text, analysisResult) {
 }
 
 // ============================================================================
+// Utility Functions
+// ============================================================================
+
+// Enhanced bubble alert for duplicate warnings (more noticeable)
+function showBubbleWarning(message, element, type = 'warning') {
+    // Remove any existing bubbles
+    const existingBubbles = document.querySelectorAll('.bubble-warning');
+    existingBubbles.forEach(bubble => bubble.remove());
+    
+    // Create bubble element
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble-warning';
+    bubble.innerHTML = `
+        <div class="bubble-content">
+            <div class="bubble-icon">⚠️</div>
+            <div class="bubble-text">${message}</div>
+        </div>
+    `;
+    
+    // Position bubble near the element
+    const rect = element.getBoundingClientRect();
+    bubble.style.position = 'fixed';
+    bubble.style.top = `${rect.top - 60}px`;
+    bubble.style.left = `${rect.left}px`;
+    bubble.style.zIndex = '9999';
+    bubble.style.maxWidth = '400px';
+    bubble.style.backgroundColor = '#fff3cd';
+    bubble.style.border = '1px solid #ffeaa7';
+    bubble.style.borderRadius = '8px';
+    bubble.style.padding = '12px';
+    bubble.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    bubble.style.fontSize = '14px';
+    bubble.style.color = '#856404';
+    
+    // Add to document
+    document.body.appendChild(bubble);
+    
+    // Auto-remove after 8 seconds
+    setTimeout(() => {
+        if (bubble.parentNode) {
+            bubble.remove();
+        }
+    }, 8000);
+}
+
+// ============================================================================
 // Supabase Database Functions
 // ============================================================================
 
