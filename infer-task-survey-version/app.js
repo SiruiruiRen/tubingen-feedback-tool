@@ -27,13 +27,11 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ============================================================================
 
 // Page flow configuration
-const STUDY_PAGES = ['video-intro', 'task1', 'survey1', 'task2', 'survey2', 'thankyou'];
+const STUDY_PAGES = ['video-intro', 'task1', 'survey1', 'thankyou'];
 const PROGRESS_VALUES = {
     'video-intro': 0,
-    'task1': 16,
-    'survey1': 33,
-    'task2': 50,
-    'survey2': 66,
+    'task1': 25,
+    'survey1': 75,
     'thankyou': 100
 };
 
@@ -68,10 +66,8 @@ const translations = {
         task1_subtitle: "Analyze your teaching reflection and receive feedback",
         task2_title: "INFER Task 2",
         task2_subtitle: "Analyze your second teaching reflection and receive feedback",
-        survey1_title: "Post-Task 1 Survey",
-        survey1_subtitle: "Please share your thoughts about the first task",
-        survey2_title: "Post-Task 2 Survey",
-        survey2_subtitle: "Please share your thoughts about the second task",
+        survey1_title: "Post-Task Survey",
+        survey1_subtitle: "Please share your thoughts about the task",
         settings: "Settings",
         your_name: "Your Name:",
         enter_name: "Enter your name",
@@ -110,14 +106,10 @@ const translations = {
         final_submission_note: "You can continue revising your reflection until you're satisfied, then click this button when you're ready to move on.",
         continue_editing: "Continue Editing",
         confirm_submit: "Yes, Submit Final",
-        continue_to_task2: "Continue to Task 2",
         complete_study: "Complete Study",
-        survey1_heading: "Post-Task 1 Survey",
-        survey1_description: "Please share your thoughts about your experience with Task 1. This takes about 3-5 minutes.",
-        survey1_instructions: "Instructions: Complete the survey above, then click \"Continue to Task 2\" below to proceed.",
-        survey2_heading: "Post-Task 2 Survey",
-        survey2_description: "Please share your thoughts about your experience with Task 2. This takes about 3-5 minutes.",
-        survey2_instructions: "Final Step: Complete the survey above, then click \"Complete Study\" below to finish.",
+        survey1_heading: "Post-Task Survey",
+        survey1_description: "Please share your thoughts about your experience with the task. This takes about 3-5 minutes.",
+        survey1_instructions: "Final Step: Complete the survey above, then click \"Complete Study\" below to finish.",
         citation_header: "Citation",
         loading_messages: [
             "Please wait while the little elves create your feedback...",
@@ -132,10 +124,8 @@ const translations = {
         task1_subtitle: "Analysieren Sie Ihre Unterrichtsreflexion und erhalten Sie Feedback",
         task2_title: "INFER Aufgabe 2",
         task2_subtitle: "Analysieren Sie Ihre zweite Unterrichtsreflexion und erhalten Sie Feedback",
-        survey1_title: "Umfrage nach Aufgabe 1",
-        survey1_subtitle: "Bitte teilen Sie Ihre Gedanken zur ersten Aufgabe mit",
-        survey2_title: "Umfrage nach Aufgabe 2",
-        survey2_subtitle: "Bitte teilen Sie Ihre Gedanken zur zweiten Aufgabe mit",
+        survey1_title: "Umfrage nach der Aufgabe",
+        survey1_subtitle: "Bitte teilen Sie Ihre Gedanken zur Aufgabe mit",
         settings: "Einstellungen",
         your_name: "Ihr Name:",
         enter_name: "Geben Sie Ihren Namen ein",
@@ -174,14 +164,10 @@ const translations = {
         final_submission_note: "Sie können Ihre Reflexion weiterhin überarbeiten, bis Sie zufrieden sind. Klicken Sie dann auf diese Schaltfläche, wenn Sie bereit sind, fortzufahren.",
         continue_editing: "Weiter bearbeiten",
         confirm_submit: "Ja, endgültig einreichen",
-        continue_to_task2: "Weiter zu Aufgabe 2",
         complete_study: "Studie abschließen",
-        survey1_heading: "Umfrage nach Aufgabe 1",
-        survey1_description: "Bitte teilen Sie Ihre Gedanken zu Ihrer Erfahrung mit Aufgabe 1 mit. Dies dauert ca. 3-5 Minuten.",
-        survey1_instructions: "Anleitung: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Weiter zu Aufgabe 2\", um fortzufahren.",
-        survey2_heading: "Umfrage nach Aufgabe 2",
-        survey2_description: "Bitte teilen Sie Ihre Gedanken zu Ihrer Erfahrung mit Aufgabe 2 mit. Dies dauert ca. 3-5 Minuten.",
-        survey2_instructions: "Letzter Schritt: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Studie abschließen\", um fertig zu werden.",
+        survey1_heading: "Umfrage nach der Aufgabe",
+        survey1_description: "Bitte teilen Sie Ihre Gedanken zu Ihrer Erfahrung mit der Aufgabe mit. Dies dauert ca. 3-5 Minuten.",
+        survey1_instructions: "Letzter Schritt: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Studie abschließen\", um fertig zu werden.",
         citation_header: "Zitation",
         loading_messages: [
             "Bitte warten Sie, während die kleinen Elfen Ihr Feedback erstellen...",
@@ -331,17 +317,9 @@ function setupEventListeners() {
     // Task 1 listeners
     setupTaskListeners('task1');
     
-    // Task 2 listeners
-    setupTaskListeners('task2');
-    
     // Survey navigation
-    document.getElementById('continue-to-task2')?.addEventListener('click', () => {
-        logEvent('navigation', { from: 'survey1', to: 'task2' });
-        showPage('task2');
-    });
-    
     document.getElementById('complete-study')?.addEventListener('click', () => {
-        logEvent('navigation', { from: 'survey2', to: 'thankyou' });
+        logEvent('navigation', { from: 'survey1', to: 'thankyou' });
         logEvent('study_completed', {
             session_id: currentSessionId,
             final_page: 'thankyou',
