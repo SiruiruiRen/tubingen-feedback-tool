@@ -882,25 +882,37 @@ async function analyzeReflectionDistribution(reflection, language) {
 }
 
 function createSentenceWindows(text) {
+    // Split text into sentences using basic sentence detection
     const sentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
-    const cleanSentences = sentences.map(s => s.trim()).filter(s => s.length > 0);
+    const cleanSentences = sentences
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
     
     const windows = [];
     let windowId = 1;
     
+    // Create non-overlapping 3-sentence windows for better speed
     for (let i = 0; i < cleanSentences.length; i += 3) {
-        const sentenceCount = Math.min(3, cleanSentences.length - i);
+        const remainingSentences = cleanSentences.length - i;
+        const sentenceCount = Math.min(3, remainingSentences);
         const windowText = cleanSentences.slice(i, i + sentenceCount).join(' ');
         
         if (windowText.length >= 20) {
             windows.push({
                 id: `chunk_${String(windowId++).padStart(3, '0')}`,
-                text: windowText
+                text: windowText,
+                sentence_count: sentenceCount,
+                start_position: i
             });
         }
     }
     
-    return windows.length > 0 ? windows : [{ id: 'chunk_001', text: text }];
+    return windows.length > 0 ? windows : [{ 
+        id: 'chunk_001', 
+        text: text, 
+        sentence_count: 1, 
+        start_position: 0 
+    }];
 }
 
 async function classifyDescription(windowText) {
@@ -1001,10 +1013,13 @@ function calculatePercentages(classificationResults) {
     if (totalWindows === 0) {
         return {
             percentages: { description: 0, explanation: 0, prediction: 0, other: 100, professional_vision: 0 },
-            weakest_component: "Prediction"
+            weakest_component: "Prediction",
+            analysis_summary: "No valid windows for analysis"
         };
     }
     
+    // Assign each window to exactly one category using priority system
+    // Priority: Description > Explanation > Prediction > Other
     let descriptionCount = 0;
     let explanationCount = 0;
     let predictionCount = 0;
@@ -1022,22 +1037,43 @@ function calculatePercentages(classificationResults) {
         }
     });
     
-    const percentages = {
-        description: Math.round((descriptionCount / totalWindows) * 100),
-        explanation: Math.round((explanationCount / totalWindows) * 100),
-        prediction: Math.round((predictionCount / totalWindows) * 100),
-        other: Math.round((otherCount / totalWindows) * 100)
+    // Calculate raw percentages
+    const descriptionPct = (descriptionCount / totalWindows) * 100;
+    const explanationPct = (explanationCount / totalWindows) * 100;
+    const predictionPct = (predictionCount / totalWindows) * 100;
+    const otherPct = (otherCount / totalWindows) * 100;
+    
+    // Professional Vision% = Description% + Explanation% + Prediction%
+    const professionalVisionPct = descriptionPct + explanationPct + predictionPct;
+    
+    // Ensure Professional Vision% + Others% = 100%
+    const adjustedOtherPct = 100 - professionalVisionPct;
+    
+    // Round all percentages to 1 decimal place (CRITICAL: not whole numbers!)
+    const finalPercentages = {
+        description: Math.round(descriptionPct * 10) / 10,
+        explanation: Math.round(explanationPct * 10) / 10,
+        prediction: Math.round(predictionPct * 10) / 10,
+        other: Math.round(adjustedOtherPct * 10) / 10,
+        professional_vision: Math.round(professionalVisionPct * 10) / 10
     };
     
-    percentages.professional_vision = percentages.description + percentages.explanation + percentages.prediction;
+    // Find weakest component (excluding other)
+    const components = {
+        'Description': finalPercentages.description,
+        'Explanation': finalPercentages.explanation,
+        'Prediction': finalPercentages.prediction
+    };
     
-    const weakest = Object.entries(percentages)
-        .filter(([key]) => ['description', 'explanation', 'prediction'].includes(key))
-        .sort((a, b) => a[1] - b[1])[0];
+    const weakestComponent = Object.keys(components).reduce((a, b) => 
+        components[a] <= components[b] ? a : b
+    );
     
-    const weakestComponent = weakest[0].charAt(0).toUpperCase() + weakest[0].slice(1);
-    
-    return { percentages, weakest_component: weakestComponent };
+    return {
+        percentages: finalPercentages,
+        weakest_component: weakestComponent,
+        analysis_summary: `Analyzed ${totalWindows} non-overlapping text windows. Professional Vision: ${finalPercentages.professional_vision}% (D:${finalPercentages.description}% + E:${finalPercentages.explanation}% + P:${finalPercentages.prediction}%) + Other: ${finalPercentages.other}% = 100%`
+    };
 }
 
 // ============================================================================
