@@ -1,6 +1,11 @@
 // INFER - Simplified Version with In-Between Surveys
 // Removes: Welcome/consent, pre-survey, and final survey
-// Keeps: Task 1 → Survey 1 → Task 2 → Survey 2 → Complete
+// Keeps: Video Intro → Task 1 → Survey 1 → Task 2 → Survey 2 → Complete
+//
+// DATA COLLECTION:
+// - All binary classification results are stored in localStorage
+// - To export all data, open browser console and run: exportAllClassificationData()
+// - This will download a JSON file with all classification results
 
 // Constants and configuration
 const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
@@ -421,13 +426,19 @@ async function generateFeedback(taskId, reflection) {
         const analysisResult = await analyzeReflectionDistribution(reflection, currentLanguage);
         console.log('✅ Analysis complete:', analysisResult);
         
-        // Step 2: Generate both feedback styles
+        // Store binary classification results (for research data)
+        storeBinaryClassificationResults(taskId, analysisResult);
+        
+        // Step 2: Display analysis distribution
+        displayAnalysisDistribution(taskId, analysisResult);
+        
+        // Step 3: Generate both feedback styles
         const [extendedFeedback, shortFeedback] = await Promise.all([
             generateWeightedFeedback(reflection, currentLanguage, 'academic', analysisResult),
             generateWeightedFeedback(reflection, currentLanguage, 'user-friendly', analysisResult)
         ]);
         
-        // Display feedback
+        // Step 4: Display feedback
         if (elements.feedbackExtended) {
             elements.feedbackExtended.innerHTML = formatStructuredFeedback(extendedFeedback, analysisResult);
         }
@@ -435,7 +446,7 @@ async function generateFeedback(taskId, reflection) {
             elements.feedbackShort.innerHTML = formatStructuredFeedback(shortFeedback, analysisResult);
         }
         
-        // Show tabs and switch to preferred style
+        // Step 5: Show tabs and switch to preferred style
         if (elements.feedbackTabs) {
             elements.feedbackTabs.classList.remove('d-none');
         }
@@ -446,7 +457,7 @@ async function generateFeedback(taskId, reflection) {
             document.getElementById(`extended-tab-${taskId}`)?.click();
         }
         
-        // Show revise and submit buttons
+        // Step 6: Show revise and submit buttons
         if (elements.reviseBtn) elements.reviseBtn.style.display = 'inline-block';
         if (elements.submitBtn) elements.submitBtn.style.display = 'block';
         
@@ -535,6 +546,116 @@ function showAlert(message, type = 'info') {
 }
 
 // ============================================================================
+// Display and Storage Functions
+// ============================================================================
+
+function displayAnalysisDistribution(taskId, analysisResult) {
+    const elements = getTaskElements(taskId);
+    if (!elements || !analysisResult) return;
+    
+    // Find or create distribution container
+    let distributionContainer = document.getElementById(`analysis-distribution-${taskId}`);
+    if (!distributionContainer) {
+        distributionContainer = document.createElement('div');
+        distributionContainer.id = `analysis-distribution-${taskId}`;
+        distributionContainer.className = 'analysis-distribution-professional mb-3';
+        
+        // Insert before feedback tabs
+        if (elements.feedbackTabs) {
+            elements.feedbackTabs.parentNode.insertBefore(distributionContainer, elements.feedbackTabs);
+        }
+    }
+    
+    const { percentages, weakest_component } = analysisResult;
+    const isGerman = currentLanguage === 'de';
+    
+    // Check for gibberish/no professional vision
+    if (percentages.professional_vision <= 5) {
+        distributionContainer.innerHTML = `
+            <div class="professional-analysis-summary">
+                <h6>${isGerman ? 'Analyse Ihrer Reflexion' : 'Analysis of Your Reflection'}</h6>
+                <p class="analysis-text text-warning">
+                    ${isGerman ? 'Ihr Text bezieht sich nicht auf Professional Vision. Überarbeiten Sie ihn, um ihn auf das Video zu beziehen.' 
+                              : 'Your text does not relate to professional vision. Revise to relate to the video.'}
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    distributionContainer.innerHTML = `
+        <div class="professional-analysis-summary">
+            <h6>${isGerman ? 'Analyse Ihrer Reflexion' : 'Analysis of Your Reflection'}</h6>
+            <p class="analysis-text">
+                ${isGerman ? `Ihre Reflexion enthält ${percentages.description || 0}% Beschreibung, ${percentages.explanation || 0}% Erklärung und ${percentages.prediction || 0}% Vorhersage. ${weakest_component} kann gestärkt werden.` 
+                          : `Your reflection contains ${percentages.description || 0}% description, ${percentages.explanation || 0}% explanation, and ${percentages.prediction || 0}% prediction. ${weakest_component} can be strengthened.`}
+            </p>
+        </div>
+    `;
+}
+
+function storeBinaryClassificationResults(taskId, analysisResult) {
+    const timestamp = new Date().toISOString();
+    const elements = getTaskElements(taskId);
+    const studentName = elements.nameInput?.value.trim() || 'Unknown';
+    const videoId = elements.videoSelect?.value || 'Unknown';
+    
+    // Create comprehensive data object
+    const dataToStore = {
+        timestamp,
+        task_id: taskId,
+        participant_name: studentName,
+        video_id: videoId,
+        language: currentLanguage,
+        analysis_summary: {
+            percentages: analysisResult.percentages,
+            weakest_component: analysisResult.weakest_component,
+            total_windows: analysisResult.windows?.length || 0
+        },
+        binary_classifications: analysisResult.classificationResults || [],
+        windows: analysisResult.windows || []
+    };
+    
+    // Store in localStorage for persistence
+    const storageKey = `${taskId}_classifications_${timestamp}`;
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(dataToStore));
+        console.log(`✅ Binary classification results stored:`, storageKey);
+        console.log('📊 Classification data:', dataToStore);
+        
+        // Also keep a list of all classification keys for easy retrieval
+        const allKeys = JSON.parse(localStorage.getItem('all_classification_keys') || '[]');
+        allKeys.push(storageKey);
+        localStorage.setItem('all_classification_keys', JSON.stringify(allKeys));
+        
+    } catch (error) {
+        console.error('Error storing classification results:', error);
+    }
+    
+    // Also log to console for debugging
+    console.table(analysisResult.classificationResults);
+}
+
+// Helper function to export all classification data
+function exportAllClassificationData() {
+    const allKeys = JSON.parse(localStorage.getItem('all_classification_keys') || '[]');
+    const allData = allKeys.map(key => JSON.parse(localStorage.getItem(key) || '{}'));
+    
+    console.log('📦 All stored classification data:', allData);
+    
+    // Create downloadable JSON
+    const dataStr = JSON.stringify(allData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `infer_classification_data_${new Date().toISOString()}.json`;
+    link.click();
+    
+    return allData;
+}
+
+// ============================================================================
 // Analysis Functions (Same as original)
 // ============================================================================
 
@@ -556,6 +677,7 @@ async function analyzeReflectionDistribution(reflection, language) {
             
             classificationResults.push({
                 window_id: window.id,
+                window_text: window.text,
                 description,
                 explanation,
                 prediction
@@ -565,13 +687,19 @@ async function analyzeReflectionDistribution(reflection, language) {
         const analysis = calculatePercentages(classificationResults);
         console.log('📊 Analysis result:', analysis);
         
+        // Store classification results with analysis
+        analysis.classificationResults = classificationResults;
+        analysis.windows = windows;
+        
         return analysis;
     } catch (error) {
         console.error('❌ Error in classification:', error);
         return {
             percentages: { description: 30, explanation: 35, prediction: 25, other: 10, professional_vision: 90 },
             weakest_component: "Prediction",
-            analysis_summary: "Fallback distribution due to classification error"
+            analysis_summary: "Fallback distribution due to classification error",
+            classificationResults: [],
+            windows: []
         };
     }
 }
