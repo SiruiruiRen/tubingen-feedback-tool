@@ -526,6 +526,7 @@ function setupModalListeners() {
 // Language Management
 function switchLanguage(lang) {
     currentLanguage = lang;
+    renderLanguageSwitchers();
     applyTranslations();
     
     // Update all language radio buttons
@@ -542,7 +543,8 @@ function applyTranslations() {
     document.querySelectorAll('[data-lang-key]').forEach(element => {
         const key = element.getAttribute('data-lang-key');
         if (t[key]) {
-            element.textContent = t[key];
+            // Use innerHTML to support HTML tags like <strong>
+            element.innerHTML = t[key];
         }
     });
     
@@ -552,6 +554,22 @@ function applyTranslations() {
             element.placeholder = t[key];
         }
     });
+}
+
+function renderLanguageSwitchers() {
+    const containers = document.querySelectorAll('.language-switcher-container');
+    containers.forEach(container => {
+        container.innerHTML = `
+            <div class="btn-group" role="group">
+                <button type="button" class="btn ${currentLanguage === 'en' ? 'btn-primary' : 'btn-outline-primary'}" id="lang-switch-en">English</button>
+                <button type="button" class="btn ${currentLanguage === 'de' ? 'btn-primary' : 'btn-outline-primary'}" id="lang-switch-de">Deutsch</button>
+            </div>
+        `;
+    });
+    
+    // Add event listeners
+    document.getElementById('lang-switch-en')?.addEventListener('click', () => switchLanguage('en'));
+    document.getElementById('lang-switch-de')?.addEventListener('click', () => switchLanguage('de'));
 }
 
 // Word Count
@@ -630,13 +648,13 @@ async function generateFeedback(taskId, reflection) {
         
         console.log(`⚠️ Duplicate submission detected! Warning count: ${warningCount}`);
         
-        const studentName = elements.nameInput?.value.trim();
+        const participantCode = elements.codeInput?.value.trim();
         const videoSelected = elements.videoSelect?.value;
         
         // Log both the warning event and the resubmit_same_text event
         logEvent('revision_warning_shown', {
             task: taskId,
-            participant_name: studentName,
+            participant_name: participantCode,
             video_id: videoSelected,
             reflection_id: TaskState[taskId].currentReflectionId,
             language: currentLanguage,
@@ -648,7 +666,7 @@ async function generateFeedback(taskId, reflection) {
         
         logEvent('resubmit_same_text', {
             task: taskId,
-            participant_name: studentName,
+            participant_name: participantCode,
             video_id: videoSelected,
             reflection_id: TaskState[taskId].currentReflectionId,
             language: currentLanguage,
@@ -714,11 +732,11 @@ async function generateFeedback(taskId, reflection) {
         }
         
         // Step 4: Save to database (before displaying)
-        const studentName = elements.nameInput?.value.trim();
+        const participantCode = elements.codeInput?.value.trim();
         const videoSelected = elements.videoSelect?.value;
         
         await saveFeedbackToDatabase(taskId, {
-            studentName,
+            participantCode,
             videoSelected,
             reflectionText: reflection,
             analysisResult,
@@ -760,7 +778,7 @@ async function generateFeedback(taskId, reflection) {
         // Log feedback generation event
         logEvent('submit_reflection', {
             task: taskId,
-            participant_name: studentName,
+            participant_name: participantCode,
             video_id: videoSelected,
             language: currentLanguage,
             reflection_id: TaskState[taskId].currentReflectionId,
@@ -806,7 +824,7 @@ function handleCopy(taskId) {
             // Log copy event
             logEvent('copy_feedback', {
                 task: taskId,
-                participant_name: elements.nameInput?.value.trim(),
+                participant_name: elements.codeInput?.value.trim(),
                 video_id: elements.videoSelect?.value,
                 feedback_type: feedbackType,
                 reflection_id: TaskState[taskId].currentReflectionId
@@ -832,7 +850,7 @@ function handleRevise(taskId) {
     // Log revise click
     logEvent('click_revise', {
         task: taskId,
-        participant_name: elements.nameInput?.value.trim(),
+        participant_name: elements.codeInput?.value.trim(),
         video_id: elements.videoSelect?.value,
         reflection_id: TaskState[taskId].currentReflectionId,
         revision_number: TaskState[taskId].revisionCount,
@@ -862,7 +880,7 @@ function confirmFinalSubmission(taskId) {
     // Log final submission
     logEvent('final_submission', {
         task: taskId,
-        participant_name: elements.nameInput?.value.trim(),
+        participant_name: elements.codeInput?.value.trim(),
         video_id: elements.videoSelect?.value,
         language: currentLanguage,
         reflection_id: TaskState[taskId].currentReflectionId,
@@ -947,14 +965,14 @@ function displayAnalysisDistribution(taskId, analysisResult) {
 async function storeBinaryClassificationResults(taskId, analysisResult) {
     const timestamp = new Date().toISOString();
     const elements = getTaskElements(taskId);
-    const studentName = elements.nameInput?.value.trim() || 'Unknown';
+    const participantCode = elements.codeInput?.value.trim() || 'Unknown';
     const videoId = elements.videoSelect?.value || 'Unknown';
     
     // Create comprehensive data object
     const dataToStore = {
         timestamp,
         task_id: taskId,
-        participant_name: studentName,
+        participant_name: participantCode,
         video_id: videoId,
         language: currentLanguage,
         analysis_summary: {
@@ -989,7 +1007,7 @@ async function storeBinaryClassificationResults(taskId, analysisResult) {
                 session_id: currentSessionId,
                 reflection_id: reflectionId,
                 task_id: taskId,
-                participant_name: studentName,
+                participant_name: participantCode,
                 video_id: videoId,
                 language: currentLanguage,
                 window_id: result.window_id,
@@ -1709,7 +1727,7 @@ async function saveFeedbackToDatabase(taskId, data) {
 
         const reflectionData = {
             session_id: currentSessionId,
-            participant_name: data.studentName,
+            participant_name: data.participantCode,
             video_id: data.videoSelected,
             language: currentLanguage,
             task_id: taskId,
