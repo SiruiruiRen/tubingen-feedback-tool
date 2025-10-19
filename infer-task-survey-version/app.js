@@ -27,15 +27,15 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ============================================================================
 
 // Page flow configuration
-const STUDY_PAGES = ['video-intro', 'task1', 'survey1', 'thankyou'];
+const STUDY_PAGES = ['welcome', 'task1', 'survey1', 'thankyou'];
 const PROGRESS_VALUES = {
-    'video-intro': 0,
+    'welcome': 0,
     'task1': 25,
     'survey1': 75,
     'thankyou': 100
 };
 
-let currentPage = 'video-intro';
+let currentPage = 'welcome';
 let currentLanguage = 'en';
 let userPreferredFeedbackStyle = 'extended';
 let currentSessionId = null;
@@ -62,15 +62,31 @@ const TaskState = {
 // Language translations
 const translations = {
     en: {
+        title: "INFER",
+        subtitle: "An intelligent feedback system for observing classroom videos",
+        welcome_to_infer: "Welcome to INFER",
+        welcome_message: "Thank you for choosing to work with our intelligent feedback system for classroom observation.",
+        browser_recommendation: "For the best experience, we recommend using <strong>Google Chrome</strong>.",
+        video_instructions_title: "Watch the Teaching Video",
+        video_instructions_text: "Please watch the teaching video before starting the reflection task.",
+        open_video_button: "Open Teaching Video",
+        video_password_label: "Video Password:",
+        copy_password: "Copy Password",
+        video_watched_confirm: "I have watched the video.",
+        data_consent_header: "Data Protection Consent",
+        data_consent_intro: "Your data will be stored anonymously and used only for scientific purposes.",
+        data_consent_agree: "I agree to the use of the data for scientific purposes.",
+        data_consent_disagree: "I do not agree to the use of the data for scientific purposes.",
+        consent_disagreement_message: "Unfortunately, you cannot participate without consent to data use. Thank you for your interest.",
+        continue_button: "Continue to Task",
         task1_title: "INFER Task 1",
         task1_subtitle: "Analyze your teaching reflection and receive feedback",
-        task2_title: "INFER Task 2",
-        task2_subtitle: "Analyze your second teaching reflection and receive feedback",
         survey1_title: "Post-Task Survey",
         survey1_subtitle: "Please share your thoughts about the task",
         settings: "Settings",
-        your_name: "Your Name:",
-        enter_name: "Enter your name",
+        participant_code_label: "Your Participant Code:",
+        code_placeholder: "e.g., A0895",
+        code_help: "Create a code: First letter of mother's first name + birth month (2 digits) + birth year (2 digits). Example: Mother named Anna, born in August 1995 → A0895",
         video_watched: "Video Watched:",
         select_video: "Select a video...",
         language: "Language:",
@@ -120,15 +136,31 @@ const translations = {
         ]
     },
     de: {
+        title: "INFER",
+        subtitle: "Ein intelligentes Feedback-System zur Beobachtung von Unterricht",
+        welcome_to_infer: "Willkommen zu INFER",
+        welcome_message: "Vielen Dank, dass Sie sich dazu entschieden haben mit unserem intelligenten Feedback-System zur Beobachtung von Unterricht zu arbeiten.",
+        browser_recommendation: "Für die beste Erfahrung empfehlen wir die Verwendung von <strong>Google Chrome</strong>.",
+        video_instructions_title: "Unterrichtsvideo ansehen",
+        video_instructions_text: "Bitte schauen Sie sich zunächst das Unterrichtsvideo an, bevor Sie mit der Reflexionsaufgabe beginnen.",
+        open_video_button: "Unterrichtsvideo öffnen",
+        video_password_label: "Video-Passwort:",
+        copy_password: "Passwort kopieren",
+        video_watched_confirm: "Ich habe das Video angeschaut.",
+        data_consent_header: "Einverständniserklärung Datenschutz",
+        data_consent_intro: "Ihre Daten werden anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet.",
+        data_consent_agree: "Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke zu.",
+        data_consent_disagree: "Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke nicht zu.",
+        consent_disagreement_message: "Leider können Sie ohne Zustimmung zur Datennutzung nicht an der Studie teilnehmen. Vielen Dank für Ihr Interesse.",
+        continue_button: "Weiter zur Aufgabe",
         task1_title: "INFER Aufgabe 1",
         task1_subtitle: "Analysieren Sie Ihre Unterrichtsreflexion und erhalten Sie Feedback",
-        task2_title: "INFER Aufgabe 2",
-        task2_subtitle: "Analysieren Sie Ihre zweite Unterrichtsreflexion und erhalten Sie Feedback",
         survey1_title: "Umfrage nach der Aufgabe",
         survey1_subtitle: "Bitte teilen Sie Ihre Gedanken zur Aufgabe mit",
         settings: "Einstellungen",
-        your_name: "Ihr Name:",
-        enter_name: "Geben Sie Ihren Namen ein",
+        participant_code_label: "Ihr Teilnehmer-Code:",
+        code_placeholder: "z.B. A0895",
+        code_help: "Erstellen Sie einen Code: Erster Buchstabe des Vornamens der Mutter + Geburtsmonat (2 Ziffern) + Geburtsjahr (2 Ziffern). Beispiel: Mutter heißt Anna, geboren im August 1995 → A0895",
         video_watched: "Angesehenes Video:",
         select_video: "Wählen Sie ein Video...",
         language: "Sprache:",
@@ -213,14 +245,15 @@ window.addEventListener('beforeunload', () => {
 
 function initializeApp() {
     setupEventListeners();
+    renderLanguageSwitchers();
     applyTranslations();
-    updateProgress('video-intro');
+    updateProgress('welcome');
     updateWordCounts();
-    showPage('video-intro');
+    showPage('welcome');
     
     // Log session start
     logEvent('session_start', {
-        entry_page: 'video-intro',
+        entry_page: 'welcome',
         user_agent: navigator.userAgent,
         screen_width: window.screen.width,
         screen_height: window.screen.height
@@ -277,27 +310,65 @@ function nextPage() {
 
 // Event Listeners Setup
 function setupEventListeners() {
-    // Video intro page listeners
+    // Welcome page listeners
     const videoCheckbox = document.getElementById('video-watched-checkbox');
-    const continueFromVideoBtn = document.getElementById('continue-to-task1-from-video');
+    const dataConsentAgree = document.getElementById('data-consent-agree');
+    const dataConsentDisagree = document.getElementById('data-consent-disagree');
+    const continueBtn = document.getElementById('continue-to-task1');
+    const disagreementMessage = document.getElementById('consent-disagreement-message');
     
-    if (videoCheckbox && continueFromVideoBtn) {
+    function validateConsent() {
+        const videoWatched = videoCheckbox && videoCheckbox.checked;
+        const dataConsented = dataConsentAgree && dataConsentAgree.checked;
+        
+        if (continueBtn) {
+            continueBtn.disabled = !(videoWatched && dataConsented);
+        }
+    }
+    
+    if (videoCheckbox) {
         videoCheckbox.addEventListener('change', (e) => {
-            continueFromVideoBtn.disabled = !e.target.checked;
-            
-            // Log checkbox interaction (using consent_interaction as it's an allowed event_type)
             logEvent('consent_interaction', {
                 type: 'video_watched_checkbox',
-                checked: e.target.checked,
-                timestamp: new Date().toISOString()
+                checked: e.target.checked
+            });
+            validateConsent();
+        });
+    }
+    
+    if (dataConsentAgree) {
+        dataConsentAgree.addEventListener('change', () => {
+            if (disagreementMessage) {
+                disagreementMessage.classList.add('d-none');
+            }
+            logEvent('consent_interaction', {
+                type: 'data_consent',
+                choice: 'agree'
+            });
+            validateConsent();
+        });
+    }
+    
+    if (dataConsentDisagree) {
+        dataConsentDisagree.addEventListener('change', () => {
+            if (disagreementMessage) {
+                disagreementMessage.classList.remove('d-none');
+            }
+            if (continueBtn) {
+                continueBtn.disabled = true;
+            }
+            logEvent('consent_interaction', {
+                type: 'data_consent',
+                choice: 'disagree'
             });
         });
-        
-        continueFromVideoBtn.addEventListener('click', () => {
+    }
+    
+    if (continueBtn) {
+        continueBtn.addEventListener('click', () => {
             logEvent('navigation', {
-                from: 'video-intro',
-                to: 'task1',
-                action: 'continue_from_video'
+                from: 'welcome',
+                to: 'task1'
             });
             showPage('task1');
         });
@@ -399,7 +470,7 @@ function setupTabListeners(taskId) {
 
 function getTaskElements(taskId) {
     return {
-        nameInput: document.getElementById(`student-name-${taskId}`),
+        codeInput: document.getElementById(`participant-code-${taskId}`),
         videoSelect: document.getElementById(`video-select-${taskId}`),
         reflectionText: document.getElementById(`reflection-text-${taskId}`),
         generateBtn: document.getElementById(`generate-btn-${taskId}`),
@@ -503,16 +574,22 @@ async function handleGenerateFeedback(taskId) {
     const elements = getTaskElements(taskId);
     
     // Validation
-    const studentName = elements.nameInput?.value.trim();
-    if (!studentName) {
-        showAlert('Please enter your name before generating feedback.', 'warning');
-        elements.nameInput?.focus();
+    const participantCode = elements.codeInput?.value.trim();
+    if (!participantCode) {
+        const message = currentLanguage === 'en' 
+            ? 'Please enter your participant code before generating feedback.'
+            : 'Bitte geben Sie Ihren Teilnehmer-Code ein, bevor Sie Feedback generieren.';
+        showAlert(message, 'warning');
+        elements.codeInput?.focus();
         return;
     }
 
     const videoSelected = elements.videoSelect?.value;
     if (!videoSelected) {
-        showAlert('Please select a video before generating feedback.', 'warning');
+        const message = currentLanguage === 'en'
+            ? 'Please select a video before generating feedback.'
+            : 'Bitte wählen Sie ein Video aus, bevor Sie Feedback generieren.';
+        showAlert(message, 'warning');
         elements.videoSelect?.focus();
         return;
     }
