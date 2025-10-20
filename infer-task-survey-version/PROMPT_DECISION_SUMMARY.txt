@@ -1,0 +1,222 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║   PROMPT ENGINEERING DECISION - EXECUTIVE SUMMARY               ║
+║   Based on Human Coding Analysis                                ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 KEY FINDINGS FROM HUMAN CODING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Inter-Coder Reliability (Cohen's Kappa):
+
+Component          Kappa      Interpretation
+─────────────────────────────────────────────────────────────────
+Description        0.63-0.75  SUBSTANTIAL - Humans mostly agree ✓
+Explanation        0.36-0.48  FAIR - Major disagreements ⚠️
+Prediction         0.51       MODERATE - Some disagreements
+Others             0.16       POOR - Cannot agree on what's not PV
+
+🚨 CRITICAL ISSUE: Explanation has LOWEST reliability!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  CURRENT PROMPT PROBLEMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem 1: TOO INCLUSIVE for Explanation
+────────────────────────────────────────────────────────────────
+Current instruction: "Be INCLUSIVE - accept common-sense reasoning"
+Result: MASSIVE overestimation of Explanation scores
+
+Example:
+Text: "Repetition helps students remember better"
+Current AI: Explanation (1) ← TOO LOOSE
+Human coders: Description or Others ← NO THEORY CITED
+
+
+Problem 2: Cannot Identify "Others" Content
+────────────────────────────────────────────────────────────────
+Human data: 89.1% of content is "Others" (not PV)
+AI prompts: Often classify as 0-10% Others
+Result: 60-100% PV overestimation!
+
+Example:
+Text: "The classroom has 25 students and is well-lit"
+Current AI: Description (1) ← WRONG
+Should be: Others (0) ← Not teaching/learning event
+
+
+Problem 3: Explanation Definition Too Vague
+────────────────────────────────────────────────────────────────
+Current: "Connect to educational knowledge"
+Issue: What counts as "educational knowledge"?
+  → Common sense? ✓ (too loose)
+  → Theory names? ? (unclear)
+  → Research citation? ? (unclear)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 RECOMMENDATION: USE STRICTER PROMPTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Priority 1: EXPLANATION (Highest Impact)
+────────────────────────────────────────────────────────────────
+Change: Remove "Be INCLUSIVE"
+Add: "Require EXPLICIT theory mention"
+
+BEFORE (Current - Too Loose):
+✓ "Open questions give students room to think" → Explanation
+✓ "Repetition helps memory" → Explanation
+✓ "Hands-on activities increase engagement" → Explanation
+
+AFTER (Stricter - Theory Required):
+✗ "Open questions give students room to think" → Others (no theory)
+✓ "Open questions activate prior knowledge per constructivism" → Explanation
+✗ "Repetition helps memory" → Others (no theory)
+✓ "Repetition aids memory per spacing effect research" → Explanation
+
+
+Priority 2: DESCRIPTION (Medium Impact)
+────────────────────────────────────────────────────────────────
+Change: Add explicit exclusions for:
+  - Demographics ("25 students", "experienced teacher")
+  - Physical setup ("desks in rows", "well-lit")
+  - Materials alone ("worksheets available")
+
+BEFORE:
+✓ "The classroom has 25 students" → Description
+✓ "Worksheets are on the desks" → Description
+
+AFTER:
+✗ "The classroom has 25 students" → Others
+✗ "Worksheets are on the desks" → Others
+✓ "Teacher distributes worksheets to students" → Description
+
+
+Priority 3: PREDICTION (Lower Impact)
+────────────────────────────────────────────────────────────────
+Change: Emphasize theory requirement
+
+BEFORE:
+✓ "This will likely increase motivation" → Prediction
+
+AFTER:
+✗ "This will likely increase motivation" → Others (no theory)
+✓ "This could increase motivation per SDT" → Prediction
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 EXPECTED OUTCOMES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+With STRICTER Prompts:
+
+Positive Effects:
+✅ Better alignment with expert human coding
+✅ Reduces 60-100% PV overestimation to ~10-20%
+✅ More accurate "Others" detection
+✅ Pushes students to learn theory names
+✅ Higher research validity
+✅ Better discriminates expertise levels
+
+Negative Effects:
+⚠️  Lower PV scores overall (may discourage students)
+⚠️  Requires students to know theory terminology
+⚠️  May penalize implicit understanding
+⚠️  Less encouraging for beginners
+⚠️  Could reduce engagement if too critical
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 DECISION MATRIX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Use STRICTER Prompts if:
+✓ Research validity is priority
+✓ You want alignment with expert coding
+✓ Students are advanced (know theory)
+✓ Goal: Summative assessment
+✓ Need accurate PV measurements
+
+Use CURRENT (Loose) Prompts if:
+✓ Formative support is priority
+✓ Students are beginners (learning theory)
+✓ Goal: Encourage reflection
+✓ Accept some overestimation for motivation
+✓ Focus on growth, not accuracy
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 RECOMMENDED ACTION PLAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 1: TEST Both Versions
+─────────────────────────────
+  → Create STRICT version of Explanation prompt
+  → Run on 100 sample segments
+  → Compare kappa with human R2
+  → If κ > 0.60 → Continue to Step 2
+  → If κ < 0.60 → Iterate on prompt wording
+
+Step 2: PILOT with Small Student Group
+─────────────────────────────
+  → Test with 10-15 students
+  → Collect feedback on:
+     - Do scores feel fair?
+     - Is feedback helpful?
+     - Motivated to revise?
+  → Compare revision patterns
+  → Assess student satisfaction
+
+Step 3: DECISION
+─────────────────────────────
+  → If students respond positively + good κ → Deploy STRICT
+  → If students discouraged but good κ → Provide more scaffolding
+  → If bad κ → Iterate on prompts
+  → If good student response but bad κ → Keep CURRENT
+
+Step 4: MONITOR
+─────────────────────────────
+  → Track PV score distributions
+  → Watch for student complaints
+  → Monitor revision rates
+  → Adjust as needed
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Read the full analysis:
+→ PROMPT_ANALYSIS_HUMAN_VS_AI.md
+
+Contains:
+  - Detailed prompt comparisons
+  - Concrete examples with human disagreements
+  - Complete STRICTER prompt versions
+  - Edge case analysis
+  - Implementation guide
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ BOTTOM LINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For RESEARCH STUDY:
+→ Use STRICTER prompts (especially Explanation)
+→ Better validity, worth the trade-off
+→ Aligns with expert judgment
+→ Pushes students to use theory
+
+For FORMATIVE TOOL:
+→ Keep CURRENT prompts
+→ Prioritize encouragement
+→ Accept some overestimation
+→ Support learning process
+
+YOUR CHOICE depends on: Research vs Formative priority 🎯
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
