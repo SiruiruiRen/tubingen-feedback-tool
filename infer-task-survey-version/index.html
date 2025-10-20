@@ -53,8 +53,40 @@
                         </div>
                     </div>
                     
-                    <!-- Video Instructions - MOVED TO TOP -->
+                    <!-- Data Consent - FIRST -->
                     <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 data-lang-key="data_consent_header">Einverständniserklärung Datenschutz</h5>
+                        </div>
+                        <div class="card-body">
+                            <p data-lang-key="data_consent_intro">Während der Bearbeitung der Unterrichtsanalyse werden ihre Daten anonymisiert gespeichert. Weiter werden sie nach der Unterrichtsanalyse gebeten, kurze Fragen zu ihren Erfahrungen und zum Umgang mit dem Tool auszufüllen. Auch diese Daten werden anonymisiert gespeichert. Ihre Antworten helfen uns das Tool stetig weiterzuentwickeln. Bitte stimmen sie zu, wenn wir ihre Daten dementsprechend für wissenschaftliche Zwecke nutzen dürfen.</p>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="data-consent" id="data-consent-agree" value="agree" required>
+                                    <label class="form-check-label" for="data-consent-agree" data-lang-key="data_consent_agree">
+                                        Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke zu.
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="data-consent" id="data-consent-disagree" value="disagree">
+                                    <label class="form-check-label" for="data-consent-disagree" data-lang-key="data_consent_disagree">
+                                        Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke nicht zu.
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="consent-disagreement-message" class="alert alert-info d-none">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <span data-lang-key="consent_disagreement_message">
+                                    Leider können Sie ohne Zustimmung zur Datennutzung nicht an der Studie teilnehmen. Vielen Dank für Ihr Interesse.
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Instructions - SECOND -->
+                    <div class="card">
                         <div class="card-header">
                             <h5><i class="bi bi-camera-video me-2"></i><span data-lang-key="video_instructions_title">Unterrichtsvideo ansehen</span></h5>
                         </div>
@@ -87,38 +119,6 @@
                                 <label class="form-check-label" for="video-watched-checkbox" data-lang-key="video_watched_confirm">
                                     Ich habe das Video angeschaut.
                                 </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Data Consent - MOVED AFTER VIDEO -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 data-lang-key="data_consent_header">Einverständniserklärung Datenschutz</h5>
-                        </div>
-                        <div class="card-body">
-                            <p data-lang-key="data_consent_intro">Während der Bearbeitung der Unterrichtsanalyse werden ihre Daten anonymisiert gespeichert. Weiter werden sie nach der Unterrichtsanalyse gebeten, kurze Fragen zu ihren Erfahrungen und zum Umgang mit dem Tool auszufüllen. Auch diese Daten werden anonymisiert gespeichert. Ihre Antworten helfen uns das Tool stetig weiterzuentwickeln. Bitte stimmen sie zu, wenn wir ihre Daten dementsprechend für wissenschaftliche Zwecke nutzen dürfen.</p>
-                            
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="data-consent" id="data-consent-agree" value="agree" required>
-                                    <label class="form-check-label" for="data-consent-agree" data-lang-key="data_consent_agree">
-                                        Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke zu.
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="data-consent" id="data-consent-disagree" value="disagree">
-                                    <label class="form-check-label" for="data-consent-disagree" data-lang-key="data_consent_disagree">
-                                        Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke nicht zu.
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div id="consent-disagreement-message" class="alert alert-info d-none">
-                                <i class="bi bi-info-circle me-2"></i>
-                                <span data-lang-key="consent_disagreement_message">
-                                    Leider können Sie ohne Zustimmung zur Datennutzung nicht an der Studie teilnehmen. Vielen Dank für Ihr Interesse.
-                                </span>
                             </div>
                             
                             <div class="text-center mt-4">
