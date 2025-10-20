@@ -74,7 +74,7 @@ const translations = {
         copy_password: "Copy Password",
         video_watched_confirm: "I have watched the video.",
         data_consent_header: "Data Protection Consent",
-        data_consent_intro: "Your data will be stored anonymously and used only for scientific purposes.",
+        data_consent_intro: "While processing the lesson analysis, your data will be stored anonymously. After the lesson analysis, you will be asked to answer a few short questions about your experience and how you found the tool. This data will also be stored anonymously. Your answers will help us to continuously improve the tool. Please agree to allow us to use your data for scientific purposes.",
         data_consent_agree: "I agree to the use of the data for scientific purposes.",
         data_consent_disagree: "I do not agree to the use of the data for scientific purposes.",
         consent_disagreement_message: "Unfortunately, you cannot participate without consent to data use. Thank you for your interest.",
@@ -148,7 +148,7 @@ const translations = {
         copy_password: "Passwort kopieren",
         video_watched_confirm: "Ich habe das Video angeschaut.",
         data_consent_header: "Einverständniserklärung Datenschutz",
-        data_consent_intro: "Ihre Daten werden anonymisiert gespeichert und nur für wissenschaftliche Zwecke verwendet.",
+        data_consent_intro: "Während der Bearbeitung der Unterrichtsanalyse werden ihre Daten anonymisiert gespeichert. Weiter werden sie nach der Unterrichtsanalyse gebeten, kurze Fragen zu ihren Erfahrungen und zum Umgang mit dem Tool auszufüllen. Auch diese Daten werden anonymisiert gespeichert. Ihre Antworten helfen uns das Tool stetig weiterzuentwickeln. Bitte stimmen sie zu, wenn wir ihre Daten dementsprechend für wissenschaftliche Zwecke nutzen dürfen.",
         data_consent_agree: "Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke zu.",
         data_consent_disagree: "Ich stimme der Nutzung der Daten für wissenschaftliche Zwecke nicht zu.",
         consent_disagreement_message: "Leider können Sie ohne Zustimmung zur Datennutzung nicht an der Studie teilnehmen. Vielen Dank für Ihr Interesse.",
@@ -250,6 +250,9 @@ function initializeApp() {
     updateProgress('welcome');
     updateWordCounts();
     showPage('welcome');
+    
+    // Set default language
+    switchLanguage('de'); // Start with German as default
     
     // Log session start
     logEvent('session_start', {
@@ -713,16 +716,48 @@ async function generateFeedback(taskId, reflection) {
         // Store binary classification results (for research data)
         storeBinaryClassificationResults(taskId, analysisResult);
         
-        // Step 2: Display analysis distribution
+        // Step 2: Check for non-meaningful input (very low professional vision)
+        if (analysisResult.percentages.professional_vision < 10) {
+            // Display simple message instead of generating feedback
+            displayAnalysisDistribution(taskId, analysisResult);
+            
+            const simpleMessage = currentLanguage === 'en'
+                ? "Please write a reflection that relates to the teaching video you watched. Focus on describing what you observed, explaining why it happened using educational theories, and predicting the effects on student learning."
+                : "Bitte schreiben Sie eine Reflexion, die sich auf das Unterrichtsvideo bezieht, das Sie sich angeschaut haben. Konzentrieren Sie sich darauf zu beschreiben, was Sie beobachtet haben, zu erklären, warum es passiert ist (unter Verwendung pädagogischer Theorien), und die Auswirkungen auf das Lernen der Schüler vorherzusagen.";
+            
+            if (elements.feedbackExtended) {
+                elements.feedbackExtended.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${simpleMessage}</div>`;
+            }
+            if (elements.feedbackShort) {
+                elements.feedbackShort.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${simpleMessage}</div>`;
+            }
+            
+            // Show tabs
+            if (elements.feedbackTabs) {
+                elements.feedbackTabs.classList.remove('d-none');
+            }
+            
+            // Show revise button
+            if (elements.reviseBtn) elements.reviseBtn.style.display = 'inline-block';
+            
+            clearInterval(loadingInterval);
+            if (elements.loadingSpinner) elements.loadingSpinner.style.display = 'none';
+            if (elements.generateBtn) elements.generateBtn.disabled = false;
+            
+            showAlert('⚠️ Please revise your reflection to relate to professional vision.', 'warning');
+            return;
+        }
+        
+        // Step 3: Display analysis distribution
         displayAnalysisDistribution(taskId, analysisResult);
         
-        // Step 3: Generate both feedback styles
+        // Step 4: Generate both feedback styles
         const [extendedFeedback, shortFeedback] = await Promise.all([
             generateWeightedFeedback(reflection, currentLanguage, 'academic', analysisResult),
             generateWeightedFeedback(reflection, currentLanguage, 'user-friendly', analysisResult)
         ]);
         
-        // Step 3.5: Add revision suggestion for random/irrelevant submissions
+        // Step 5: Add revision suggestion for random/irrelevant submissions
         let finalShortFeedback = shortFeedback;
         if (analysisResult && analysisResult.percentages.other > 50) {
             const revisionNote = currentLanguage === 'en' 
@@ -731,7 +766,7 @@ async function generateFeedback(taskId, reflection) {
             finalShortFeedback += revisionNote;
         }
         
-        // Step 4: Save to database (before displaying)
+        // Step 6: Save to database (before displaying)
         const participantCode = elements.codeInput?.value.trim();
         const videoSelected = elements.videoSelect?.value;
         
@@ -744,7 +779,7 @@ async function generateFeedback(taskId, reflection) {
             shortFeedback: finalShortFeedback
         });
         
-        // Step 5: Display feedback
+        // Step 7: Display feedback
         if (elements.feedbackExtended) {
             elements.feedbackExtended.innerHTML = formatStructuredFeedback(extendedFeedback, analysisResult);
         }
@@ -752,7 +787,7 @@ async function generateFeedback(taskId, reflection) {
             elements.feedbackShort.innerHTML = formatStructuredFeedback(finalShortFeedback, analysisResult);
         }
         
-        // Step 6: Show tabs and switch to preferred style
+        // Step 8: Show tabs and switch to preferred style
         if (elements.feedbackTabs) {
             elements.feedbackTabs.classList.remove('d-none');
         }
@@ -766,7 +801,7 @@ async function generateFeedback(taskId, reflection) {
         // Start feedback viewing tracking
         startFeedbackViewing(taskId, userPreferredFeedbackStyle, currentLanguage);
         
-        // Step 7: Show revise and submit buttons
+        // Step 9: Show revise and submit buttons
         if (elements.reviseBtn) elements.reviseBtn.style.display = 'inline-block';
         if (elements.submitBtn) elements.submitBtn.style.display = 'block';
         
