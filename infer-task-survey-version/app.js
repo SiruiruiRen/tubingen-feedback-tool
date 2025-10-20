@@ -716,8 +716,8 @@ async function generateFeedback(taskId, reflection) {
         // Store binary classification results (for research data)
         storeBinaryClassificationResults(taskId, analysisResult);
         
-        // Step 2: Check for non-meaningful input (very low professional vision)
-        if (analysisResult.percentages.professional_vision < 10) {
+        // Step 2: Check for non-meaningful input (very low professional vision using priority calculation)
+        if (analysisResult.percentages_priority.professional_vision < 10) {
             // Display simple message instead of generating feedback
             displayAnalysisDistribution(taskId, analysisResult);
             
@@ -757,9 +757,9 @@ async function generateFeedback(taskId, reflection) {
             generateWeightedFeedback(reflection, currentLanguage, 'user-friendly', analysisResult)
         ]);
         
-        // Step 5: Add revision suggestion for random/irrelevant submissions
+        // Step 5: Add revision suggestion for random/irrelevant submissions (use priority-based "other")
         let finalShortFeedback = shortFeedback;
-        if (analysisResult && analysisResult.percentages.other > 50) {
+        if (analysisResult && analysisResult.percentages_priority.other > 50) {
             const revisionNote = currentLanguage === 'en' 
                 ? "\n\n**Important Note:** Your reflection contains a significant amount of content that doesn't follow professional lesson analysis steps. Please revise your reflection to focus more on describing what you observed, explaining why it happened using educational theories, and predicting the effects on student learning."
                 : "\n\n**Wichtiger Hinweis:** Ihre Reflexion enthält einen erheblichen Anteil an Inhalten, die nicht den Schritten einer professionellen Stundenanalyse folgen. Bitte überarbeiten Sie Ihre Reflexion, um sich mehr auf die Beschreibung Ihrer Beobachtungen, die Erklärung mit Hilfe pädagogischer Theorien und die Vorhersage der Auswirkungen auf das Lernen der Schüler zu konzentrieren.";
@@ -818,7 +818,8 @@ async function generateFeedback(taskId, reflection) {
             language: currentLanguage,
             reflection_id: TaskState[taskId].currentReflectionId,
             reflection_length: reflection.length,
-            analysis_percentages: analysisResult.percentages,
+            analysis_percentages_raw: analysisResult.percentages_raw,
+            analysis_percentages_priority: analysisResult.percentages_priority,
             weakest_component: analysisResult.weakest_component
         });
         
@@ -969,11 +970,13 @@ function displayAnalysisDistribution(taskId, analysisResult) {
         }
     }
     
-    const { percentages, weakest_component } = analysisResult;
+    // Use RAW percentages for display (can exceed 100%)
+    const rawPercentages = analysisResult.percentages_raw || analysisResult.percentages;
+    const { weakest_component } = analysisResult;
     const isGerman = currentLanguage === 'de';
     
-    // Check for gibberish/no professional vision
-    if (percentages.professional_vision <= 5) {
+    // Check for gibberish/no professional vision using raw percentages
+    if (rawPercentages.professional_vision <= 5) {
         distributionContainer.innerHTML = `
             <div class="professional-analysis-summary">
                 <h6>${isGerman ? 'Analyse Ihrer Reflexion' : 'Analysis of Your Reflection'}</h6>
@@ -990,8 +993,8 @@ function displayAnalysisDistribution(taskId, analysisResult) {
         <div class="professional-analysis-summary">
             <h6>${isGerman ? 'Analyse Ihrer Reflexion' : 'Analysis of Your Reflection'}</h6>
             <p class="analysis-text">
-                ${isGerman ? `Ihre Reflexion enthält ${percentages.description || 0}% Beschreibung, ${percentages.explanation || 0}% Erklärung und ${percentages.prediction || 0}% Vorhersage. ${weakest_component} kann gestärkt werden.` 
-                          : `Your reflection contains ${percentages.description || 0}% description, ${percentages.explanation || 0}% explanation, and ${percentages.prediction || 0}% prediction. ${weakest_component} can be strengthened.`}
+                ${isGerman ? `Ihre Reflexion enthält ${rawPercentages.description || 0}% Beschreibung, ${rawPercentages.explanation || 0}% Erklärung und ${rawPercentages.prediction || 0}% Vorhersage.` 
+                          : `Your reflection contains ${rawPercentages.description || 0}% description, ${rawPercentages.explanation || 0}% explanation, and ${rawPercentages.prediction || 0}% prediction.`}
             </p>
         </div>
     `;
@@ -1314,13 +1317,35 @@ function calculatePercentages(classificationResults) {
     
     if (totalWindows === 0) {
         return {
-            percentages: { description: 0, explanation: 0, prediction: 0, other: 100, professional_vision: 0 },
+            percentages_raw: { description: 0, explanation: 0, prediction: 0, professional_vision: 0 },
+            percentages_priority: { description: 0, explanation: 0, prediction: 0, other: 100, professional_vision: 0 },
             weakest_component: "Prediction",
             analysis_summary: "No valid windows for analysis"
         };
     }
     
-    // Assign each window to exactly one category using priority system
+    // === RAW CALCULATION (can exceed 100%) ===
+    // Count how many windows have each component (binary 1s)
+    let rawDescriptionCount = 0;
+    let rawExplanationCount = 0;
+    let rawPredictionCount = 0;
+    
+    classificationResults.forEach(result => {
+        if (result.description === 1) rawDescriptionCount++;
+        if (result.explanation === 1) rawExplanationCount++;
+        if (result.prediction === 1) rawPredictionCount++;
+    });
+    
+    // Raw percentages (can add to > 100%)
+    const rawPercentages = {
+        description: Math.round((rawDescriptionCount / totalWindows) * 100 * 10) / 10,
+        explanation: Math.round((rawExplanationCount / totalWindows) * 100 * 10) / 10,
+        prediction: Math.round((rawPredictionCount / totalWindows) * 100 * 10) / 10,
+        professional_vision: Math.round(((rawDescriptionCount + rawExplanationCount + rawPredictionCount) / totalWindows) * 100 * 10) / 10
+    };
+    
+    // === PRIORITY-BASED CALCULATION (adds to 100%) ===
+    // Assign each window to exactly ONE category using priority system
     // Priority: Description > Explanation > Prediction > Other
     let descriptionCount = 0;
     let explanationCount = 0;
@@ -1339,32 +1364,20 @@ function calculatePercentages(classificationResults) {
         }
     });
     
-    // Calculate raw percentages
-    const descriptionPct = (descriptionCount / totalWindows) * 100;
-    const explanationPct = (explanationCount / totalWindows) * 100;
-    const predictionPct = (predictionCount / totalWindows) * 100;
-    const otherPct = (otherCount / totalWindows) * 100;
-    
-    // Professional Vision% = Description% + Explanation% + Prediction%
-    const professionalVisionPct = descriptionPct + explanationPct + predictionPct;
-    
-    // Ensure Professional Vision% + Others% = 100%
-    const adjustedOtherPct = 100 - professionalVisionPct;
-    
-    // Round all percentages to 1 decimal place (CRITICAL: not whole numbers!)
-    const finalPercentages = {
-        description: Math.round(descriptionPct * 10) / 10,
-        explanation: Math.round(explanationPct * 10) / 10,
-        prediction: Math.round(predictionPct * 10) / 10,
-        other: Math.round(adjustedOtherPct * 10) / 10,
-        professional_vision: Math.round(professionalVisionPct * 10) / 10
+    // Priority-based percentages (adds to 100%)
+    const priorityPercentages = {
+        description: Math.round((descriptionCount / totalWindows) * 100 * 10) / 10,
+        explanation: Math.round((explanationCount / totalWindows) * 100 * 10) / 10,
+        prediction: Math.round((predictionCount / totalWindows) * 100 * 10) / 10,
+        other: Math.round((otherCount / totalWindows) * 100 * 10) / 10,
+        professional_vision: Math.round(((descriptionCount + explanationCount + predictionCount) / totalWindows) * 100 * 10) / 10
     };
     
-    // Find weakest component (excluding other)
+    // Find weakest component based on priority percentages
     const components = {
-        'Description': finalPercentages.description,
-        'Explanation': finalPercentages.explanation,
-        'Prediction': finalPercentages.prediction
+        'Description': priorityPercentages.description,
+        'Explanation': priorityPercentages.explanation,
+        'Prediction': priorityPercentages.prediction
     };
     
     const weakestComponent = Object.keys(components).reduce((a, b) => 
@@ -1372,9 +1385,11 @@ function calculatePercentages(classificationResults) {
     );
     
     return {
-        percentages: finalPercentages,
-        weakest_component: weakestComponent,
-        analysis_summary: `Analyzed ${totalWindows} non-overlapping text windows. Professional Vision: ${finalPercentages.professional_vision}% (D:${finalPercentages.description}% + E:${finalPercentages.explanation}% + P:${finalPercentages.prediction}%) + Other: ${finalPercentages.other}% = 100%`
+        percentages_raw: rawPercentages,           // Show to students (can > 100%)
+        percentages_priority: priorityPercentages, // Use for feedback and later analysis
+        percentages: rawPercentages,               // Default to raw for display
+        weakest_component: weakestComponent,       // Based on priority
+        analysis_summary: `Analyzed ${totalWindows} windows. Raw: D:${rawPercentages.description}% E:${rawPercentages.explanation}% P:${rawPercentages.prediction}% (Total PV: ${rawPercentages.professional_vision}%). Priority-based: D:${priorityPercentages.description}% E:${priorityPercentages.explanation}% P:${priorityPercentages.prediction}% Other:${priorityPercentages.other}% = 100%`
     };
 }
 
@@ -1386,6 +1401,9 @@ async function generateWeightedFeedback(reflection, language, style, analysisRes
     const promptType = `${style} ${language === 'en' ? 'English' : 'German'}`;
     const systemPrompt = getFeedbackPrompt(promptType, analysisResult);
     
+    // Use priority-based percentages for feedback generation (adds to 100%)
+    const pctPriority = analysisResult.percentages_priority;
+    
     const languageInstruction = language === 'en' 
         ? "IMPORTANT: You MUST respond in English. The entire feedback MUST be in English only."
         : "WICHTIG: Sie MÜSSEN auf Deutsch antworten. Das gesamte Feedback MUSS ausschließlich auf Deutsch sein.";
@@ -1394,7 +1412,7 @@ async function generateWeightedFeedback(reflection, language, style, analysisRes
         model: model,
         messages: [
             { role: "system", content: languageInstruction + "\n\n" + systemPrompt },
-            { role: "user", content: `Based on the analysis showing ${analysisResult.percentages.description}% description, ${analysisResult.percentages.explanation}% explanation, ${analysisResult.percentages.prediction}% prediction (Professional Vision: ${analysisResult.percentages.professional_vision}%) + Other: ${analysisResult.percentages.other}% = 100%, provide feedback for this reflection:\n\n${reflection}` }
+            { role: "user", content: `Based on the analysis showing ${pctPriority.description}% description, ${pctPriority.explanation}% explanation, ${pctPriority.prediction}% prediction (Professional Vision: ${pctPriority.professional_vision}%) + Other: ${pctPriority.other}% = 100%, provide feedback for this reflection:\n\n${reflection}` }
         ],
         temperature: 0.3,
         max_tokens: 2000
@@ -1767,7 +1785,11 @@ async function saveFeedbackToDatabase(taskId, data) {
             language: currentLanguage,
             task_id: taskId,
             reflection_text: data.reflectionText,
-            analysis_percentages: data.analysisResult.percentages,
+            analysis_percentages: {
+                raw: data.analysisResult.percentages_raw,
+                priority: data.analysisResult.percentages_priority,
+                displayed_to_student: data.analysisResult.percentages_raw  // What student saw
+            },
             weakest_component: data.analysisResult.weakest_component,
             feedback_extended: data.extendedFeedback,
             feedback_short: data.shortFeedback,
