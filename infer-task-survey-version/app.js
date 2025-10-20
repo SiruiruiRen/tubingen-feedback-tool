@@ -975,6 +975,11 @@ function displayAnalysisDistribution(taskId, analysisResult) {
     const { weakest_component } = analysisResult;
     const isGerman = currentLanguage === 'de';
     
+    console.log('🖥️ DISPLAYING TO STUDENT:');
+    console.log('Raw percentages:', rawPercentages);
+    console.log('D:', rawPercentages.description, 'E:', rawPercentages.explanation, 'P:', rawPercentages.prediction);
+    console.log('Total:', (rawPercentages.description || 0) + (rawPercentages.explanation || 0) + (rawPercentages.prediction || 0));
+    
     // Check for gibberish/no professional vision using raw percentages
     if (rawPercentages.professional_vision <= 5) {
         distributionContainer.innerHTML = `
@@ -1384,13 +1389,20 @@ function calculatePercentages(classificationResults) {
         components[a] <= components[b] ? a : b
     );
     
-    return {
+    const result = {
         percentages_raw: rawPercentages,           // Show to students (can > 100%)
         percentages_priority: priorityPercentages, // Use for feedback and later analysis
         percentages: rawPercentages,               // Default to raw for display
         weakest_component: weakestComponent,       // Based on priority
         analysis_summary: `Analyzed ${totalWindows} windows. Raw: D:${rawPercentages.description}% E:${rawPercentages.explanation}% P:${rawPercentages.prediction}% (Total PV: ${rawPercentages.professional_vision}%). Priority-based: D:${priorityPercentages.description}% E:${priorityPercentages.explanation}% P:${priorityPercentages.prediction}% Other:${priorityPercentages.other}% = 100%`
     };
+    
+    console.log('📊 CALCULATION RESULTS:');
+    console.log('RAW (shown to students):', rawPercentages);
+    console.log('PRIORITY (internal use):', priorityPercentages);
+    console.log('RAW total:', rawPercentages.description + rawPercentages.explanation + rawPercentages.prediction);
+    
+    return result;
 }
 
 // ============================================================================
