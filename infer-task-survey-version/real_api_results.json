@@ -1,0 +1,240 @@
+{
+  "german": {
+    "control_group": {},
+    "experimental_group": {}
+  },
+  "english": {
+    "control_group": {},
+    "experimental_group": {}
+  },
+  "metadata": {
+    "timestamp": "2025-10-21T01:29:43.615Z",
+    "german_text_length": 3697,
+    "english_text_length": 2191,
+    "models_used": [
+      "gpt-5-mini"
+    ]
+  },
+  "de": {
+    "control_group": {
+      "control_1": {
+        "prompt": "I am writing a response to analyze a video about teaching. Give me feedback.",
+        "response": "Gern — hier konkretes, konstruktives Feedback zu deinem Text (Inhalt, Formulierungen, tiefergehende Analyse-Vorschläge und sprachliche Korrekturen).\n\nWorauf du gut achtest\n- Detaillierte Ablaufbeschreibung: Du beschreibst die Sequenz Schritt für Schritt und nennst Personen, Materialien und Abläufe — das macht die Beobachtung nachvollziehbar.\n- Fokus auf Lernprozess und Fehlerkultur: Du gehst nicht nur auf das Was, sondern auch auf das Wie ein (Wiederholen, Korrigieren, Mut zum Fehler).\n- Wahrnehmung von Atmosphäre und Motivation: Du reflektierst, wie sich die Unterrichtsform auf Aufmerksamkeit und Beteiligung auswirken kann.\n- Sensibilität gegenüber unterschiedlichen Schülerpersönlichkeiten: Du berücksichtigst mögliche Effekte der Fehlerkorrektur auf schüchterne SuS.\n\nKonkrete Verbesserungsvorschläge (inhaltlich)\n- Verknüpfe Beobachtung mit Theorie: Begriffe wie „Scaffolding“, „Modeling“, „Recast vs. Explicit Correction“, „Affective Filter“ oder „TTT / PPP“ würden deine Analyse stärken. Z. B.: „Die Lehrkraft modelliert mehrfach (Modeling), korrigiert meist explizit („no no no“) — das ist ein Mix aus Recast und expliziter Korrektur, was X für die Lernenden bedeuten kann.“\n- Teilnahmeverteilung analysieren: Du erwähnst, dass der Fokus auf zwei Personen liegt. Ergänze, wie oft andere SuS beteiligt werden (häufigkeit), ob gezielt abgefragt wird, und ob das Passiv-Sein problematisch für Sprachproduktion ist.\n- Fehlerkorrektur genauer untersuchen: Beschreibe, ob Korrekturen zu Uptake/Repair führen (nehmen SuS die Korrektur an und verwenden sie korrekt danach?) und ob die Lehrkraft Elicitation oder Modellierung verwendet.\n- Material- und Methodeneinsatz bewerten: Wie nutzen die laminierten Gegenstände die multimodale Repräsentation? Fördert das Bedeutsamkeit/Contextualisierung der Zielphrase?\n- Messbare Hinweise: Wenn möglich, gib Zeitangaben oder Häufigkeiten (z. B. „dreimal wiederholt“, „zwei Schüler aktiv, Rest passiv“) — das macht die Analyse belastbarer.\n- Differenzierung und Inklusion: Erwähne, ob die Aufgaben Anpassungen für schwächere oder stärkere SuS ermöglichen.\n\nSprachliche/ stilistische Korrekturen (einige Beispiele)\n- „setzt ihm eine Baskenmütze auf auf.“ → „setzt ihm eine Baskenmütze auf.“\n- „endet ihr ein Tuch um.“ → „bindet ihr ein Tuch um.“\n- „Die Phrase, die gelernt werden soll, wird nun zunächst häufig gesagt,“ → „Die Zielphrase wird zunächst mehrfach modelliert/gesagt.“\n- „Die Lehrerin kommentiert am Ende des ersten Übungsteils die Leitung mit ‚bien‘“ → „…kommentiert am Ende des ersten Übungsteils die Leistung mit ‚bien‘.“\n- „Falsch angesetzte Sätze verbessert die Lehrkraft durch ein unterbrechen mit ‚no no no no‘,“ → „Falsch formulierte Sätze unterbricht die Lehrkraft mit ‚no no no no‘.“\n- Stil: Vermeide viele Wiederholungen von „antwortet/antwortet/antwortet“ — variiere mit „erwiderte“, „gab die Antwort“, „sagte“.\n\nVorschlag für klarere Struktur deines Textes\n1. Kurzbeschreibung (2–3 Sätze): Setting, Ziel der Übung, Rollen.\n2. Chronologische Beobachtung (gefällig in Abschnitten, z. B. 1. Modellierung, 2. Übung mit SuS, 3. eigenständige Übung).\n3. Analytischer Teil: Methoden, Fehlerbehandlung, Beteiligung, Materialeinsatz.\n4. Bewertung/Schluss: Was lief gut, welche Risiken gibt es, konkrete Empfehlungen für die Lehrkraft.\n\nKonkrete Empfehlungen an die Lehrkraft (kannst du als Kritikpunkt einbauen)\n- Erhöhe die Partizipation: Mehr gezielte Fragen an verschiedene SuS, Rotationsprinzip, kurze Paarübungen.\n- Variiere Fehlerkorrektur: Statt sofortigem „no no“, gelegentlich Elicitation („Wie heißt das noch mal?“) oder Recast anbieten, um das Selbstvertrauen zu stärken.\n- Positive Verstärkung erweitern: Lob nicht nur kurz („bien“), sondern konkreter („Gut, du hast die Zielstruktur korrekt gebildet, weil…“).\n- Wartezeit (Wait time): Nach Fragen etwas länger warten, damit auch schüchterne SuS produzieren können.\n- Dokumentation: Timestamps oder Transkript-Auszüge einfügen, um deine Beobachtungen belegt darzustellen.\n\nMöchtest du, dass ich:\n- deinen Text stilistisch überarbeite (auf Deutsch) und die oben genannten Korrekturen einbaue?\n- ein kurzes, theoretisch untermauertes Feedback für eine Lehrperson formuliere (inkl. konkreter, umsetzbarer Tipps)?\n\nWenn du willst, kann ich auch eine überarbeitete Version deines Textes verfassen, die sprachlich gestrafft und in die vorgeschlagene Struktur gebracht ist.",
+        "language": "de"
+      },
+      "control_2": {
+        "prompt": "I am writing a response to analyze a video about teaching based on professional vision. Give me feedback.",
+        "response": "Gern — dein Text ist schon sehr detailliert und liefert viele konkrete Beobachtungen. Unten habe ich positives, konkrete Verbesserungsvorschläge und Formulierungsempfehlungen zusammengestellt, damit deine Analyse klarer, präziser und stärker theoriebasiert wird.\n\nPositives\n- Gute Detailbeobachtungen: Du beschreibst viele konkrete Handlungen (Wer tritt vor, welche Materialien, Signalworte wie „no no no“, Gesten), das ist wichtig für eine evidenzbasierte Analyse.\n- Reflexion über Lernprozess: Du erkennst das Prinzip von Üben, Wiederholen und Fehlerkorrektur und bewertest Atmosphäre und Fehlerkultur.\n- Sensibilität gegenüber möglichen negativen Effekten: Du berücksichtigst verschiedene Schülerperspektiven (z. B. schüchterne Kinder).\n\nWas du verbessern kannst\n1) Trenne Beschreibung und Interpretation klarer\n- Markiere explizit, was du beobachtet hast (Beschreibung) und was daraus folgerst (Interpretation). Beispiel: „Die Lehrerin sagt ‚no no no‘ (Beobachtung). Das könnte als implizite Form der Fehlerkorrektur wirken und schüchterne Schüler hemmen (Interpretation).“\n\n2) Verwende präzisere Fachbegriffe\n- Statt „wiederholen“ oder „korrekt reagieren“ kannst du Begriffe wie „Elicitation“, „Recast“, „explicit correction“, „positive/negative feedback“, „scaffolding“, „gestural prompt“ nutzen — das hilft, deine Analyse in den Rahmen der Professional Vision zu stellen.\n\n3) Beziehe dich explizit auf das Konzept „professional vision“\n- Goodwins Aspekte (coding, highlighting, producing material representations) passen gut: z. B. wie die Lehrerin „highlighted“ (durch Lob und ‚mhm‘) richtige Äußerungen, wie die laminierten Gegenstände als materielle Repräsentationen fungieren, und wie sie durch Gesten und Rollenvergabe die Aufmerksamkeit lenkt. Mach diese Verbindung explizit.\n\n4) Belege deine Interpretationen stärker\n- Ergänze wenn möglich Zeitmarken, kurze Transkriptstellen oder direkt zitierte Schüleräußerungen. So wirken Aussagen über Atmosphäre oder Motivation weniger spekulativ.\n\n5) Analysiere Fehlerkorrektur differenzierter\n- Beschreibe Art und Konsequenz der Korrekturen: Wird die richtige Form wiederholt (modelliert)? Wird auf die Schülerantworten eingegangen (uptake)? Nutzt die Lehrerin „peer correction“? Verweise auf Forschung (z. B. Lyster & Ranta zu Korrekturtypen).\n\n6) Aufmerksamkeit der Klasse und Partizipation\n- Du schreibst, dass der Fokus stark auf zwei Personen liegt. Quantifiziere/konkretisiere: Wie viele Meldungen aus der Klasse gab es? Wie lange waren die anderen passiv? Welche Impulse könnten die Lehrkraft geben, um mehr Beteiligung zu erzeugen?\n\n7) Tonfall und Wirkung von „no no no“\n- Du beschreibst es als beiläufig und ruhig, gleichzeitig als potenziell rüde. Könntest du anhand eines kurzen Zitats oder Gestenbeschreibung zeigen, warum du zu dieser Ambivalenz kommst? Das stärkt deine Schlussfolgerung zur Fehlerkultur.\n\nKonkrete Formulierungsvorschläge (deutsch, knapp)\n- Statt: „Die Lehrerin kommentiert am Ende des ersten Übungsteils die Leitung mit ‚bien‘, lobt also kurz die vorne stehenden Schüler.“\n  Besser: „Die Lehrerin lobt die vorstehenden Schüler kurz mit ‚bien‘ (explicit positive feedback), wodurch korrekte Antworten hervorgehoben werden (highlighting).“\n\n- Statt: „Das Lernen wird von der Lehrkraft hier als Prozess verstanden.“\n  Besser: „Die Lehrkraft organisiert Lernen als iterative Praxis: Modellieren – Elicitation – Feedback – Wiederholung. Diese Sequenz unterstützt Automatisierung sprachlicher Phrasen.“\n\n- Statt: „Ob sich diejenigen die mit ‚no‘ ´abgefertigt´ wurden letztlich negativ beeinflusst sehen…“\n  Besser: „Ob Lernende negativ auf die knappe Korrektur ‚no no no‘ reagieren, hängt von individuellen Merkmalen ab; um das abzuschätzen, wären Hinweise auf nonverbale Reaktionen (z. B. veränderte Mimik, Körperhaltung) hilfreich.“\n\nWeitere Empfehlungen\n- Ergänze eine kurze Methodensektion: Wann wurde das Video aufgenommen, Dauer, eigene Rolle (Beobachter/in), Hinweis auf Ethik/Einverständnis.\n- Ziehe Forschungsliteratur hinzu (z. B. Goodwin zu professional vision; Lyster & Ranta zu Corrective Feedback; ggf. Hayes, Vygotsky oder Communicative Language Teaching), um deine Interpretation theoretisch zu stützen.\n- Falls du möchtest, kann ich deinen Text überarbeiten: klarere Struktur (Beschreibung – Analyse – Schlussfolgerung) und fachsprachliche Präzisierung einbauen.\n\nMöchtest du, dass ich deinen Text in eine überarbeitete Version mit den genannten Änderungen umschreibe (z. B. 2–3 Abschnitte: Beschreibung, Analyse nach „professional vision“, Empfehlungen)?",
+        "language": "de"
+      },
+      "control_3": {
+        "prompt": "I watched a teaching video and wrote my thoughts. Can you give me feedback on my analysis?",
+        "response": "",
+        "language": "de"
+      }
+    },
+    "experimental_group": {
+      "classification_results": [
+        {
+          "window_id": "chunk_001",
+          "window_text": "Die Lehrerin kündigt zunächst an, dass die Klasse nun eine Aufgabe zu lösen hat. Da sie dies in Französisch kommuniziert, wiederholt sie dies. Dann bittet sie auf Deutsch einen Jungen, Luca, nach vorne und setzt ihm eine Baskenmütze auf auf.",
+          "description": 1,
+          "explanation": 1,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_002",
+          "window_text": "Danach bittet sie ein Mädchen, Lea, nach vorne und endet ihr ein Tuch um. Die beiden sollen Brigitte und Danielle darstellen. Die Phrase, die gelernt werden soll, wird nun zunächst häufig gesagt, dann in die Aufgabe eingebunden.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_003",
+          "window_text": "Für die Aufgabe hat sie verschiedene einlaminierte gedruckte Gegenstände für die Tafel mitgebracht. Nun müssen zunächst Luca und Lea die Aufgabe lösen. Mit zustimmendem Mhm macht die Lehrkraft deutlich, wenn das Gesagte korrekt ist.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_004",
+          "window_text": "Sie lässt nun ein weiteres Mädchen aus der Klasse, das in der ersten reihe sitzt, Sarah, ebenfalls die Phrase wiederholen, die eingeübt werden soll. Die Lehrerin kommentiert am Ende des ersten Übungsteils die Leitung mit bien, lobt also kurz die vorne stehenden Schüler. Der Rest der Klasse ist sowohl im ersten als auch im daraufhin folgenden zweiten Übungsteil größtenteils passiv, Dann wiederholen Luca und Lea vorne noch einmal die Aufgaben und führen sie dann mit anderen Gegenständen noch einmal aus, die an die Tafel gehängt werden.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_005",
+          "window_text": "Auch Sarah soll nun wieder antworten, was die Lehrkraft durch die Handbewegung initiiert. Falsch angesetzte Sätze verbessert die Lehrkraft durch ein unterbrechen mit no no no no, das beiläufig und ruhig eingeworfen wird. Nun machen die Schüler mit einem weiteren Beispiel die Übung komplett alleine, was die Lehrerin auf Deutsch mit jetzt seid ihr mal dran einleitet, Fehler aber durch wiederholen bzw.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_006",
+          "window_text": "Einwerfen der richtigen Phrase verbessert. Florian, ein Junge in der ersten Reihe, übernimmt Sarahs Aufgabe, nachdem er sich gemeldet hat. Die Lehrkraft macht die Schülerinnen und Schüler dann darauf aufmerksam, dass Luca und Lea in ihrem Dialog etwas vergessen haben und fragt in die Runde was es sei.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_007",
+          "window_text": "Sarah antwortet auf Deutsch und auf die Frage der Lehrkraft, wie die Phrase zu lauten hat, antwortet zunächst Leyla aus der zweiten Reihe falsch. Die Lehrkraft sagt wieder no no no, ruft den sich meldeten Florian auf und wiederholt dessen richtige Antwort zweimal. Die vorstehende Lea setzt den Dialog dann auf Aufforderung der Lehrkraft fort.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_008",
+          "window_text": "Zum Ende der Sequenz teilt die Lehrerin mit, dass die Übung nun noch einmal von vorne gemacht wird\n\nDas Lernen wird von der Lehrkraft hier als Prozess verstanden. Die Schülerinnen und Schüler, sollen durch ausprobieren und durch das Verbessern und Wiederholen der Lehrkraft und der Mitschüler, die Phrasen besser verinnerlichen. Die Lehrkraft reagiert zwar mit no auf Fehler, trotzdem herrscht eine gute Fehlerkultur, in der die Schülerinnen und Schüler sich trauen zu äußern.",
+          "description": 0,
+          "explanation": 1,
+          "prediction": 1
+        },
+        {
+          "window_id": "chunk_009",
+          "window_text": "Die Atmosphäre und der Umgangston sind trotz der nicht immer konstruktiv gewählten Worte wertschätzen und respektvoll und die Schülerinnen und Schüler erhalten eine konstruktiv gemeinte Unterstützung. Die Schülerinnen und Schüler sind aufmerksam, obwohl der Fokus stark auf zwei Personen liegt, wahrscheinlich vor allem weil die Übung abwechslungsreich scheint im Vergleich zu normalem Frontalunterricht. Die meisten Schülerinnen und Schüler werden von der wiederholenden Herangehensweise profitieren, da sich so der Stoff besser festigen kann.",
+          "description": 0,
+          "explanation": 1,
+          "prediction": 1
+        },
+        {
+          "window_id": "chunk_010",
+          "window_text": "Ob sich diejenigen die mit no ´abgefertigt´ wurden letztlich negativ beeinflusst sehen in ihrer Beziehung zur Lehrkraft und ihrer Motivation zum Fach, hängt von der Persönlichkeit der Schülerinnen und Schüler ab. Gerade schüchternere Kinder könnten sich durch diese augenscheinlich ungewollt rüde Art beeindrucken lassen und sich nicht mehr so viel (zu-)trauen.",
+          "description": 0,
+          "explanation": 1,
+          "prediction": 1
+        }
+      ],
+      "analysis_result": {
+        "percentages_raw": {
+          "description": 70,
+          "explanation": 40,
+          "prediction": 30,
+          "professional_vision": 140
+        },
+        "percentages_priority": {
+          "description": 70,
+          "explanation": 40,
+          "prediction": 30,
+          "other": 0,
+          "professional_vision": 140
+        },
+        "weakest_component": "Prediction",
+        "analysis_summary": "Analyzed 10 non-overlapping text windows. Professional Vision: 140% (D:70% + E:40% + P:30%) + Other: 0% = 100%"
+      },
+      "academic_feedback": {
+        "response": "",
+        "language": "de"
+      },
+      "user_friendly_feedback": {
+        "response": "#### Description\nGood: You captured much of what happened and gave a clear account of the lesson flow.  \nTip: Add quick specifics — who, what, when, and one piece of measurable data (e.g., \"8 of 12 students completed X in 10 minutes\").\n\n#### Explanation\nGood: You named some reasons why things went well or not.  \nTip: For each reason, link it to one concrete example from the lesson (e.g., \"Because I gave wait time, three quieter students answered\").\n\n#### Prediction\nGood: You tried to anticipate future outcomes but the predictions are vague and hard to check. A stronger prediction will say what will change and how you'll know.  \nTip:\n- Write predictions as measurable \"If/then\" statements (e.g., \"If I shorten the instruction to 3 minutes, then 10 of 12 students will start on task within 2 minutes\").  \n- Include a time frame and a clear success marker (how many students, how long, or what score).  \n- Add one quick contingency: say what you'll do if the prediction is not met (e.g., \"If fewer than 8 start, I will use a timer and a 30-second prompt\").",
+        "language": "de"
+      }
+    }
+  },
+  "en": {
+    "control_group": {
+      "control_1": {
+        "prompt": "I am writing a response to analyze a video about teaching. Give me feedback.",
+        "response": "Nice, this is a clear, detailed observation. Below I give: 1) quick overall feedback on your analysis, 2) suggestions for additional analytic angles and evidence you might add, 3) wording/style edits to tighten the text, and 4) a concise rewritten version you can use or adapt.\n\n1) Overall feedback (strengths)\n- Your sequence is chronological and easy to follow — you capture who does what and when.  \n- You notice key teaching moves (announcement, modeling, repetition, correction, praise).  \n- You attend to language use (teacher switches between French and German) and to student participation patterns (who is active vs. passive).  \n- You note both teacher feedback (approval/“mhm”, “bien”) and corrective feedback (“no no no no”), which is important for analyzing interactional tone.\n\n2) Suggestions for deeper analysis (content you could add)\n- Identify the lesson objective and the exact target phrase being practiced (quote it). That clarifies whether teacher moves align with the objective.  \n- Note the age/grade, level of learners, and context (e.g., L2 German class in a French-speaking school) if known — this affects interpretation of code-switching and corrective style.  \n- Add evidence for timing and distribution of talk: approximate durations (e.g., 2 min modeling, 4 min practice), and student talk time vs teacher talk time. This helps show how student-centered the activity is.  \n- Describe nonverbal cues in more detail: teacher’s gestures, proximity, eye contact, and how these support or constrain learning.  \n- Analyze feedback types: recast (teacher repeats correct phrase), explicit correction (saying “no no no”), praise (“bien”). Discuss possible effects — e.g., recasts support uptake, repeated “no” may be face-threatening for some learners.  \n- Consider alternatives and implications: could the teacher increase whole-class engagement (pair work, choral repetition, rotating volunteers)? Is error correction public and immediate appropriate for this task, or would a delayed group correction reduce embarrassment?  \n- Note assessment/evidence of learning: does the teacher check comprehension or procedural understanding beyond immediate repetition? Is there cognitive challenge or only form-focused practice?\n\n3) Language and style edits (short list)\n- Use consistent tense (past tense for describing filmed events).  \n- Prefer active voice: “The teacher asked Luca to come forward” instead of “she asks a boy”.  \n- Avoid phrases like “thrown in” (colloquial) — use “inserted casually” or “uttered casually.”  \n- Replace vague words like “task” with specifics where possible (e.g., “matching activity with laminated objects”).  \n- Reduce repetition of “now/then” by varying sentence structure or grouping sequential actions.\n\n4) Concise revised version (you can paste this in place of your paragraph)\n\nThe teacher announces that the class will work on a task, first in French and then repeated in German. She invites Luca forward, places a beret on him, then invites Lea and ties a scarf around her; the two are to role-play “Brigitte” and “Danielle.” The target phrase is modeled and repeated several times, then integrated into a matching activity using laminated objects attached to the board. Luca and Lea perform the task while the teacher signals approval with “Mhm” and briefly praises them with “bien.” A girl in the front row, Sarah, is also invited to repeat the phrase. The rest of the class remains largely passive throughout both practice stages. In the second practice, Luca and Lea repeat the exercise with different objects; the teacher elicits Sarah’s response with a hand gesture and corrects errors by interrupting with “no no no no,” delivered calmly. The teacher then tells the class in German, “now it’s your turn,” and students do another example independently; she still models and recasts correct forms when mistakes occur. Florian volunteers after raising his hand and takes Sarah’s turn. Later the teacher points out that Luca and Lea omitted a line in their dialogue and elicits the missing phrase; Leyla initially answers incorrectly, the teacher again says “no no no,” calls on Florian and repeats his correct answer twice, then has Lea continue the dialogue. The sequence ends with the teacher announcing the exercise will be repeated from the beginning.\n\nIf you want, I can:\n- Mark this version with time stamps tied to the video,\n- Add a short pedagogical critique (what works / what to change) suitable for a lesson observation report,\n- Or rewrite it in a more formal observation format (e.g., “Observer notes,” “Evidence,” “Impact on learning,” “Recommendations”). Which would help you most?",
+        "language": "en"
+      },
+      "control_2": {
+        "prompt": "I am writing a response to analyze a video about teaching based on professional vision. Give me feedback.",
+        "response": "This is a clear, concrete description of what happens in the clip — good attention to sequence and to language choice. Below I give focused feedback to help you turn this descriptive account into a stronger analytic piece grounded in \"professional vision\" (i.e., the moves teachers/researchers make when they notice, code, and reason about classroom interactions).\n\nStrengths\n- Detailed, moment-by-moment description. That gives good raw material for interpretation.\n- You report both verbal and some nonverbal actions (e.g., beret/scarf, hand movement), which is important for multimodal analysis.\n- You note language switching (French/German), repetition, and types of feedback (approving “Mhm”, “bien”, “no no no no”), which are analytically useful.\n\nWhere to improve (content and analytic moves)\n1. Make your interpretive claims explicit and tie them to evidence\n   - Right now much of the text is descriptive. Add clear claims (e.g., “The teacher uses modeling and recasts to scaffold correct production,” or “Most of the class is passive, suggesting limited engagement design”). After each claim, point to the specific part of the description (or a time stamp/transcript excerpt) as evidence.\n\n2. Distinguish description from inference\n   - Avoid assuming internal states (e.g., “the teacher makes it clear when what is said is correct” is OK as an observation if you note the signal used; be wary of phrasing like “approving” without showing the cue). Where you infer intention, flag it as a hypothesis.\n\n3. Add timestamps or short transcripts\n   - Micro-evidence strengthens professional vision. Add timecodes or short verbatim transcripts of key turns (for example the correction sequence with “no no no no” and the subsequent recast). Include gestures and prosody if relevant.\n\n4. Analyze interactional patterns, not only events\n   - Who gets to speak, how are turns allocated, what kinds of prompts are used (open vs closed), and how is participation distributed across seating rows? Quantify or at least systematically describe: e.g., “three students participated actively, the majority remained passive.”\n\n5. Unpack the feedback types and their likely effects\n   - Label the forms of feedback you observe: explicit correction, recast, positive minimal response, gestural prompting. Discuss potential impacts on L2 learning (e.g., recasts may be less salient than explicit correction; minimal positive signals promote repetition but may not foster self-repair).\n\n6. Attend to language switching and classroom norms\n   - The teacher’s use of French and German is important. Discuss possible functions (scaffolding, classroom management, modeling target language) and implications for learner comprehension and identity (e.g., the teacher introduces the task in German later: “now it’s your turn”—what does that do for L2 uptake?).\n\n7. Consider multimodal resources\n   - You note costumes, laminated objects, gestures. Analyze how these support meaning-making and participation (e.g., role-play increases authenticity, visual objects anchor referents).\n\n8. Raise alternative interpretations and limitations\n   - For example, class passivity might reflect efficient teacher-led practice (focused pair demonstration) rather than disengagement. Note limitations of inferring student learning from short behavioral cues.\n\nAnalytic frameworks and literature you could draw on\n- Goodwin (1994) “professional vision” — how experts notice and code events.\n- Conversation Analysis (CA) for repair sequences and turn-taking.\n- Research on corrective feedback in L2 classrooms (recasts, explicit correction, uptake).\n- Multimodal interaction analysis for gestures, gaze, props.\n- Classroom discourse / teacher questioning literature (wait-time, distribution of questions).\n\nConcrete additions to the text (structure and phrasing)\n- Add a short opening sentence stating your analytic focus (e.g., “I analyze how the teacher uses modeling, role-play, and corrective feedback to support target-phrase production and what this reveals about classroom participation.”)\n- After the descriptive paragraph, add sections: Evidence (time-stamped excerpts), Interpretation (claims linked to evidence), Implications (for teaching or research), Limitations.\n\nExample of turning description into a short analytic paragraph\n- Current: “With an approving ‘Mhm’ the teacher makes it clear when what is said is correct.”\n- Revised analytic version: “The teacher uses minimal positive feedback (e.g., ‘Mhm’, ‘bien’) to mark correct responses. These brief approvals appear immediately after student turns and function to endorse production without explicit metalinguistic explanation, encouraging repetition but providing little information for learner self-correction.”\n\nChecklist for revision\n- Add timestamps/transcripts for 3–5 key interaction moments (one correction, one modeling, one student uptake).\n- State 2–3 interpretive claims and link each to specific evidence.\n- Identify types of feedback and their likely L2 effects using cited literature.\n- Note participation patterns (who speaks, how often).\n- Include 1–2 limitations and one suggestion for further analysis.\n\nIf you want, I can:\n- Provide suggested citations (formatted for your style).\n- Edit one paragraph of your text into more analytic language.\n- Help create a brief transcript of a segment if you share the timecodes.\n\nWould you like me to rewrite one section of your analysis in a more analytical style (and if so, which paragraph)?",
+        "language": "en"
+      },
+      "control_3": {
+        "prompt": "I watched a teaching video and wrote my thoughts. Can you give me feedback on my analysis?",
+        "response": "This is a clear, careful, and useful observation — good level of detail and a sensible sequence of events. Below I give positive feedback on what you did well, point out places where you could tighten or deepen the analysis, and offer concrete next steps and questions you might address to strengthen it further.\n\nWhat you did well\n- Detailed, chronological description: You capture turn-by-turn actions, who speaks, and what the teacher does next. That makes it easy to follow the sequence.\n- Noticing multimodal cues: You note gestures, props (beret, scarf, laminated items), and teacher vocal responses (“Mhm”, “bien”), which are important for classroom interaction.\n- Attention to feedback patterns: You describe how the teacher corrects (interrupting “no no no no”, repeating correct forms), who gets to respond, and when the class is passive vs active.\n- Noting language choice: You observe L1/L2 switching (teacher announces in French then repeats; also uses German for instructions) — important for language-teaching analysis.\n- Identifying participation dynamics: You flag that only a few students are active and the rest are largely passive.\n\nWhere to tighten or deepen the analysis\n1. Be cautious about interpreting intent\n   - Phrases like “the teacher makes it clear when what is said is correct” or “casually and calmly thrown in” are plausible, but they interpret intention and tone. Where possible, support those claims with concrete evidence (exact utterances, timing, facial expression) or say they’re your interpretation.\n\n2. Add analytic categories / pedagogical constructs\n   Consider organizing your observations under headings such as:\n   - Lesson structure (e.g., Presentation → Practice → Production)\n   - Input (how target language is modelled)\n   - Interaction patterns (T-S, S-S, number of turns per student)\n   - Feedback type (recast, explicit correction, clarification request, metalinguistic prompt)\n   - Engagement and participation (who participates, extent of whole-class involvement)\n   - Language use balance (L1 vs L2)\n   - Instructional aids (props, movement)\n   Labeling events with these terms will make your analysis more precise and connect it to SLA/ELT literature.\n\n3. Specify the target language item and the learning objective\n   - You refer to “the phrase to be learned” but don’t write it out. Specify the target phrase, its form and meaning, and whether the teacher made the objective explicit. That helps assess appropriateness of practice and feedback.\n\n4. Describe the correction more precisely\n   - “No no no no” and repeating the correct phrase — are these recasts, explicit corrections, or interruptions? Note whether the teacher gives time for self-correction (e.g., waits after a correction), or simply supplies the correct form. Also note whether students uptake the correction successfully.\n\n5. Quantify or give examples of participation\n   - How many students actually produced the phrase? How often did the teacher call on volunteers vs select students? How long are student responses (single phrase vs longer utterance)? Even simple counts (e.g., 3 students produced X, rest passive) bolster your points.\n\n6. Consider affective and sociocultural elements\n   - The teacher uses props to role-play “Brigitte” and “Danielle.” That’s a helpful multimodal cue, but could also play into cultural stereotyping (beret = French stereotype). You might comment on whether the props aided comprehension or risked stereotyping, depending on context.\n\n7. Evaluate effectiveness\n   - Beyond describing actions, judge whether the teaching moves likely supported learning: Was there sufficient repetition and meaningful use? Was practice communicative or controlled? Did the rest of the class get enough practice to internalize the phrase?\n\nConcrete suggestions for improvement (if you were the observer or would report this)\n- Add timestamps or short verbatim quotes for key moments (e.g., teacher’s exact correction). This increases reliability.\n- Classify feedback episodes (e.g., explicit correction vs recast) and note student uptake (self-correct vs forced correction).\n- Note wait time: how long did the teacher pause after asking a question or after an error?\n- Look at distribution of talk time: proportion Talk vs Student Talk (T: S ratio).\n- Assess whether the task reaches communicative goals or remains controlled drilling; suggest follow-up tasks to increase classwide production (pair work, choral practice, recycling activities).\n- Suggest alternative teacher moves that might improve learning (examples below).\n\nPractical alternative moves / suggestions for the teacher\n- To increase participation: use pair or small-group practice so every student produces the target phrase; then sample from groups.\n- For corrective feedback: combine a brief explicit prompt (“Try that again, check your verb”) or a recast plus a pause to allow self-correction, rather than repeated “no no no,” which can feel negative to learners.\n- For stronger uptake: after correcting, ask the student to repeat and then have a peer repeat — that increases processing and memory.\n- To assess comprehension: use concept-checking questions or short comprehension activities (matching, pointing) rather than only form repetition.\n- To reduce stereotyping risk: when using cultural props, frame them explicitly (e.g., “We’re imagining Brigitte, a French woman; these are props to help us act the dialogue”) or use neutral props.\n\nIf you want to deepen this into a formal observation report\n- I can help reformat this into a structured observation (e.g., 1-page feedback for the teacher) with: strengths, areas for development, suggested actions, and sample phrasing the teacher could use.\n- Or I can code the interaction for feedback types (recasts, explicit corrections, prompts, etc.) and produce simple counts.\n\nWould you like me to:\n- Turn your notes into a short structured observation report for the teacher?\n- Code the sequence for feedback types and participation statistics (you’d need to provide the video timestamps or more verbatim transcript)?\n- Rewrite your analysis using the pedagogical categories I suggested?",
+        "language": "en"
+      }
+    },
+    "experimental_group": {
+      "classification_results": [
+        {
+          "window_id": "chunk_001",
+          "window_text": "The teacher first announces that the class will now work on a task. Since she communicates this in French, she repeats it. Then she asks a boy, Luca, to come forward in German and puts a beret on him.",
+          "description": 1,
+          "explanation": 1,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_002",
+          "window_text": "Then she asks a girl, Lea, to come forward and ties a scarf around her. The two are supposed to represent \"Brigitte\" and \"Danielle\". The phrase to be learned is now said frequently at first, then integrated into the task.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_003",
+          "window_text": "For the task, she has brought various laminated printed objects for the board. Now Luca and Lea must first solve the task. With an approving \"Mhm\" the teacher makes it clear when what is said is correct.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_004",
+          "window_text": "She now lets another girl from the class, who sits in the first row, Sarah, also repeat the phrase that should be practiced. The teacher comments on the performance at the end of the first practice part with \"bien\", so briefly praises the students standing in front. The rest of the class is largely passive in both the first and the following second practice part.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_005",
+          "window_text": "Then Luca and Lea repeat the tasks in front again and perform them again with other objects that are hung on the board. Sarah should also answer now, which the teacher initiates through the hand movement. Incorrect sentences are corrected by the teacher by interrupting with \"no no no no\", which is casually and calmly thrown in.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_006",
+          "window_text": "Now the students make the exercise completely alone with another example, which the teacher introduces in German with \"now it's your turn\", but improves errors by repeating or throwing in the correct phrase. Florian, a boy in the first row, takes over Sarah's task after he has raised his hand. The teacher then draws the students' attention to the fact that Luca and Lea have forgotten something in their dialogue and asks around what it is.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_007",
+          "window_text": "Sarah answers in German and to the teacher's question about how the phrase should sound, Leyla from the second row initially answers incorrectly. The teacher says \"no no no\" again, calls the raised Florian and repeats his correct answer twice. The standing Lea then continues the dialogue at the teacher's request.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 0
+        },
+        {
+          "window_id": "chunk_008",
+          "window_text": "At the end of the sequence, the teacher announces that the exercise will now be done again from the beginning.",
+          "description": 1,
+          "explanation": 0,
+          "prediction": 1
+        }
+      ],
+      "analysis_result": {
+        "percentages_raw": {
+          "description": 100,
+          "explanation": 12.5,
+          "prediction": 12.5,
+          "professional_vision": 125
+        },
+        "percentages_priority": {
+          "description": 100,
+          "explanation": 12.5,
+          "prediction": 12.5,
+          "other": 0,
+          "professional_vision": 125
+        },
+        "weakest_component": "Explanation",
+        "analysis_summary": "Analyzed 8 non-overlapping text windows. Professional Vision: 125% (D:100% + E:12.5% + P:12.5%) + Other: 0% = 100%"
+      },
+      "academic_feedback": {
+        "response": "",
+        "language": "en"
+      },
+      "user_friendly_feedback": {
+        "response": "#### Description\nGood:\nYou gave very detailed observations (100% score shows your notes are thorough).  \nTip:\n- Keep using short, time-stamped bullets and direct quotes to preserve clarity.\n\n#### Explanation\nGood:\nYou’ve identified that this part needs work, which is the right place to focus.  \nTip:\n- Use a 2-sentence template each time: \"I saw [specific behavior]. That shows [short, plain statement about student thinking or skill].\"  \n- Add one linking sentence: \"So, I think this happened because [brief cause] and the evidence is [short evidence].\"  \n- Try these quick sentence stems to speed writing: \"Observed: ___. This suggests ___. Evidence: ___. Next step: ___.\"\n\n#### Prediction\nGood:\nYou made predictions about next steps, but they can be clearer.  \nTip:\n- Make each prediction an if–then statement: \"If I do X, then by [when] students will do Y,\" and write one measureable sign you’ll look for.",
+        "language": "en"
+      }
+    }
+  }
+}

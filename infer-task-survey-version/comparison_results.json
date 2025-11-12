@@ -1,0 +1,112 @@
+{
+  "control_prompts": {
+    "control_1": "I am writing a response to analyze a video about teaching. Give me feedback.",
+    "control_2": "I am writing a response to analyze a video about teaching based on professional vision. Give me feedback.",
+    "control_3": "I watched a teaching video and wrote my thoughts. Can you give me feedback on my analysis?"
+  },
+  "experimental_analysis": {
+    "percentages_raw": {
+      "description": 80.0,
+      "explanation": 90.0,
+      "prediction": 30.0,
+      "professional_vision": 200.0
+    },
+    "percentages_priority": {
+      "description": 80.0,
+      "explanation": 90.0,
+      "prediction": 30.0,
+      "other": -100.0,
+      "professional_vision": 200.0
+    },
+    "weakest_component": "Prediction",
+    "analysis_summary": "Analyzed 10 non-overlapping text windows. Professional Vision: 200.0% (D:80.0% + E:90.0% + P:30.0%) + Other: -100.0% = 100%",
+    "classificationResults": [
+      {
+        "window_id": "chunk_001",
+        "window_text": "Die Lehrerin kündigt zunächst an, dass die Klasse nun eine Aufgabe zu lösen hat. Da sie dies in Französisch kommuniziert, wiederholt sie dies. Dann bittet sie auf Deutsch einen Jungen, Luca, nach vorne und setzt ihm eine Baskenmütze auf auf",
+        "description": 1,
+        "explanation": 1,
+        "prediction": 0
+      },
+      {
+        "window_id": "chunk_002",
+        "window_text": "Danach bittet sie ein Mädchen, Lea, nach vorne und endet ihr ein Tuch um. Die beiden sollen Brigitte und Danielle darstellen. Die Phrase, die gelernt werden soll, wird nun zunächst häufig gesagt, dann in die Aufgabe eingebunden",
+        "description": 1,
+        "explanation": 1,
+        "prediction": 1
+      },
+      {
+        "window_id": "chunk_003",
+        "window_text": "Für die Aufgabe hat sie verschiedene einlaminierte gedruckte Gegenstände für die Tafel mitgebracht. Nun müssen zunächst Luca und Lea die Aufgabe lösen. Mit zustimmendem Mhm macht die Lehrkraft deutlich, wenn das Gesagte korrekt ist",
+        "description": 1,
+        "explanation": 1,
+        "prediction": 0
+      },
+      {
+        "window_id": "chunk_004",
+        "window_text": "Sie lässt nun ein weiteres Mädchen aus der Klasse, das in der ersten reihe sitzt, Sarah, ebenfalls die Phrase wiederholen, die eingeübt werden soll. Die Lehrerin kommentiert am Ende des ersten Übungsteils die Leitung mit bien, lobt also kurz die vorne stehenden Schüler. Der Rest der Klasse ist sowohl im ersten als auch im daraufhin folgenden zweiten Übungsteil größtenteils passiv, Dann wiederholen Luca und Lea vorne noch einmal die Aufgaben und führen sie dann mit anderen Gegenständen noch einmal aus, die an die Tafel gehängt werden",
+        "description": 1,
+        "explanation": 1,
+        "prediction": 1
+      },
+      {
+        "window_id": "chunk_005",
+        "window_text": "Auch Sarah soll nun wieder antworten, was die Lehrkraft durch die Handbewegung initiiert. Falsch angesetzte Sätze verbessert die Lehrkraft durch ein unterbrechen mit no no no no, das beiläufig und ruhig eingeworfen wird.  Nun machen die Schüler mit einem weiteren Beispiel die Übung komplett alleine, was die Lehrerin auf Deutsch mit jetzt seid ihr mal dran einleitet, Fehler aber durch wiederholen bzw",
+        "description": 1,
+        "explanation": 1,
+        "prediction": 0
+      },
+      {
+        "window_id": "chunk_006",
+        "window_text": "Einwerfen der richtigen Phrase verbessert. Florian, ein Junge in der ersten Reihe, übernimmt Sarahs Aufgabe, nachdem er sich gemeldet hat. Die Lehrkraft macht die Schülerinnen und Schüler dann darauf aufmerksam, dass Luca und Lea in ihrem Dialog etwas vergessen haben und fragt in die Runde was es sei",
+        "description": 1,
+        "explanation": 1,
+        "prediction": 0
+      },
+      {
+        "window_id": "chunk_007",
+        "window_text": "Sarah antwortet auf Deutsch und auf die Frage der Lehrkraft, wie die Phrase zu lauten hat, antwortet zunächst Leyla aus der zweiten Reihe falsch. Die Lehrkraft sagt wieder no no no, ruft den sich meldeten Florian auf und wiederholt dessen richtige Antwort zweimal. Die vorstehende Lea setzt den Dialog dann auf Aufforderung der Lehrkraft fort",
+        "description": 0,
+        "explanation": 1,
+        "prediction": 0
+      },
+      {
+        "window_id": "chunk_008",
+        "window_text": "Zum Ende der Sequenz teilt die Lehrerin mit, dass die Übung nun noch einmal von vorne gemacht wird\n\nDas Lernen wird von der Lehrkraft hier als Prozess verstanden. Die Schülerinnen und Schüler, sollen durch ausprobieren und durch das Verbessern und Wiederholen der Lehrkraft und der Mitschüler, die Phrasen besser verinnerlichen. Die Lehrkraft reagiert zwar mit no auf Fehler, trotzdem herrscht eine gute Fehlerkultur, in der die Schülerinnen und Schüler sich trauen zu äußern",
+        "description": 1,
+        "explanation": 1,
+        "prediction": 0
+      },
+      {
+        "window_id": "chunk_009",
+        "window_text": "Die Atmosphäre und der Umgangston sind trotz der nicht immer konstruktiv gewählten Worte wertschätzen und respektvoll und die Schülerinnen und Schüler erhalten eine konstruktiv gemeinte Unterstützung. Die Schülerinnen und Schüler sind aufmerksam, obwohl der Fokus stark auf zwei Personen liegt, wahrscheinlich vor allem weil die Übung abwechslungsreich scheint im Vergleich zu normalem Frontalunterricht.\n\nDie meisten Schülerinnen und Schüler werden von der wiederholenden Herangehensweise profitieren, da sich so der Stoff besser festigen kann. Ob sich diejenigen die mit no ´abgefertigt´ wurden letztlich negativ beeinflusst sehen in ihrer Beziehung zur Lehrkraft und ihrer Motivation zum Fach, hängt von der Persönlichkeit der Schülerinnen und Schüler ab",
+        "description": 1,
+        "explanation": 1,
+        "prediction": 1
+      },
+      {
+        "window_id": "chunk_010",
+        "window_text": "Gerade schüchternere Kinder könnten sich durch diese augenscheinlich ungewollt rüde Art beeindrucken lassen und sich nicht mehr so viel (zu-)trauen.",
+        "description": 0,
+        "explanation": 0,
+        "prediction": 0
+      }
+    ],
+    "windows": [
+      "Die Lehrerin kündigt zunächst an, dass die Klasse nun eine Aufgabe zu lösen hat. Da sie dies in Französisch kommuniziert, wiederholt sie dies. Dann bittet sie auf Deutsch einen Jungen, Luca, nach vorne und setzt ihm eine Baskenmütze auf auf",
+      "Danach bittet sie ein Mädchen, Lea, nach vorne und endet ihr ein Tuch um. Die beiden sollen Brigitte und Danielle darstellen. Die Phrase, die gelernt werden soll, wird nun zunächst häufig gesagt, dann in die Aufgabe eingebunden",
+      "Für die Aufgabe hat sie verschiedene einlaminierte gedruckte Gegenstände für die Tafel mitgebracht. Nun müssen zunächst Luca und Lea die Aufgabe lösen. Mit zustimmendem Mhm macht die Lehrkraft deutlich, wenn das Gesagte korrekt ist",
+      "Sie lässt nun ein weiteres Mädchen aus der Klasse, das in der ersten reihe sitzt, Sarah, ebenfalls die Phrase wiederholen, die eingeübt werden soll. Die Lehrerin kommentiert am Ende des ersten Übungsteils die Leitung mit bien, lobt also kurz die vorne stehenden Schüler. Der Rest der Klasse ist sowohl im ersten als auch im daraufhin folgenden zweiten Übungsteil größtenteils passiv, Dann wiederholen Luca und Lea vorne noch einmal die Aufgaben und führen sie dann mit anderen Gegenständen noch einmal aus, die an die Tafel gehängt werden",
+      "Auch Sarah soll nun wieder antworten, was die Lehrkraft durch die Handbewegung initiiert. Falsch angesetzte Sätze verbessert die Lehrkraft durch ein unterbrechen mit no no no no, das beiläufig und ruhig eingeworfen wird.  Nun machen die Schüler mit einem weiteren Beispiel die Übung komplett alleine, was die Lehrerin auf Deutsch mit jetzt seid ihr mal dran einleitet, Fehler aber durch wiederholen bzw",
+      "Einwerfen der richtigen Phrase verbessert. Florian, ein Junge in der ersten Reihe, übernimmt Sarahs Aufgabe, nachdem er sich gemeldet hat. Die Lehrkraft macht die Schülerinnen und Schüler dann darauf aufmerksam, dass Luca und Lea in ihrem Dialog etwas vergessen haben und fragt in die Runde was es sei",
+      "Sarah antwortet auf Deutsch und auf die Frage der Lehrkraft, wie die Phrase zu lauten hat, antwortet zunächst Leyla aus der zweiten Reihe falsch. Die Lehrkraft sagt wieder no no no, ruft den sich meldeten Florian auf und wiederholt dessen richtige Antwort zweimal. Die vorstehende Lea setzt den Dialog dann auf Aufforderung der Lehrkraft fort",
+      "Zum Ende der Sequenz teilt die Lehrerin mit, dass die Übung nun noch einmal von vorne gemacht wird\n\nDas Lernen wird von der Lehrkraft hier als Prozess verstanden. Die Schülerinnen und Schüler, sollen durch ausprobieren und durch das Verbessern und Wiederholen der Lehrkraft und der Mitschüler, die Phrasen besser verinnerlichen. Die Lehrkraft reagiert zwar mit no auf Fehler, trotzdem herrscht eine gute Fehlerkultur, in der die Schülerinnen und Schüler sich trauen zu äußern",
+      "Die Atmosphäre und der Umgangston sind trotz der nicht immer konstruktiv gewählten Worte wertschätzen und respektvoll und die Schülerinnen und Schüler erhalten eine konstruktiv gemeinte Unterstützung. Die Schülerinnen und Schüler sind aufmerksam, obwohl der Fokus stark auf zwei Personen liegt, wahrscheinlich vor allem weil die Übung abwechslungsreich scheint im Vergleich zu normalem Frontalunterricht.\n\nDie meisten Schülerinnen und Schüler werden von der wiederholenden Herangehensweise profitieren, da sich so der Stoff besser festigen kann. Ob sich diejenigen die mit no ´abgefertigt´ wurden letztlich negativ beeinflusst sehen in ihrer Beziehung zur Lehrkraft und ihrer Motivation zum Fach, hängt von der Persönlichkeit der Schülerinnen und Schüler ab",
+      "Gerade schüchternere Kinder könnten sich durch diese augenscheinlich ungewollt rüde Art beeindrucken lassen und sich nicht mehr so viel (zu-)trauen."
+    ]
+  },
+  "feedback_prompts": {
+    "academic_english": "You are a supportive yet rigorous teaching mentor providing feedback in a scholarly tone. Your feedback MUST be detailed, academic, and comprehensive, deeply integrating theory.\n\n**Knowledge Base Integration:**\nYou MUST base your feedback on the theoretical framework of empirical teaching quality research. Specifically, use the process-oriented teaching-learning model (Seidel & Shavelson, 2007) or the three basic dimensions of teaching quality (Klieme, 2006) for feedback on description and explanation. For prediction, use self-determination theory (Deci & Ryan, 1993) or theories of cognitive and constructive learning (Atkinson & Shiffrin, 1968; Craik & Lockhart, 1972).\n\n**CRITICAL: You MUST explicitly cite these theories using the (Author, Year) format. Do NOT cite any other theories.**\n\n**MANDATORY WEIGHTED FEEDBACK STRUCTURE:**\n1. **Weakest Area Focus**: Write 6-8 detailed, academic sentences ONLY for the weakest component (Prediction), integrating multiple specific suggestions and deeply connecting them to theory.\n2. **Stronger Areas**: For the two stronger components, write EXACTLY 3-4 detailed sentences each (1 Strength, 1 Suggestion, 1 'Why' that explicitly connects to theory).\n3. **Conclusion**: Write 2-3 sentences summarizing the key area for development.\n\n**CRITICAL FOCUS REQUIREMENTS:**\n- Focus ONLY on analysis skills, not teaching performance.\n- Emphasize objective, non-evaluative observation for the Description section.\n\n**FORMATTING:**\n- Sections: \"#### Description\", \"#### Explanation\", \"#### Prediction\", \"#### Conclusion\"\n- Sub-headings: \"Strength:\", \"Suggestions:\", \"Why:\" ",
+    "user_friendly_english": "You are a friendly teaching mentor providing feedback for a busy teacher who wants quick, practical tips.\n\n**Style Guide - MUST BE FOLLOWED:**\n- **Language**: Use simple, direct language. Avoid academic jargon completely.\n- **Citations**: Do NOT include any in-text citations like (Author, Year).\n- **Focus**: Give actionable advice. Do NOT explain the theory behind the advice.\n\n**MANDATORY CONCISE FEEDBACK STRUCTURE:**\n1. **Weakest Area Focus**: For the weakest component (Prediction), provide a \"Good:\" section with 1-2 sentences, and a \"Tip:\" section with a bulleted list of 2-3 clear, practical tips.\n2. **Stronger Areas**: For the two stronger components, write a \"Good:\" section with one sentence and a \"Tip:\" section with one practical tip.\n3. **No Conclusion**: Do not include a \"Conclusion\" section.\n\n**FORMATTING:**\n- Sections: \"#### Description\", \"#### Explanation\", \"#### Prediction\"\n- Sub-headings: \"Good:\", \"Tip:\" "
+  }
+}
