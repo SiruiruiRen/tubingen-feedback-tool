@@ -6,136 +6,111 @@
 -- Perfect for Excel/CSV analysis
 -- =====================================================
 
+WITH reflection_timing AS (
+    SELECT 
+        session_id,
+        participant_name,
+        video_id,
+        task_id,
+        language,
+        id as reflection_id,
+        revision_number,
+        parent_reflection_id,
+        created_at,
+        reflection_text,
+        analysis_percentages,
+        weakest_component,
+        feedback_extended,
+        feedback_short,
+        -- Calculate timing using window functions in CTE
+        FIRST_VALUE(created_at) OVER (PARTITION BY session_id, video_id, task_id ORDER BY revision_number) as first_submission_time,
+        LAG(created_at) OVER (PARTITION BY session_id, video_id, task_id ORDER BY revision_number) as previous_revision_time,
+        COUNT(*) OVER (PARTITION BY session_id, video_id, task_id) as total_revisions
+    FROM reflections
+    WHERE created_at >= '2025-01-01'  -- CHANGE THIS DATE for new data only
+),
+event_counts AS (
+    SELECT 
+        rt.reflection_id,
+        COUNT(CASE WHEN ue.event_type = 'view_feedback_end' THEN 1 END) as reading_sessions,
+        SUM(CASE WHEN ue.event_type = 'view_feedback_end' 
+            THEN (ue.event_data->>'duration_seconds')::NUMERIC 
+            ELSE 0 
+        END) as total_reading_seconds,
+        COUNT(CASE WHEN ue.event_type = 'select_feedback_style' THEN 1 END) as tab_switches,
+        COUNT(CASE WHEN ue.event_type = 'revision_warning_shown' THEN 1 END) as warnings,
+        COUNT(CASE WHEN ue.event_type = 'learn_concepts_interaction' THEN 1 END) as concept_clicks,
+        COUNT(CASE WHEN ue.event_type = 'copy_feedback' THEN 1 END) as copy_actions
+    FROM reflection_timing rt
+    LEFT JOIN user_events ue ON rt.session_id = ue.session_id
+        AND ue.timestamp_utc BETWEEN COALESCE(rt.previous_revision_time, rt.first_submission_time) AND rt.created_at
+    GROUP BY rt.reflection_id
+)
 SELECT 
     -- Participant Information
-    r.session_id,
-    r.participant_name as participant_id,
-    r.video_id,
-    r.task_id,
-    r.language,
+    rt.session_id,
+    rt.participant_name as participant_id,
+    rt.video_id,
+    rt.task_id,
+    rt.language,
     
     -- Reflection Metadata
-    r.id as reflection_id,
-    r.revision_number,
-    r.parent_reflection_id,
+    rt.reflection_id,
+    rt.revision_number,
+    rt.parent_reflection_id,
+    rt.total_revisions,
     
-    -- Timing Information
-    r.created_at as submission_timestamp,
-    TO_CHAR(r.created_at, 'YYYY-MM-DD HH24:MI:SS') as submission_time_formatted,
-    
-    -- Time since first submission for this session-video-task
-    EXTRACT(EPOCH FROM (
-        r.created_at - FIRST_VALUE(r.created_at) OVER (
-            PARTITION BY r.session_id, r.video_id, r.task_id 
-            ORDER BY r.revision_number
-        )
-    )) / 60 as minutes_since_first_submission,
-    
-    -- Time since previous revision
-    EXTRACT(EPOCH FROM (
-        r.created_at - LAG(r.created_at) OVER (
-            PARTITION BY r.session_id, r.video_id, r.task_id 
-            ORDER BY r.revision_number
-        )
-    )) / 60 as minutes_since_previous_revision,
-    
-    -- Total revisions for this session-video-task
-    COUNT(*) OVER (PARTITION BY r.session_id, r.video_id, r.task_id) as total_revisions,
+    -- Timing
+    rt.created_at as submission_timestamp,
+    TO_CHAR(rt.created_at, 'YYYY-MM-DD HH24:MI:SS') as submission_time_formatted,
+    EXTRACT(EPOCH FROM (rt.created_at - rt.first_submission_time)) / 60 as minutes_since_first_submission,
+    EXTRACT(EPOCH FROM (rt.created_at - rt.previous_revision_time)) / 60 as minutes_since_previous_revision,
     
     -- Reflection Content
-    r.reflection_text,
-    LENGTH(r.reflection_text) as text_length_characters,
-    array_length(string_to_array(r.reflection_text, ' '), 1) as text_length_words,
+    rt.reflection_text,
+    LENGTH(rt.reflection_text) as text_length_characters,
+    array_length(string_to_array(rt.reflection_text, ' '), 1) as text_length_words,
     
     -- Analysis Results (RAW - shown to students)
-    r.analysis_percentages->'raw'->>'description' as description_pct_raw,
-    r.analysis_percentages->'raw'->>'explanation' as explanation_pct_raw,
-    r.analysis_percentages->'raw'->>'prediction' as prediction_pct_raw,
-    r.analysis_percentages->'raw'->>'professional_vision' as pv_total_pct_raw,
+    (rt.analysis_percentages->'raw'->>'description')::NUMERIC as description_pct_raw,
+    (rt.analysis_percentages->'raw'->>'explanation')::NUMERIC as explanation_pct_raw,
+    (rt.analysis_percentages->'raw'->>'prediction')::NUMERIC as prediction_pct_raw,
+    (rt.analysis_percentages->'raw'->>'professional_vision')::NUMERIC as pv_total_pct_raw,
     
     -- Analysis Results (PRIORITY - for research)
-    r.analysis_percentages->'priority'->>'description' as description_pct_priority,
-    r.analysis_percentages->'priority'->>'explanation' as explanation_pct_priority,
-    r.analysis_percentages->'priority'->>'prediction' as prediction_pct_priority,
-    r.analysis_percentages->'priority'->>'other' as other_pct_priority,
-    r.analysis_percentages->'priority'->>'professional_vision' as pv_total_pct_priority,
+    (rt.analysis_percentages->'priority'->>'description')::NUMERIC as description_pct_priority,
+    (rt.analysis_percentages->'priority'->>'explanation')::NUMERIC as explanation_pct_priority,
+    (rt.analysis_percentages->'priority'->>'prediction')::NUMERIC as prediction_pct_priority,
+    (rt.analysis_percentages->'priority'->>'other')::NUMERIC as other_pct_priority,
+    (rt.analysis_percentages->'priority'->>'professional_vision')::NUMERIC as pv_total_pct_priority,
     
     -- Weakest Component
-    r.weakest_component,
+    rt.weakest_component,
     
-    -- Generated Feedback (truncated for readability)
-    LEFT(r.feedback_extended, 500) as feedback_extended_preview,
-    LEFT(r.feedback_short, 500) as feedback_short_preview,
-    LENGTH(r.feedback_extended) as feedback_extended_length,
-    LENGTH(r.feedback_short) as feedback_short_length,
+    -- Generated Feedback (full text)
+    rt.feedback_extended,
+    rt.feedback_short,
+    LENGTH(rt.feedback_extended) as feedback_extended_length,
+    LENGTH(rt.feedback_short) as feedback_short_length,
     
-    -- Reading Behavior During This Revision
-    (SELECT COUNT(*) 
-     FROM user_events ue 
-     WHERE ue.session_id = r.session_id 
-       AND ue.event_type = 'view_feedback_end'
-       AND ue.timestamp_utc BETWEEN 
-           LAG(r.created_at, 1, r.created_at) OVER (PARTITION BY r.session_id, r.video_id, r.task_id ORDER BY r.revision_number)
-           AND r.created_at
-    ) as reading_sessions_before_this_revision,
-    
-    (SELECT SUM((ue.event_data->>'duration_seconds')::NUMERIC)
-     FROM user_events ue 
-     WHERE ue.session_id = r.session_id 
-       AND ue.event_type = 'view_feedback_end'
-       AND ue.timestamp_utc BETWEEN 
-           LAG(r.created_at, 1, r.created_at) OVER (PARTITION BY r.session_id, r.video_id, r.task_id ORDER BY r.revision_number)
-           AND r.created_at
-    ) as total_reading_seconds_before_this_revision,
-    
-    (SELECT COUNT(*) 
-     FROM user_events ue 
-     WHERE ue.session_id = r.session_id 
-       AND ue.event_type = 'select_feedback_style'
-       AND ue.timestamp_utc BETWEEN 
-           LAG(r.created_at, 1, r.created_at) OVER (PARTITION BY r.session_id, r.video_id, r.task_id ORDER BY r.revision_number)
-           AND r.created_at
-    ) as tab_switches_before_this_revision,
-    
-    -- Warnings
-    (SELECT COUNT(*) 
-     FROM user_events ue 
-     WHERE ue.session_id = r.session_id 
-       AND ue.event_type = 'revision_warning_shown'
-       AND ue.timestamp_utc BETWEEN 
-           LAG(r.created_at, 1, r.created_at) OVER (PARTITION BY r.session_id, r.video_id, r.task_id ORDER BY r.revision_number)
-           AND r.created_at
-    ) as warnings_before_this_revision,
-    
-    -- Concept Interactions
-    (SELECT COUNT(*) 
-     FROM user_events ue 
-     WHERE ue.session_id = r.session_id 
-       AND ue.event_type = 'learn_concepts_interaction'
-       AND ue.timestamp_utc BETWEEN 
-           LAG(r.created_at, 1, r.created_at) OVER (PARTITION BY r.session_id, r.video_id, r.task_id ORDER BY r.revision_number)
-           AND r.created_at
-    ) as concept_clicks_before_this_revision,
-    
-    -- Copy Actions
-    (SELECT COUNT(*) 
-     FROM user_events ue 
-     WHERE ue.session_id = r.session_id 
-       AND ue.event_type = 'copy_feedback'
-       AND ue.timestamp_utc BETWEEN 
-           LAG(r.created_at, 1, r.created_at) OVER (PARTITION BY r.session_id, r.video_id, r.task_id ORDER BY r.revision_number)
-           AND r.created_at
-    ) as copy_actions_before_this_revision
+    -- User Behavior Before This Revision
+    ec.reading_sessions as reading_sessions_before_this_revision,
+    ec.total_reading_seconds as total_reading_seconds_before_this_revision,
+    ROUND(ec.total_reading_seconds / 60, 2) as total_reading_minutes_before_this_revision,
+    ec.tab_switches as tab_switches_before_this_revision,
+    ec.warnings as warnings_before_this_revision,
+    ec.concept_clicks as concept_clicks_before_this_revision,
+    ec.copy_actions as copy_actions_before_this_revision
 
-FROM reflections r
-WHERE r.created_at >= '2025-01-01'  -- CHANGE THIS DATE for new data only
-ORDER BY r.session_id, r.video_id, r.task_id, r.revision_number;
+FROM reflection_timing rt
+LEFT JOIN event_counts ec ON rt.reflection_id = ec.reflection_id
+ORDER BY rt.session_id, rt.video_id, rt.task_id, rt.revision_number;
 
 
 -- =====================================================
--- SIMPLIFIED VERSION (if above is too slow)
+-- SIMPLIFIED VERSION (Fast - No Event Data)
 -- =====================================================
--- Same data but without the subqueries for events
+-- Just reflection data without user event calculations
 
 SELECT 
     -- Participant Information
@@ -157,26 +132,29 @@ SELECT
     -- Reflection Content
     reflection_text,
     LENGTH(reflection_text) as text_length_characters,
+    array_length(string_to_array(reflection_text, ' '), 1) as text_length_words,
     
-    -- Analysis Results (RAW - shown to students)
-    analysis_percentages->'raw'->>'description' as description_pct_raw,
-    analysis_percentages->'raw'->>'explanation' as explanation_pct_raw,
-    analysis_percentages->'raw'->>'prediction' as prediction_pct_raw,
-    analysis_percentages->'raw'->>'professional_vision' as pv_total_pct_raw,
+    -- Analysis Results (RAW - shown to students) - CAST to NUMERIC
+    (analysis_percentages->'raw'->>'description')::NUMERIC as description_pct_raw,
+    (analysis_percentages->'raw'->>'explanation')::NUMERIC as explanation_pct_raw,
+    (analysis_percentages->'raw'->>'prediction')::NUMERIC as prediction_pct_raw,
+    (analysis_percentages->'raw'->>'professional_vision')::NUMERIC as pv_total_pct_raw,
     
-    -- Analysis Results (PRIORITY - for research)
-    analysis_percentages->'priority'->>'description' as description_pct_priority,
-    analysis_percentages->'priority'->>'explanation' as explanation_pct_priority,
-    analysis_percentages->'priority'->>'prediction' as prediction_pct_priority,
-    analysis_percentages->'priority'->>'other' as other_pct_priority,
-    analysis_percentages->'priority'->>'professional_vision' as pv_total_pct_priority,
+    -- Analysis Results (PRIORITY - for research) - CAST to NUMERIC
+    (analysis_percentages->'priority'->>'description')::NUMERIC as description_pct_priority,
+    (analysis_percentages->'priority'->>'explanation')::NUMERIC as explanation_pct_priority,
+    (analysis_percentages->'priority'->>'prediction')::NUMERIC as prediction_pct_priority,
+    (analysis_percentages->'priority'->>'other')::NUMERIC as other_pct_priority,
+    (analysis_percentages->'priority'->>'professional_vision')::NUMERIC as pv_total_pct_priority,
     
     -- Weakest Component
     weakest_component,
     
-    -- Feedback (truncated)
-    LEFT(feedback_extended, 300) as feedback_extended_preview,
-    LEFT(feedback_short, 300) as feedback_short_preview
+    -- Generated Feedback (FULL TEXT)
+    feedback_extended,
+    feedback_short,
+    LENGTH(feedback_extended) as feedback_extended_length,
+    LENGTH(feedback_short) as feedback_short_length
 
 FROM reflections
 WHERE created_at >= '2025-01-01'  -- CHANGE THIS DATE
