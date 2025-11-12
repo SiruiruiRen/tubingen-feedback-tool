@@ -66,8 +66,8 @@ SELECT
     EXTRACT(EPOCH FROM (rt.created_at - rt.first_submission_time)) / 60 as minutes_since_first_submission,
     EXTRACT(EPOCH FROM (rt.created_at - rt.previous_revision_time)) / 60 as minutes_since_previous_revision,
     
-    -- Reflection Content
-    rt.reflection_text,
+    -- Reflection Content (replace newlines for Excel)
+    REPLACE(REPLACE(rt.reflection_text, E'\n', ' '), E'\r', ' ') as reflection_text,
     LENGTH(rt.reflection_text) as text_length_characters,
     array_length(string_to_array(rt.reflection_text, ' '), 1) as text_length_words,
     
@@ -87,9 +87,9 @@ SELECT
     -- Weakest Component
     rt.weakest_component,
     
-    -- Generated Feedback (full text)
-    rt.feedback_extended,
-    rt.feedback_short,
+    -- Generated Feedback (full text, newlines replaced for Excel)
+    REPLACE(REPLACE(rt.feedback_extended, E'\n', ' '), E'\r', ' ') as feedback_extended,
+    REPLACE(REPLACE(rt.feedback_short, E'\n', ' '), E'\r', ' ') as feedback_short,
     LENGTH(rt.feedback_extended) as feedback_extended_length,
     LENGTH(rt.feedback_short) as feedback_short_length,
     
@@ -129,8 +129,8 @@ SELECT
     created_at as submission_timestamp,
     TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') as submission_time_formatted,
     
-    -- Reflection Content
-    reflection_text,
+    -- Reflection Content (replace newlines for Excel)
+    REPLACE(REPLACE(reflection_text, E'\n', ' '), E'\r', ' ') as reflection_text,
     LENGTH(reflection_text) as text_length_characters,
     array_length(string_to_array(reflection_text, ' '), 1) as text_length_words,
     
@@ -150,9 +150,9 @@ SELECT
     -- Weakest Component
     weakest_component,
     
-    -- Generated Feedback (FULL TEXT)
-    feedback_extended,
-    feedback_short,
+    -- Generated Feedback (FULL TEXT, newlines replaced for Excel)
+    REPLACE(REPLACE(feedback_extended, E'\n', ' '), E'\r', ' ') as feedback_extended,
+    REPLACE(REPLACE(feedback_short, E'\n', ' '), E'\r', ' ') as feedback_short,
     LENGTH(feedback_extended) as feedback_extended_length,
     LENGTH(feedback_short) as feedback_short_length
 
