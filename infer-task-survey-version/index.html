@@ -663,6 +663,33 @@
         </div>
     </div>
 
+    <!-- AI Usage Detection Modal -->
+    <div class="modal fade" id="ai-usage-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <span data-lang-key="ai_usage_title">Tab Switch Detected</span>
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <p data-lang-key="ai_usage_message">
+                        We noticed you switched to another tab. Did you use another AI system (such as ChatGPT) for your work on this task?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="handleAIUsageResponse(true)" data-lang-key="ai_usage_yes">
+                        Yes, I used AI
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="handleAIUsageResponse(false)" data-lang-key="ai_usage_no">
+                        No, I did not use AI
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Supabase JavaScript library with fallback -->

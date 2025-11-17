@@ -123,6 +123,10 @@ const translations = {
         continue_editing: "Continue Editing",
         confirm_submit: "Yes, Submit Final",
         complete_study: "Complete Study",
+        ai_usage_title: "Tab Switch Detected",
+        ai_usage_message: "We noticed you switched to another tab. Did you use another AI system (such as ChatGPT) for your work on this task?",
+        ai_usage_yes: "Yes, I used AI",
+        ai_usage_no: "No, I did not use AI",
         survey1_heading: "Post-Task Survey",
         survey1_description: "Please share your thoughts about your experience with the task. This takes about 3-5 minutes.",
         survey1_instructions: "Final Step: Complete the survey above, then click \"Complete Study\" below to finish.",
@@ -197,6 +201,10 @@ const translations = {
         continue_editing: "Weiter bearbeiten",
         confirm_submit: "Ja, endgültig einreichen",
         complete_study: "Studie abschließen",
+        ai_usage_title: "Tab-Wechsel erkannt",
+        ai_usage_message: "Wir haben bemerkt, dass Sie zu einem anderen Tab gewechselt haben. Haben Sie ein anderes KI-System (wie ChatGPT) für Ihre Arbeit an dieser Aufgabe verwendet?",
+        ai_usage_yes: "Ja, ich habe KI verwendet",
+        ai_usage_no: "Nein, ich habe keine KI verwendet",
         survey1_heading: "Umfrage nach der Aufgabe",
         survey1_description: "Bitte teilen Sie Ihre Gedanken zu Ihrer Erfahrung mit der Aufgabe mit. Dies dauert ca. 3-5 Minuten.",
         survey1_instructions: "Letzter Schritt: Füllen Sie die Umfrage oben aus und klicken Sie dann unten auf \"Studie abschließen\", um fertig zu werden.",
@@ -241,6 +249,41 @@ window.addEventListener('beforeunload', () => {
         final_page: currentPage,
         final_progress: studyProgress
     });
+});
+
+// Tab switching detection (cheating detection)
+let tabSwitchCount = 0;
+let lastHiddenTime = null;
+let hasAskedAboutAI = false;
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // User switched away from tab
+        lastHiddenTime = Date.now();
+        tabSwitchCount++;
+        
+        logEvent('tab_hidden', {
+            tab_switch_count: tabSwitchCount,
+            current_page: currentPage,
+            timestamp: new Date().toISOString()
+        });
+    } else {
+        // User returned to tab
+        const timeAway = lastHiddenTime ? (Date.now() - lastHiddenTime) / 1000 : 0;
+        
+        logEvent('tab_visible', {
+            tab_switch_count: tabSwitchCount,
+            time_away_seconds: timeAway,
+            current_page: currentPage,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Only ask if they were away for more than 5 seconds and on a task page
+        if (timeAway > 5 && (currentPage === 'task1' || currentPage === 'task2') && !hasAskedAboutAI) {
+            hasAskedAboutAI = true;
+            showAIUsageModal();
+        }
+    }
 });
 
 function initializeApp() {
@@ -1589,6 +1632,35 @@ function formatStructuredFeedback(text, analysisResult) {
 // ============================================================================
 // Utility Functions
 // ============================================================================
+
+// Show AI usage detection modal
+function showAIUsageModal() {
+    const modal = new bootstrap.Modal(document.getElementById('ai-usage-modal'));
+    modal.show();
+}
+
+function handleAIUsageResponse(usedAI) {
+    const isGerman = currentLanguage === 'de';
+    
+    logEvent('ai_usage_response', {
+        used_ai: usedAI,
+        tab_switch_count: tabSwitchCount,
+        current_page: currentPage,
+        timestamp: new Date().toISOString()
+    });
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('ai-usage-modal'));
+    if (modal) modal.hide();
+    
+    // Show message based on response
+    if (usedAI) {
+        const message = isGerman 
+            ? 'Vielen Dank für Ihre Ehrlichkeit. Bitte beachten Sie, dass diese Aufgabe Ihre eigene Analyse erfordert.'
+            : 'Thank you for your honesty. Please note that this task requires your own analysis.';
+        showAlert(message, 'warning');
+    }
+}
 
 // Enhanced bubble alert for duplicate warnings (more noticeable)
 function showBubbleWarning(message, element, type = 'warning') {
