@@ -2017,9 +2017,14 @@ function applyTranslations() {
                 const span = element.querySelector('span[data-lang-key]');
                 if (span) span.textContent = t[key];
             } 
-            // For span elements directly
+            // For span elements directly - use innerHTML to preserve HTML tags
             else if (element.tagName === 'SPAN' && element.hasAttribute('data-lang-key')) {
-                element.textContent = t[key];
+                // Use innerHTML if the translation contains HTML tags, otherwise use textContent
+                if (t[key].includes('<') && t[key].includes('>')) {
+                    element.innerHTML = t[key];
+                } else {
+                    element.textContent = t[key];
+                }
             } 
             // For input elements, check if they should have placeholder updated
             else if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
@@ -2039,7 +2044,12 @@ function applyTranslations() {
                 // Only update if element doesn't have children with data-lang-key (to preserve structure)
                 const hasChildrenWithLangKey = element.querySelector('[data-lang-key]');
                 if (!hasChildrenWithLangKey || ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LABEL'].includes(element.tagName)) {
-                    element.textContent = t[key];
+                    // Use innerHTML for elements that might contain HTML
+                    if (t[key].includes('<') && t[key].includes('>')) {
+                        element.innerHTML = t[key];
+                    } else {
+                        element.textContent = t[key];
+                    }
                 }
             }
         }
