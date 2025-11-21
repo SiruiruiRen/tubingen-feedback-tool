@@ -524,6 +524,21 @@ function showPage(pageId) {
                         ? `Participant: ${currentParticipant}`
                         : `Teilnehmer: ${currentParticipant}`;
                 }
+                
+                // Update dashboard button text based on current page
+                const dashboardBtn = document.getElementById('nav-dashboard-btn');
+                const dashboardBtnSpan = dashboardBtn?.querySelector('span');
+                if (dashboardBtn && dashboardBtnSpan) {
+                    if (pageId === 'dashboard') {
+                        // On dashboard page, hide the button or change text
+                        dashboardBtn.style.display = 'none';
+                    } else {
+                        // On other pages, show "Back to Dashboard"
+                        dashboardBtn.style.display = 'inline-block';
+                        dashboardBtnSpan.setAttribute('data-lang-key', 'back_to_dashboard');
+                        dashboardBtnSpan.textContent = translations[currentLanguage].back_to_dashboard;
+                    }
+                }
             }
         }
         
@@ -543,10 +558,16 @@ function showPage(pageId) {
         */
         
         // Render dashboard if showing dashboard page
-        if (pageId === 'dashboard' && currentParticipantProgress) {
+        if (pageId === 'dashboard') {
+            if (currentParticipantProgress) {
+                setTimeout(() => {
+                    renderDashboard();
+                }, 100);
+            }
+            // Render language switcher in dashboard header
             setTimeout(() => {
-                renderDashboard();
-            }, 100);
+                renderLanguageSwitcherInNav();
+            }, 50);
         }
         
         // Setup video page if it's a video page
@@ -752,11 +773,11 @@ function renderDashboard() {
     const nameEl = document.getElementById('dashboard-participant-name');
     if (welcomeText && nameEl) {
         if (currentParticipant) {
-            welcomeText.textContent = currentLanguage === 'en' ? 'Welcome back,' : 'Willkommen zurück,';
-            nameEl.textContent = currentParticipant;
+            welcomeText.textContent = translations[currentLanguage].dashboard_welcome;
+            nameEl.textContent = ` ${currentParticipant}`;
             nameEl.style.fontWeight = '600';
         } else {
-            welcomeText.textContent = currentLanguage === 'en' ? 'Welcome' : 'Willkommen';
+            welcomeText.textContent = translations[currentLanguage].dashboard_welcome.replace(',', '');
             nameEl.textContent = '';
         }
     }
@@ -1961,6 +1982,21 @@ function renderLanguageSwitcherInNav() {
         // Add event listeners
         document.getElementById('nav-lang-switch-en')?.addEventListener('click', () => switchLanguage('en'));
         document.getElementById('nav-lang-switch-de')?.addEventListener('click', () => switchLanguage('de'));
+    }
+    
+    // Also render language switcher in dashboard header
+    const dashboardHeaderSwitcher = document.querySelector('.language-switcher-container-inline-header');
+    if (dashboardHeaderSwitcher) {
+        dashboardHeaderSwitcher.innerHTML = `
+            <div class="btn-group" role="group">
+                <button type="button" class="btn ${currentLanguage === 'en' ? 'btn-primary' : 'btn-outline-primary'}" id="header-lang-switch-en">English</button>
+                <button type="button" class="btn ${currentLanguage === 'de' ? 'btn-primary' : 'btn-outline-primary'}" id="header-lang-switch-de">Deutsch</button>
+            </div>
+        `;
+        
+        // Add event listeners
+        document.getElementById('header-lang-switch-en')?.addEventListener('click', () => switchLanguage('en'));
+        document.getElementById('header-lang-switch-de')?.addEventListener('click', () => switchLanguage('de'));
     }
 }
 
